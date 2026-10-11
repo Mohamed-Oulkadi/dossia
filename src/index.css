@@ -1,27 +1,29 @@
 /* ─────────────────────────────────────────────────
-   Google Fonts — must precede @import "tailwindcss"
+   Google Fonts — Inter & Geist/Outfit
 ───────────────────────────────────────────────── */
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
 @import "tailwindcss";
 
 /* ─────────────────────────────────────────────────
-   Dossia Design Tokens
+   Dossia Clinical Design Tokens
+   Restrained Executive SaaS Palette
 ───────────────────────────────────────────────── */
 @theme {
-  --color-dossia-bg:        #0a0a0f;
-  --color-dossia-surface:   #111118;
-  --color-dossia-surface2:  #16161f;
-  --color-dossia-border:    #1e1e2e;
-  --color-dossia-accent:    #34d399;   /* emerald-400 */
-  --color-dossia-accent-alt:#2dd4bf;   /* teal-300    */
-  --color-dossia-text:      #f4f4f5;   /* zinc-100    */
-  --color-dossia-muted:     #71717a;   /* zinc-500    */
-  --color-dossia-warning:   #fbbf24;   /* amber-400   */
-  --color-dossia-danger:    #f87171;   /* red-400     */
+  --color-dossia-bg:        #09090b;   /* zinc-950 deep dark */
+  --color-dossia-surface:   #121215;   /* zinc-900 surface */
+  --color-dossia-surface2:  #18181b;   /* zinc-850 elevated surface */
+  --color-dossia-border:    #27272a;   /* zinc-800 crisp hairline border */
+  --color-dossia-border-subtle: #1f1f23;
+  --color-dossia-accent:    #059669;   /* emerald-600 restrained surgical clinical */
+  --color-dossia-accent-subtle: rgba(5, 150, 105, 0.12);
+  --color-dossia-text:      #f4f4f5;   /* zinc-100 high readability */
+  --color-dossia-muted:     #71717a;   /* zinc-500 */
+  --color-dossia-warning:   #d97706;   /* amber-600 */
+  --color-dossia-danger:    #dc2626;   /* red-600 */
 
-  --font-sans: 'Inter', system-ui, sans-serif;
-  --font-display: 'Outfit', 'Inter', sans-serif;
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
 }
 
 /* ─────────────────────────────────────────────────
@@ -47,86 +49,62 @@ body {
 }
 
 /* ─────────────────────────────────────────────────
-   Typography scale
+   Typography scale — restrained & surgical
 ───────────────────────────────────────────────── */
 h1, h2, h3, h4, h5, h6 {
-  font-family: var(--font-display);
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  line-height: 1.1;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  color: var(--color-dossia-text);
+}
+
+/* Moroccan Financials & Dates — Always monospace + tabular */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
 }
 
 /* ─────────────────────────────────────────────────
-   Scrollbar — premium dark look
+   Scrollbar — minimal hairline look
 ───────────────────────────────────────────────── */
-::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: var(--color-dossia-bg); }
 ::-webkit-scrollbar-thumb {
   background: var(--color-dossia-border);
-  border-radius: 999px;
-}
-::-webkit-scrollbar-thumb:hover { background: var(--color-dossia-muted); }
-
-/* ─────────────────────────────────────────────────
-   Focus ring — accessibility
-───────────────────────────────────────────────── */
-:focus-visible {
-  outline: 2px solid var(--color-dossia-accent);
-  outline-offset: 2px;
   border-radius: 4px;
 }
+::-webkit-scrollbar-thumb:hover { background: #3f3f46; }
 
 /* ─────────────────────────────────────────────────
-   Utility: Glass surface
+   Focus ring — accessible, minimal
 ───────────────────────────────────────────────── */
-.glass {
-  background: rgba(17, 17, 24, 0.7);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid var(--color-dossia-border);
-}
-
-/* ─────────────────────────────────────────────────
-   Utility: Gradient text
-───────────────────────────────────────────────── */
-.gradient-text {
-  background: linear-gradient(135deg, #34d399 0%, #2dd4bf 50%, #818cf8 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+:focus-visible {
+  outline: 1.5px solid var(--color-dossia-accent);
+  outline-offset: 1px;
 }
 
 /* ─────────────────────────────────────────────────
-   Utility: Glow effects
+   Clinical Status Badges (Hairline 1px borders)
 ───────────────────────────────────────────────── */
-.glow-accent {
-  box-shadow: 0 0 20px rgba(52, 211, 153, 0.25),
-              0 0 60px rgba(52, 211, 153, 0.1);
-}
-.glow-accent-sm {
-  box-shadow: 0 0 10px rgba(52, 211, 153, 0.3);
+.badge-attente {
+  background-color: rgba(217, 119, 6, 0.1);
+  color: #fbbf24;
+  border: 1px solid rgba(217, 119, 6, 0.25);
 }
 
-/* Status badge colours */
-.status-confirme  { background: rgba(52, 211, 153, 0.15); color: #34d399; }
-.status-attente   { background: rgba(251, 191, 36, 0.15);  color: #fbbf24; }
-.status-annule    { background: rgba(248, 113, 113, 0.15); color: #f87171; }
-.status-termine   { background: rgba(113, 113, 122, 0.15); color: #71717a; }
-
-/* ─────────────────────────────────────────────────
-   Animation: fade-in-up
-───────────────────────────────────────────────── */
-@keyframes fade-in-up {
-  from { opacity: 0; transform: translateY(16px); }
-  to   { opacity: 1; transform: translateY(0); }
+.badge-consultation {
+  background-color: rgba(5, 150, 105, 0.12);
+  color: #34d399;
+  border: 1px solid rgba(5, 150, 105, 0.3);
 }
-.animate-fade-in-up { animation: fade-in-up 0.5s ease forwards; }
 
-/* ─────────────────────────────────────────────────
-   Animation: pulse-glow
-───────────────────────────────────────────────── */
-@keyframes pulse-glow {
-  0%, 100% { opacity: 0.4; }
-  50%       { opacity: 0.8; }
+.badge-termine {
+  background-color: rgba(63, 63, 70, 0.4);
+  color: #a1a1aa;
+  border: 1px solid rgba(82, 82, 91, 0.4);
 }
-.animate-pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
+
+.badge-annule {
+  background-color: rgba(220, 38, 38, 0.1);
+  color: #f87171;
+  border: 1px solid rgba(220, 38, 38, 0.25);
+}

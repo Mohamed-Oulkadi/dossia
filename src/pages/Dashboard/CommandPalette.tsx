@@ -1,15 +1,26 @@
 /**
  * CommandPalette — Ctrl+K global action launcher
- * Agent B scope: src/pages/Dashboard/
- *
- * Secretary-First UX: instantly accessible, keyboard-navigable,
- * fuzzy-search over all core actions.
- * Language: Professional French (AGENTS.md)
+ * Refactored for Clinical Craft & Executive SaaS Design System
+ * 
+ * - Standardized Lucide icons: w-4 h-4 stroke-[1.5]
+ * - 1px hairline border system (border-zinc-800)
+ * - Restrained typography and tight rounded-lg radius
+ * - Moroccan clinical actions (MAD payments, CNSS, AMO)
  */
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import { useAppStore } from '@/store/useAppStore'
+import {
+  CalendarPlus,
+  UserPlus,
+  Banknote,
+  FileCheck,
+  FileText,
+  Search,
+  Calendar,
+  CornerDownLeft,
+} from 'lucide-react'
 
 // ─────────────────────────────────────────────────
 // Action definitions
@@ -19,7 +30,7 @@ interface PaletteAction {
   label: string
   description: string
   shortcut?: string
-  icon: string
+  icon: React.ComponentType<{ className?: string }>
   category: string
   action: () => void
 }
@@ -39,60 +50,61 @@ export function CommandPalette() {
     {
       id: 'new-consultation',
       label: 'Nouvelle Consultation',
-      description: 'Créer un nouveau rendez-vous',
+      description: 'Créer un nouveau rendez-vous patient',
       shortcut: 'Alt+N',
-      icon: '📅',
+      icon: CalendarPlus,
       category: 'Agenda',
       action: () => { openModal('new-consultation'); closeCommandPalette() },
     },
     {
       id: 'new-patient',
-      label: 'Nouveau Patient',
-      description: 'Ajouter un dossier patient',
+      label: 'Nouveau Dossier Patient',
+      description: 'Créer une fiche médicale patient',
       shortcut: 'Alt+P',
-      icon: '👤',
+      icon: UserPlus,
       category: 'Patients',
       action: () => { openModal('new-patient'); closeCommandPalette() },
     },
     {
       id: 'add-payment',
       label: 'Ajouter un Paiement (MAD)',
-      description: 'Enregistrer un paiement en Dirhams',
-      shortcut: 'Alt+€',
-      icon: '💰',
+      description: 'Encaisser des honoraires en Dirhams',
+      shortcut: 'Alt+M',
+      icon: Banknote,
       category: 'Comptabilité',
       action: () => { openModal('add-payment'); closeCommandPalette() },
     },
     {
       id: 'generate-cnss',
       label: 'Générer Feuille de Soins (CNSS)',
-      description: 'Créer et imprimer la feuille CNSS',
+      description: 'Bordereau officiel CNSS pré-rempli',
       shortcut: 'Alt+F',
-      icon: '📄',
-      category: 'CNSS / AMO',
+      icon: FileCheck,
+      category: 'Assurance Maladie',
       action: () => { openModal('generate-cnss'); closeCommandPalette() },
     },
     {
       id: 'generate-amo',
       label: 'Générer Feuille AMO',
-      description: 'Créer la feuille de remboursement AMO',
-      icon: '📋',
-      category: 'CNSS / AMO',
+      description: 'Formulaire de remboursement AMO',
+      icon: FileText,
+      category: 'Assurance Maladie',
       action: () => { openModal('generate-amo'); closeCommandPalette() },
     },
     {
       id: 'search-patient',
       label: 'Rechercher un Patient',
-      description: 'Trouver un dossier par nom ou téléphone',
-      icon: '🔍',
+      description: 'Par nom, téléphone (+212) ou CNSS',
+      icon: Search,
       category: 'Patients',
       action: () => { navigate('/app'); closeCommandPalette() },
     },
     {
       id: 'agenda',
-      label: 'Ouvrir l\'Agenda',
-      description: 'Voir les rendez-vous du jour',
-      icon: '🗓️',
+      label: 'Ouvrir l\'Agenda du Jour',
+      description: 'Consulter le planning des consultations',
+      shortcut: 'Alt+A',
+      icon: Calendar,
       category: 'Navigation',
       action: () => { navigate('/app'); closeCommandPalette() },
     },
@@ -148,7 +160,6 @@ export function CommandPalette() {
     return acc
   }, {})
 
-  // Reset selected when query changes
   useEffect(() => { setSelected(0) }, [query])
 
   let actionIndex = 0
@@ -163,66 +174,65 @@ export function CommandPalette() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.15 }}
-            className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm"
+            transition={{ duration: 0.12 }}
+            className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs"
             onClick={closeCommandPalette}
           />
 
           {/* Palette panel */}
           <motion.div
             key="palette"
-            initial={{ opacity: 0, scale: 0.95, y: -12 }}
+            initial={{ opacity: 0, scale: 0.98, y: -8 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: -12 }}
-            transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
+            exit={{ opacity: 0, scale: 0.98, y: -8 }}
+            transition={{ duration: 0.15, ease: [0.22, 1, 0.36, 1] }}
             className="
-              fixed top-[20%] left-1/2 -translate-x-1/2 z-50
-              w-full max-w-xl
-              glass border border-[var(--color-dossia-border)]
-              rounded-2xl overflow-hidden shadow-2xl
+              fixed top-[18%] left-1/2 -translate-x-1/2 z-50
+              w-full max-w-lg
+              bg-zinc-950 border border-zinc-800
+              rounded-lg overflow-hidden shadow-lg
             "
             onKeyDown={handleKeyDown}
           >
             {/* Search input */}
-            <div className="flex items-center gap-3 px-4 py-3 border-b border-[var(--color-dossia-border)]">
-              <span className="text-[var(--color-dossia-muted)] text-lg">🔍</span>
+            <div className="flex items-center gap-2.5 px-3 py-2.5 border-b border-zinc-800">
+              <Search className="w-4 h-4 text-zinc-500 stroke-[1.5] flex-shrink-0" />
               <input
                 ref={inputRef}
                 id="command-palette-input"
                 type="text"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Rechercher une action…"
+                placeholder="Rechercher une action ou naviguer…"
                 className="
-                  flex-1 bg-transparent text-[var(--color-dossia-text)]
-                  placeholder:text-[var(--color-dossia-muted)]
-                  text-sm outline-none
+                  flex-1 bg-transparent text-zinc-100
+                  placeholder:text-zinc-500
+                  text-xs outline-none
                 "
               />
-              <kbd
-                className="
-                  text-[10px] text-[var(--color-dossia-muted)]
-                  border border-[var(--color-dossia-border)]
-                  px-1.5 py-0.5 rounded font-mono
-                "
-              >
+              <kbd className="
+                text-[9px] text-zinc-500
+                border border-zinc-800 bg-zinc-900
+                px-1.5 py-0.5 rounded font-mono
+              ">
                 ESC
               </kbd>
             </div>
 
             {/* Action list */}
-            <div className="max-h-80 overflow-y-auto py-2">
+            <div className="max-h-72 overflow-y-auto py-1.5 px-1.5">
               {Object.entries(grouped).length === 0 ? (
-                <p className="text-center text-[var(--color-dossia-muted)] text-sm py-8">
+                <p className="text-center text-zinc-500 text-xs py-8">
                   Aucun résultat pour &ldquo;{query}&rdquo;
                 </p>
               ) : (
                 Object.entries(grouped).map(([category, actions]) => (
-                  <div key={category}>
-                    <p className="px-4 pt-3 pb-1 text-[10px] uppercase tracking-widest text-[var(--color-dossia-muted)] font-semibold">
+                  <div key={category} className="mb-1 last:mb-0">
+                    <p className="px-2.5 pt-2 pb-1 text-[10px] uppercase tracking-wider text-zinc-500 font-medium">
                       {category}
                     </p>
                     {actions.map((action) => {
+                      const Icon = action.icon
                       const currentIndex = actionIndex++
                       const isSelected = currentIndex === selected
                       return (
@@ -232,34 +242,34 @@ export function CommandPalette() {
                           onClick={action.action}
                           onMouseEnter={() => setSelected(currentIndex)}
                           className={`
-                            w-full flex items-center gap-3 px-4 py-2.5 text-left
-                            transition-colors duration-100
+                            w-full flex items-center gap-2.5 px-2.5 py-1.5 text-left rounded-md
+                            transition-colors duration-75 text-xs cursor-pointer
                             ${isSelected
-                              ? 'bg-[var(--color-dossia-accent)]/10 text-[var(--color-dossia-accent)]'
-                              : 'text-[var(--color-dossia-text)] hover:bg-[var(--color-dossia-surface2)]'
+                              ? 'bg-zinc-900 text-zinc-100 border border-zinc-800'
+                              : 'text-zinc-300 hover:bg-zinc-900/60 border border-transparent'
                             }
                           `}
                         >
-                          <span className="text-lg w-7 text-center flex-shrink-0">
-                            {action.icon}
+                          <span className="flex items-center justify-center flex-shrink-0">
+                            <Icon className={`w-4 h-4 stroke-[1.5] ${isSelected ? 'text-emerald-400' : 'text-zinc-400'}`} />
                           </span>
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium truncate">{action.label}</p>
-                            <p className="text-xs text-[var(--color-dossia-muted)] truncate">
+                            <p className="font-medium text-xs truncate">{action.label}</p>
+                            <p className="text-[11px] text-zinc-500 truncate">
                               {action.description}
                             </p>
                           </div>
                           {action.shortcut && (
                             <kbd className="
-                              text-[10px] text-[var(--color-dossia-muted)]
-                              border border-[var(--color-dossia-border)]
+                              text-[10px] text-zinc-400
+                              border border-zinc-800 bg-zinc-900
                               px-1.5 py-0.5 rounded font-mono flex-shrink-0
                             ">
                               {action.shortcut}
                             </kbd>
                           )}
                           {isSelected && (
-                            <span className="text-xs text-[var(--color-dossia-accent)] flex-shrink-0">↵</span>
+                            <CornerDownLeft className="w-3.5 h-3.5 text-zinc-400 flex-shrink-0 stroke-[1.5]" />
                           )}
                         </button>
                       )
@@ -272,19 +282,19 @@ export function CommandPalette() {
             {/* Footer hint */}
             <div className="
               flex items-center justify-between
-              px-4 py-2 border-t border-[var(--color-dossia-border)]
-              text-[10px] text-[var(--color-dossia-muted)]
+              px-3 py-1.5 border-t border-zinc-800
+              text-[10px] text-zinc-500 bg-zinc-950/80
             ">
-              <span className="flex items-center gap-2">
-                <kbd className="border border-[var(--color-dossia-border)] px-1 rounded font-mono">↑↓</kbd>
+              <span className="flex items-center gap-1.5">
+                <kbd className="border border-zinc-800 bg-zinc-900 px-1 py-0.2 rounded font-mono">↑↓</kbd>
                 Naviguer
               </span>
-              <span className="flex items-center gap-2">
-                <kbd className="border border-[var(--color-dossia-border)] px-1 rounded font-mono">↵</kbd>
-                Sélectionner
+              <span className="flex items-center gap-1.5">
+                <kbd className="border border-zinc-800 bg-zinc-900 px-1 py-0.2 rounded font-mono">↵</kbd>
+                Exécuter
               </span>
-              <span className="flex items-center gap-2">
-                <kbd className="border border-[var(--color-dossia-border)] px-1 rounded font-mono">ESC</kbd>
+              <span className="flex items-center gap-1.5">
+                <kbd className="border border-zinc-800 bg-zinc-900 px-1 py-0.2 rounded font-mono">ESC</kbd>
                 Fermer
               </span>
             </div>

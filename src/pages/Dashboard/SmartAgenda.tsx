@@ -1,142 +1,367 @@
 /**
- * SmartAgenda — Dense, keyboard-navigable appointment table
- * Agent B scope: src/pages/Dashboard/
- *
- * Shows today's slots 08:00–18:00 with colour-coded status badges.
- * Moroccan mock data: Agadir patients, CNSS, +212 phones.
- * Language: Professional French (AGENTS.md)
+ * SmartAgenda — Dense, keyboard-navigable appointment system
+ * Refactored for Clinical Craft & Executive SaaS Design System
+ * 
+ * - Density Pass: compact enterprise spacing (py-2 px-3 text-xs, row height h-9/h-10)
+ * - Interactive Time-Grid with clear visual hierarchy:
+ *     'En attente', 'En consultation', 'Terminé'
+ * - Standardized Lucide icons: w-4 h-4 stroke-[1.5]
+ * - Strict Moroccan formats: font-mono tabular-nums for MAD, CNSS, and +212 phones
+ * - 1px hairline border system (border-zinc-800)
  */
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAgendaStore } from '@/store/useAgendaStore'
-import { MOCK_PATIENTS, type AppointmentStatus } from '@/types/moroccan'
+import { MOCK_PATIENTS, type AppointmentStatus, type Appointment } from '@/types/moroccan'
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts'
 import { useAppStore } from '@/store/useAppStore'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import {
+  CalendarPlus,
+  FileText,
+  CreditCard,
+  Clock,
+  User,
+  LayoutList,
+  LayoutGrid,
+  X,
+  CheckCircle2,
+  AlertCircle,
+  ChevronRight,
+} from 'lucide-react'
 
 // ─────────────────────────────────────────────────
-// Status badge
+// Clinical Status Badge Component
 // ─────────────────────────────────────────────────
 function StatusBadge({ status }: { status: AppointmentStatus }) {
-  const classes: Record<AppointmentStatus, string> = {
-    'Confirmé':   'status-confirme',
-    'En attente': 'status-attente',
-    'Annulé':     'status-annule',
-    'Terminé':    'status-termine',
+  switch (status) {
+    case 'En consultation':
+      return (
+        <Badge variant="consultation" className="gap-1.5 font-mono">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+          En consultation
+        </Badge>
+      )
+    case 'En attente':
+      return (
+        <Badge variant="attente" className="gap-1.5 font-mono">
+          <Clock className="w-3 h-3 stroke-[1.5]" />
+          En attente
+        </Badge>
+      )
+    case 'Terminé':
+      return (
+        <Badge variant="termine" className="gap-1.5 font-mono">
+          <CheckCircle2 className="w-3 h-3 stroke-[1.5]" />
+          Terminé
+        </Badge>
+      )
+    case 'Annulé':
+      return (
+        <Badge variant="annule" className="gap-1.5 font-mono">
+          <AlertCircle className="w-3 h-3 stroke-[1.5]" />
+          Annulé
+        </Badge>
+      )
+    default:
+      return (
+        <Badge variant="secondary" className="gap-1.5 font-mono">
+          {status}
+        </Badge>
+      )
   }
-  return (
-    <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${classes[status]}`}>
-      {status}
-    </span>
-  )
 }
 
 // ─────────────────────────────────────────────────
-// Patient detail panel
+// Patient Detail Drawer (Hairline 1px border, compact)
 // ─────────────────────────────────────────────────
-function PatientPanel({ patientId, onClose }: { patientId: string; onClose: () => void }) {
+function PatientPanel({
+  patientId,
+  selectedAppt,
+  onClose,
+}: {
+  patientId: string
+  selectedAppt?: Appointment
+  onClose: () => void
+}) {
+  const { openModal } = useAppStore()
   const patient = MOCK_PATIENTS.find((p) => p.id === patientId)
   if (!patient) return null
 
   return (
     <motion.div
-      initial={{ opacity: 0, x: 20 }}
+      initial={{ opacity: 0, x: 24 }}
       animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: 20 }}
-      transition={{ duration: 0.2, ease: 'easeOut' }}
+      exit={{ opacity: 0, x: 24 }}
+      transition={{ duration: 0.18, ease: 'easeOut' }}
       className="
-        fixed right-0 top-0 bottom-0 z-40 w-80
-        glass border-l border-[var(--color-dossia-border)]
-        flex flex-col overflow-hidden
+        fixed right-0 top-12 bottom-0 z-40 w-84
+        bg-zinc-950 border-l border-zinc-800
+        flex flex-col overflow-hidden shadow-xl
       "
     >
-      <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--color-dossia-border)]">
-        <h3 className="font-semibold text-sm text-[var(--color-dossia-text)]">
-          Dossier Patient
-        </h3>
+      {/* Header */}
+      <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-800">
+        <div className="flex items-center gap-2">
+          <User className="w-4 h-4 text-zinc-400 stroke-[1.5]" />
+          <h3 className="font-semibold text-xs text-zinc-100 tracking-tight">
+            Fiche Patient &amp; Acte
+          </h3>
+        </div>
         <button
           onClick={onClose}
           id="close-patient-panel"
-          className="text-[var(--color-dossia-muted)] hover:text-[var(--color-dossia-text)] text-xl leading-none"
+          className="rounded-xs p-1 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900 transition-colors cursor-pointer"
         >
-          ×
+          <X className="w-4 h-4 stroke-[1.5]" />
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-5 space-y-4">
-        {/* Avatar */}
-        <div className="flex items-center gap-3">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        {/* Patient Identity */}
+        <div className="flex items-center gap-3 p-3 rounded-md border border-zinc-800 bg-zinc-900/40">
           <div className="
-            w-12 h-12 rounded-full flex items-center justify-center text-xl
-            bg-[var(--color-dossia-accent)]/10 text-[var(--color-dossia-accent)]
-            border border-[var(--color-dossia-accent)]/20
+            w-9 h-9 rounded-md flex items-center justify-center text-xs font-semibold
+            bg-zinc-800 text-zinc-200 border border-zinc-700/60 font-mono
           ">
             {patient.nomComplet.charAt(0)}
           </div>
-          <div>
-            <p className="font-semibold text-sm text-[var(--color-dossia-text)]">
+          <div className="min-w-0 flex-1">
+            <p className="font-semibold text-xs text-zinc-100 truncate">
               {patient.nomComplet}
             </p>
-            <p className="text-xs text-[var(--color-dossia-muted)]">{patient.ville}</p>
+            <p className="text-[11px] font-mono tabular-nums text-zinc-400 truncate">
+              {patient.telephone}
+            </p>
           </div>
+          <Badge variant="outline" className="font-mono text-[10px]">
+            {patient.assurance}
+          </Badge>
         </div>
 
-        {/* Info rows */}
-        {[
-          { label: 'Téléphone', value: patient.telephone },
-          { label: 'Naissance', value: new Date(patient.dateNaissance).toLocaleDateString('fr-MA') },
-          { label: 'Adresse', value: patient.adresse },
-          { label: 'Assurance', value: patient.assurance },
-          patient.cnss ? { label: 'N° CNSS', value: patient.cnss } : null,
-          patient.amo  ? { label: 'N° AMO',  value: patient.amo  } : null,
-        ]
-          .filter(Boolean)
-          .map((row) => (
-            <div key={row!.label} className="border-b border-[var(--color-dossia-border)]/50 pb-3">
-              <p className="text-[10px] uppercase tracking-wider text-[var(--color-dossia-muted)] mb-0.5">
-                {row!.label}
-              </p>
-              <p className="text-sm text-[var(--color-dossia-text)]">{row!.value}</p>
+        {/* Current Consultation State */}
+        {selectedAppt && (
+          <div className="rounded-md border border-zinc-800 bg-zinc-900/30 p-3 space-y-1.5">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] uppercase font-semibold text-zinc-500 tracking-wider">
+                Séance du jour
+              </span>
+              <StatusBadge status={selectedAppt.status} />
             </div>
-          ))}
+            <div className="flex items-baseline gap-2 pt-1">
+              <span className="font-mono text-xs font-semibold tabular-nums text-emerald-400">
+                {selectedAppt.heureDebut} — {selectedAppt.heureFin}
+              </span>
+            </div>
+            <p className="text-xs text-zinc-300 font-medium">
+              {selectedAppt.motif}
+            </p>
+          </div>
+        )}
+
+        {/* Clinical Info List */}
+        <div className="rounded-md border border-zinc-800 divide-y divide-zinc-800/80 bg-zinc-900/20 text-xs">
+          <div className="px-3 py-2 flex items-center justify-between">
+            <span className="text-zinc-500 text-[11px]">Date Naissance</span>
+            <span className="font-mono tabular-nums text-zinc-300 text-[11px]">
+              {new Date(patient.dateNaissance).toLocaleDateString('fr-MA')}
+            </span>
+          </div>
+          <div className="px-3 py-2 flex items-center justify-between">
+            <span className="text-zinc-500 text-[11px]">Ville</span>
+            <span className="text-zinc-300 text-[11px]">{patient.ville}</span>
+          </div>
+          <div className="px-3 py-2 flex items-center justify-between">
+            <span className="text-zinc-500 text-[11px]">N° CNSS</span>
+            <span className="font-mono tabular-nums text-zinc-200 text-[11px]">
+              {patient.cnss ?? 'Non renseigné'}
+            </span>
+          </div>
+          <div className="px-3 py-2 flex items-center justify-between">
+            <span className="text-zinc-500 text-[11px]">N° AMO</span>
+            <span className="font-mono tabular-nums text-zinc-200 text-[11px]">
+              {patient.amo ?? '—'}
+            </span>
+          </div>
+          <div className="px-3 py-2 flex items-center justify-between">
+            <span className="text-zinc-500 text-[11px]">Honoraires consultation</span>
+            <span className="font-mono tabular-nums font-semibold text-zinc-100 text-[11px]">
+              300.00 MAD
+            </span>
+          </div>
+        </div>
       </div>
 
-      {/* Actions */}
-      <div className="p-4 border-t border-[var(--color-dossia-border)] flex flex-col gap-2">
-        <button
+      {/* Action shortcuts */}
+      <div className="p-3 border-t border-zinc-800 space-y-1.5 bg-zinc-950">
+        <Button
           id="generate-cnss-btn"
-          className="
-            w-full py-2 rounded-lg text-xs font-medium
-            bg-[var(--color-dossia-accent)]/10
-            text-[var(--color-dossia-accent)]
-            border border-[var(--color-dossia-accent)]/20
-            hover:bg-[var(--color-dossia-accent)]/20 transition-colors
-          "
+          size="sm"
+          variant="outline"
+          className="w-full justify-start text-xs border-zinc-800 hover:bg-zinc-900"
+          onClick={() => openModal('generate-cnss')}
         >
-          📄 Générer Feuille CNSS
-        </button>
-        <button
+          <FileText className="w-3.5 h-3.5 text-emerald-400 stroke-[1.5]" />
+          <span>Éditer Feuille de Soins CNSS</span>
+        </Button>
+        <Button
           id="add-payment-patient-btn"
-          className="
-            w-full py-2 rounded-lg text-xs font-medium
-            glass border border-[var(--color-dossia-border)]
-            text-[var(--color-dossia-muted)]
-            hover:text-[var(--color-dossia-text)] transition-colors
-          "
+          size="sm"
+          className="w-full justify-start text-xs bg-zinc-100 text-zinc-950 hover:bg-zinc-200"
+          onClick={() => openModal('add-payment')}
         >
-          💰 Ajouter un Paiement
-        </button>
+          <CreditCard className="w-3.5 h-3.5 stroke-[1.5]" />
+          <span>Encaisser Honoraires (MAD)</span>
+        </Button>
       </div>
     </motion.div>
   )
 }
 
 // ─────────────────────────────────────────────────
-// SmartAgenda main component
+// Interactive Time-Grid Component
+// ─────────────────────────────────────────────────
+const TIME_SLOTS = [
+  '08:00', '08:30', '09:00', '09:30', '10:00', '10:30',
+  '11:00', '11:30', '12:00', '14:00', '14:30', '15:00',
+  '15:30', '16:00', '16:30', '17:00', '17:30',
+]
+
+function TimeGridView({
+  appointments,
+  selectedId,
+  onSelect,
+}: {
+  appointments: Appointment[]
+  selectedId: string | null
+  onSelect: (id: string | null) => void
+}) {
+  const { openModal } = useAppStore()
+
+  return (
+    <div className="p-4 space-y-2">
+      <div className="flex items-center justify-between pb-2 border-b border-zinc-800 text-xs text-zinc-400">
+        <div className="flex items-center gap-3">
+          <span className="flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            En consultation (Au fauteuil)
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-amber-400" />
+            En attente (Salle d&apos;attente)
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-zinc-500" />
+            Terminé (Facturé)
+          </span>
+        </div>
+        <span className="font-mono text-[11px] text-zinc-500">
+          Créneaux de 30 min · Agadir
+        </span>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2.5 pt-2">
+        {TIME_SLOTS.map((slot) => {
+          const appt = appointments.find((a) => a.heureDebut === slot)
+          const patient = appt ? MOCK_PATIENTS.find((p) => p.id === appt.patientId) : null
+          const isSelected = appt && appt.id === selectedId
+
+          if (!appt) {
+            return (
+              <div
+                key={slot}
+                onClick={() => openModal('new-consultation')}
+                className="
+                  group h-20 rounded-md border border-dashed border-zinc-800/80
+                  p-2.5 flex flex-col justify-between
+                  hover:border-zinc-700 hover:bg-zinc-900/30 transition-colors cursor-pointer
+                "
+              >
+                <div className="flex items-center justify-between">
+                  <span className="font-mono text-xs text-zinc-500 tabular-nums">
+                    {slot}
+                  </span>
+                  <span className="text-[10px] text-zinc-600 group-hover:text-zinc-400 transition-colors">
+                    + Dispo
+                  </span>
+                </div>
+                <span className="text-[11px] text-zinc-600 group-hover:text-zinc-400 transition-colors">
+                  Créneau libre
+                </span>
+              </div>
+            )
+          }
+
+          // Visual state styling
+          const isConsultation = appt.status === 'En consultation'
+          const isAttente = appt.status === 'En attente'
+          const isTermine = appt.status === 'Terminé'
+
+          let cardBorder = 'border-zinc-800 bg-zinc-900/40'
+          if (isConsultation) {
+            cardBorder = 'border-emerald-500/40 bg-emerald-950/20 shadow-xs'
+          } else if (isAttente) {
+            cardBorder = 'border-amber-500/30 bg-amber-950/15'
+          } else if (isTermine) {
+            cardBorder = 'border-zinc-800/70 bg-zinc-900/20 opacity-75'
+          }
+
+          if (isSelected) {
+            cardBorder += ' ring-1 ring-zinc-500'
+          }
+
+          return (
+            <div
+              key={slot}
+              onClick={() => onSelect(isSelected ? null : appt.id)}
+              className={`
+                h-20 rounded-md border p-2.5 flex flex-col justify-between
+                transition-all cursor-pointer ${cardBorder}
+                hover:border-zinc-600
+              `}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
+                  <span className="font-mono text-xs font-semibold tabular-nums text-zinc-200">
+                    {appt.heureDebut}
+                  </span>
+                  <span className="font-mono text-[10px] text-zinc-500 tabular-nums">
+                    — {appt.heureFin}
+                  </span>
+                </div>
+                <StatusBadge status={appt.status} />
+              </div>
+
+              <div className="min-w-0">
+                <div className="flex items-center justify-between">
+                  <p className="font-medium text-xs text-zinc-100 truncate">
+                    {patient?.nomComplet ?? 'Patient'}
+                  </p>
+                  <span className="font-mono text-[10px] text-zinc-500">
+                    {patient?.assurance}
+                  </span>
+                </div>
+                <p className="text-[11px] text-zinc-400 truncate">
+                  {appt.motif}
+                </p>
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────
+// SmartAgenda Main View
 // ─────────────────────────────────────────────────
 export function SmartAgenda() {
   const { appointments, selectedAppointmentId, selectAppointment } = useAgendaStore()
   const { openCommandPalette, openModal } = useAppStore()
-  const [hoveredId, setHoveredId] = useState<string | null>(null)
+  const [viewMode, setViewMode] = useState<'table' | 'grid'>('table')
+  const [statusFilter, setStatusFilter] = useState<string>('Tous')
 
   const today = new Date()
   const todayStr = today.toISOString().split('T')[0]
@@ -146,211 +371,268 @@ export function SmartAgenda() {
 
   const todayAppointments = appointments.filter((a) => a.date === todayStr)
 
-  // ── Keyboard shortcuts (within this view) ───
+  const filteredAppointments = todayAppointments.filter((a) => {
+    if (statusFilter === 'Tous') return true
+    return a.status === statusFilter
+  })
+
+  // Keyboard navigation
   useKeyboardShortcuts([
     { combo: 'ctrl+k', action: openCommandPalette },
     { combo: 'alt+n',  action: () => openModal('new-consultation') },
     { combo: 'escape', action: () => selectAppointment(null), allowInInput: true },
   ])
 
-  // ── Get patient name ─────────────────────────
-  const getPatient = (id: string) =>
-    MOCK_PATIENTS.find((p) => p.id === id)
-
-  // ── Stats summary ────────────────────────────
   const stats = {
-    total:    todayAppointments.length,
-    confirme: todayAppointments.filter((a) => a.status === 'Confirmé').length,
-    attente:  todayAppointments.filter((a) => a.status === 'En attente').length,
-    annule:   todayAppointments.filter((a) => a.status === 'Annulé').length,
+    total:        todayAppointments.length,
+    consultation: todayAppointments.filter((a) => a.status === 'En consultation').length,
+    attente:      todayAppointments.filter((a) => a.status === 'En attente').length,
+    termine:      todayAppointments.filter((a) => a.status === 'Terminé').length,
   }
 
+  const selectedAppt = appointments.find((a) => a.id === selectedAppointmentId)
+
   return (
-    <div className="flex-1 overflow-hidden flex flex-col">
-      {/* ── Header ────────────────────────────── */}
-      <div className="px-6 py-5 border-b border-[var(--color-dossia-border)] flex items-center justify-between flex-shrink-0">
-        <div>
-          <h1 className="text-lg font-bold text-[var(--color-dossia-text)]" style={{ fontFamily: 'var(--font-display)' }}>
-            Agenda du Jour
-          </h1>
-          <p className="text-xs text-[var(--color-dossia-muted)] capitalize mt-0.5">{todayLabel}</p>
+    <div className="flex-1 overflow-hidden flex flex-col bg-zinc-950">
+      {/* ── Enterprise Header (Compact, 1px border) ──────────────── */}
+      <div className="px-4 py-2.5 border-b border-zinc-800 flex items-center justify-between flex-shrink-0 bg-zinc-950">
+        <div className="flex items-center gap-3">
+          <div>
+            <div className="flex items-center gap-2">
+              <h1 className="text-sm font-semibold text-zinc-100 tracking-tight">
+                Agenda du Jour
+              </h1>
+              <span className="font-mono text-[11px] text-zinc-500">
+                · {stats.total} consultations
+              </span>
+            </div>
+            <p className="text-[11px] font-mono text-zinc-400 capitalize">
+              {todayLabel}
+            </p>
+          </div>
         </div>
 
-        <div className="flex items-center gap-3">
-          {/* Stat pills */}
-          <div className="hidden md:flex items-center gap-2">
-            <span className="px-2.5 py-1 rounded-full text-xs font-medium status-confirme">
-              {stats.confirme} Confirmés
-            </span>
-            <span className="px-2.5 py-1 rounded-full text-xs font-medium status-attente">
-              {stats.attente} En attente
-            </span>
-            {stats.annule > 0 && (
-              <span className="px-2.5 py-1 rounded-full text-xs font-medium status-annule">
-                {stats.annule} Annulés
-              </span>
-            )}
+        {/* Center: status summary counts */}
+        <div className="hidden lg:flex items-center gap-1.5">
+          <button
+            onClick={() => setStatusFilter('Tous')}
+            className={`px-2 py-0.5 rounded text-[11px] font-mono cursor-pointer transition-colors ${
+              statusFilter === 'Tous'
+                ? 'bg-zinc-800 text-zinc-100 border border-zinc-700'
+                : 'text-zinc-500 hover:text-zinc-300'
+            }`}
+          >
+            Tous ({stats.total})
+          </button>
+          <button
+            onClick={() => setStatusFilter('En consultation')}
+            className={`px-2 py-0.5 rounded text-[11px] font-mono cursor-pointer transition-colors ${
+              statusFilter === 'En consultation'
+                ? 'bg-emerald-950/60 text-emerald-400 border border-emerald-500/30'
+                : 'text-emerald-500/70 hover:text-emerald-400'
+            }`}
+          >
+            En consultation ({stats.consultation})
+          </button>
+          <button
+            onClick={() => setStatusFilter('En attente')}
+            className={`px-2 py-0.5 rounded text-[11px] font-mono cursor-pointer transition-colors ${
+              statusFilter === 'En attente'
+                ? 'bg-amber-950/60 text-amber-400 border border-amber-500/30'
+                : 'text-amber-500/70 hover:text-amber-400'
+            }`}
+          >
+            En attente ({stats.attente})
+          </button>
+          <button
+            onClick={() => setStatusFilter('Terminé')}
+            className={`px-2 py-0.5 rounded text-[11px] font-mono cursor-pointer transition-colors ${
+              statusFilter === 'Terminé'
+                ? 'bg-zinc-800 text-zinc-300 border border-zinc-700'
+                : 'text-zinc-500 hover:text-zinc-300'
+            }`}
+          >
+            Terminés ({stats.termine})
+          </button>
+        </div>
+
+        {/* Right: Controls & Actions */}
+        <div className="flex items-center gap-2">
+          {/* View toggle */}
+          <div className="flex items-center rounded-md border border-zinc-800 p-0.5 bg-zinc-900/60">
+            <button
+              onClick={() => setViewMode('table')}
+              title="Vue Tableau Compact"
+              className={`p-1 rounded text-xs transition-colors cursor-pointer ${
+                viewMode === 'table' ? 'bg-zinc-800 text-zinc-100 shadow-xs' : 'text-zinc-500 hover:text-zinc-300'
+              }`}
+            >
+              <LayoutList className="w-3.5 h-3.5 stroke-[1.5]" />
+            </button>
+            <button
+              onClick={() => setViewMode('grid')}
+              title="Grille Horaire (Time-Grid)"
+              className={`p-1 rounded text-xs transition-colors cursor-pointer ${
+                viewMode === 'grid' ? 'bg-zinc-800 text-zinc-100 shadow-xs' : 'text-zinc-500 hover:text-zinc-300'
+              }`}
+            >
+              <LayoutGrid className="w-3.5 h-3.5 stroke-[1.5]" />
+            </button>
           </div>
 
-          {/* New appointment button */}
-          <motion.button
+          {/* New consultation button */}
+          <Button
             id="new-appointment-btn"
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.97 }}
+            size="sm"
             onClick={() => openModal('new-consultation')}
-            className="
-              flex items-center gap-2 px-4 py-2 rounded-lg
-              bg-[var(--color-dossia-accent)] text-[var(--color-dossia-bg)]
-              text-sm font-semibold hover:opacity-90 transition-opacity
-            "
+            className="gap-1.5 bg-zinc-100 text-zinc-950 hover:bg-zinc-200 border-0"
           >
-            <span>+</span>
-            Nouveau RDV
-            <kbd className="
-              text-[10px] bg-black/20 px-1.5 py-0.5 rounded font-mono
-            ">Alt+N</kbd>
-          </motion.button>
+            <CalendarPlus className="w-3.5 h-3.5 stroke-[1.5]" />
+            <span>Nouveau RDV</span>
+            <kbd className="text-[10px] font-mono bg-zinc-200 px-1 py-0.2 rounded text-zinc-800">
+              Alt+N
+            </kbd>
+          </Button>
         </div>
       </div>
 
-      {/* ── Agenda table ──────────────────────── */}
+      {/* ── Main View (Table vs Grid) ──────────────── */}
       <div className="flex-1 overflow-y-auto">
-        {todayAppointments.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-64 text-[var(--color-dossia-muted)]">
-            <span className="text-4xl mb-3">📅</span>
-            <p className="text-sm">Aucun rendez-vous aujourd&apos;hui</p>
-            <button
+        {viewMode === 'grid' ? (
+          <TimeGridView
+            appointments={todayAppointments}
+            selectedId={selectedAppointmentId}
+            onSelect={selectAppointment}
+          />
+        ) : filteredAppointments.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-64 text-zinc-500">
+            <Clock className="w-8 h-8 mb-2 text-zinc-600 stroke-[1.5]" />
+            <p className="text-xs">Aucun rendez-vous trouvé</p>
+            <Button
+              variant="outline"
+              size="sm"
               onClick={() => openModal('new-consultation')}
-              className="mt-4 text-[var(--color-dossia-accent)] text-sm hover:underline"
+              className="mt-3 text-xs"
             >
-              Créer un rendez-vous →
-            </button>
+              Planifier un rendez-vous
+            </Button>
           </div>
         ) : (
-          <table className="w-full text-sm">
+          <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="border-b border-[var(--color-dossia-border)]">
-                {['Heure', 'Patient', 'Motif', 'Assurance', 'Statut', 'Actions'].map((h) => (
-                  <th
-                    key={h}
-                    className="
-                      px-4 py-3 text-left text-[10px] uppercase tracking-widest
-                      text-[var(--color-dossia-muted)] font-semibold whitespace-nowrap
-                    "
-                  >
-                    {h}
-                  </th>
-                ))}
+              <tr className="border-b border-zinc-800 bg-zinc-900/50 h-8">
+                <th className="py-2 px-3 text-[11px] font-medium text-zinc-400 uppercase tracking-wider w-28 font-mono">
+                  Heure
+                </th>
+                <th className="py-2 px-3 text-[11px] font-medium text-zinc-400 uppercase tracking-wider">
+                  Patient &amp; Contact
+                </th>
+                <th className="py-2 px-3 text-[11px] font-medium text-zinc-400 uppercase tracking-wider">
+                  Motif consultation
+                </th>
+                <th className="py-2 px-3 text-[11px] font-medium text-zinc-400 uppercase tracking-wider w-24">
+                  Couverture
+                </th>
+                <th className="py-2 px-3 text-[11px] font-medium text-zinc-400 uppercase tracking-wider w-36">
+                  Statut
+                </th>
+                <th className="py-2 px-3 text-[11px] font-medium text-zinc-400 uppercase tracking-wider text-right w-24">
+                  Actions
+                </th>
               </tr>
             </thead>
-            <tbody>
-              {todayAppointments.map((appt) => {
-                const patient  = getPatient(appt.patientId)
+            <tbody className="divide-y divide-zinc-800/60">
+              {filteredAppointments.map((appt) => {
+                const patient = MOCK_PATIENTS.find((p) => p.id === appt.patientId)
                 const isSelected = selectedAppointmentId === appt.id
-                const isHovered  = hoveredId === appt.id
 
                 return (
-                  <motion.tr
+                  <tr
                     key={appt.id}
-                    initial={{ opacity: 0, y: 4 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    onClick={() =>
-                      selectAppointment(isSelected ? null : appt.id)
-                    }
-                    onMouseEnter={() => setHoveredId(appt.id)}
-                    onMouseLeave={() => setHoveredId(null)}
+                    onClick={() => selectAppointment(isSelected ? null : appt.id)}
                     className={`
-                      border-b border-[var(--color-dossia-border)]/50 cursor-pointer
-                      transition-colors duration-100
-                      ${isSelected || isHovered
-                        ? 'bg-[var(--color-dossia-surface2)]'
-                        : 'hover:bg-[var(--color-dossia-surface)]'
+                      h-10 transition-colors cursor-pointer group text-xs
+                      ${isSelected
+                        ? 'bg-zinc-900/90'
+                        : 'hover:bg-zinc-900/40'
                       }
                     `}
                   >
-                    {/* Heure */}
-                    <td className="px-4 py-3 whitespace-nowrap">
-                      <div className="flex flex-col">
-                        <span className="font-mono text-xs font-semibold text-[var(--color-dossia-accent)]">
+                    {/* Heure (font-mono tabular-nums) */}
+                    <td className="py-2 px-3 whitespace-nowrap">
+                      <div className="flex items-baseline gap-1 font-mono tabular-nums">
+                        <span className="font-semibold text-zinc-200">
                           {appt.heureDebut}
                         </span>
-                        <span className="font-mono text-[10px] text-[var(--color-dossia-muted)]">
+                        <span className="text-[10px] text-zinc-500">
                           {appt.heureFin}
                         </span>
                       </div>
                     </td>
 
                     {/* Patient */}
-                    <td className="px-4 py-3">
+                    <td className="py-2 px-3">
                       <div className="flex items-center gap-2">
-                        <div className="
-                          w-7 h-7 rounded-full flex-shrink-0 flex items-center justify-center text-xs
-                          bg-[var(--color-dossia-accent)]/10 text-[var(--color-dossia-accent)]
-                        ">
+                        <div className="w-5 h-5 rounded flex-shrink-0 flex items-center justify-center text-[10px] font-mono bg-zinc-800 border border-zinc-700/60 text-zinc-300">
                           {patient?.nomComplet.charAt(0) ?? '?'}
                         </div>
                         <div className="min-w-0">
-                          <p className="font-medium text-[var(--color-dossia-text)] truncate text-xs">
+                          <span className="font-medium text-zinc-200 truncate block">
                             {patient?.nomComplet ?? 'Inconnu'}
-                          </p>
-                          <p className="text-[10px] text-[var(--color-dossia-muted)] truncate">
+                          </span>
+                          <span className="text-[10px] font-mono tabular-nums text-zinc-500 truncate block">
                             {patient?.telephone}
-                          </p>
+                          </span>
                         </div>
                       </div>
                     </td>
 
                     {/* Motif */}
-                    <td className="px-4 py-3 text-xs text-[var(--color-dossia-text)] max-w-[160px] truncate">
+                    <td className="py-2 px-3 text-zinc-300 truncate max-w-[200px]">
                       {appt.motif}
                     </td>
 
-                    {/* Assurance */}
-                    <td className="px-4 py-3">
-                      <span className="text-[10px] text-[var(--color-dossia-muted)] font-mono">
-                        {patient?.assurance ?? '—'}
+                    {/* Couverture CNSS / AMO */}
+                    <td className="py-2 px-3">
+                      <span className="font-mono text-[11px] text-zinc-400">
+                        {patient?.assurance ?? 'Privé'}
                       </span>
                     </td>
 
                     {/* Statut */}
-                    <td className="px-4 py-3">
+                    <td className="py-2 px-3">
                       <StatusBadge status={appt.status} />
                     </td>
 
-                    {/* Actions */}
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100" style={{ opacity: isHovered ? 1 : 0 }}>
+                    {/* Actions compact */}
+                    <td className="py-2 px-3 text-right">
+                      <div className="flex items-center justify-end gap-1">
                         <button
                           id={`appt-cnss-${appt.id}`}
-                          onClick={(e) => { e.stopPropagation(); openModal('generate-cnss') }}
-                          title="Générer CNSS"
-                          className="
-                            p-1.5 rounded text-[10px]
-                            text-[var(--color-dossia-muted)]
-                            hover:text-[var(--color-dossia-accent)]
-                            hover:bg-[var(--color-dossia-accent)]/10
-                            transition-colors
-                          "
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            openModal('generate-cnss')
+                          }}
+                          title="Feuille CNSS"
+                          className="p-1 rounded text-zinc-500 hover:text-emerald-400 hover:bg-zinc-800 transition-colors cursor-pointer"
                         >
-                          📄
+                          <FileText className="w-3.5 h-3.5 stroke-[1.5]" />
                         </button>
                         <button
                           id={`appt-pay-${appt.id}`}
-                          onClick={(e) => { e.stopPropagation(); openModal('add-payment') }}
-                          title="Paiement"
-                          className="
-                            p-1.5 rounded text-[10px]
-                            text-[var(--color-dossia-muted)]
-                            hover:text-[var(--color-dossia-accent)]
-                            hover:bg-[var(--color-dossia-accent)]/10
-                            transition-colors
-                          "
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            openModal('add-payment')
+                          }}
+                          title="Encaisser (MAD)"
+                          className="p-1 rounded text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800 transition-colors cursor-pointer"
                         >
-                          💰
+                          <CreditCard className="w-3.5 h-3.5 stroke-[1.5]" />
                         </button>
+                        <ChevronRight className="w-3.5 h-3.5 text-zinc-600 group-hover:text-zinc-400 transition-colors" />
                       </div>
                     </td>
-                  </motion.tr>
+                  </tr>
                 )
               })}
             </tbody>
@@ -358,18 +640,16 @@ export function SmartAgenda() {
         )}
       </div>
 
-      {/* ── Patient detail panel ──────────────── */}
+      {/* ── Slide-in Patient Detail Drawer ──────── */}
       <AnimatePresence>
-        {selectedAppointmentId && (() => {
-          const appt = appointments.find((a) => a.id === selectedAppointmentId)
-          return appt ? (
-            <PatientPanel
-              key={appt.patientId}
-              patientId={appt.patientId}
-              onClose={() => selectAppointment(null)}
-            />
-          ) : null
-        })()}
+        {selectedAppointmentId && selectedAppt && (
+          <PatientPanel
+            key={selectedAppt.patientId}
+            patientId={selectedAppt.patientId}
+            selectedAppt={selectedAppt}
+            onClose={() => selectAppointment(null)}
+          />
+        )}
       </AnimatePresence>
     </div>
   )

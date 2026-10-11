@@ -1,9 +1,11 @@
 /**
  * MedicalNetworkCanvas — R3F Three.js synaptic network background
- * Agent A scope: src/pages/Landing/
- *
- * Wrapped in React.lazy() from Landing/index.tsx — NEVER import directly.
- * Respects prefers-reduced-motion.
+ * Refactored for Clinical Craft & Executive SaaS Design System
+ * 
+ * - Desaturated, surgical dark-mode aesthetic
+ * - Low opacity nodes (0.25) & hairline lines (0.05)
+ * - Damped cursor parallax (0.02 lerp)
+ * - pointer-events-none container ensuring zero scroll interference
  */
 import { useRef, useMemo, useEffect } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
@@ -24,23 +26,23 @@ function NeuralNetwork({ mouse, reducedMotion }: NeuralNetworkProps) {
 
   // ── Generate node positions ──────────────────
   const { positions, linePositions, nodeCount } = useMemo(() => {
-    const count = 80
-    const range = 5.5
+    const count = 70
+    const range = 5.0
     const positions = new Float32Array(count * 3)
     const nodeVecs: THREE.Vector3[] = []
 
     for (let i = 0; i < count; i++) {
       const x = (Math.random() - 0.5) * range * 2
       const y = (Math.random() - 0.5) * range * 2
-      const z = (Math.random() - 0.5) * range * 0.8
+      const z = (Math.random() - 0.5) * range * 0.7
       positions[i * 3]     = x
       positions[i * 3 + 1] = y
       positions[i * 3 + 2] = z
       nodeVecs.push(new THREE.Vector3(x, y, z))
     }
 
-    // Connect nearby nodes
-    const maxDist = 2.4
+    // Connect nearby nodes with delicate synaptic lines
+    const maxDist = 2.2
     const linePos: number[] = []
     for (let a = 0; a < count; a++) {
       for (let b = a + 1; b < count; b++) {
@@ -73,67 +75,66 @@ function NeuralNetwork({ mouse, reducedMotion }: NeuralNetworkProps) {
     return geo
   }, [linePositions])
 
-  // ── Animation loop ───────────────────────────
+  // ── Subtle Animation loop ────────────────────
   useFrame((state) => {
     if (!groupRef.current || reducedMotion) return
 
     const t = state.clock.elapsedTime
 
-    // Mouse-driven subtle rotation
+    // Smooth, damped cursor parallax
     const nx = mouse.current[0] / size.width  - 0.5
     const ny = mouse.current[1] / size.height - 0.5
     groupRef.current.rotation.x = THREE.MathUtils.lerp(
-      groupRef.current.rotation.x, ny * 0.12, 0.04
+      groupRef.current.rotation.x, ny * 0.08, 0.02
     )
     groupRef.current.rotation.y = THREE.MathUtils.lerp(
-      groupRef.current.rotation.y, nx * 0.12, 0.04
+      groupRef.current.rotation.y, nx * 0.08, 0.02
     )
 
-    // Gentle auto-drift
-    groupRef.current.rotation.z = Math.sin(t * 0.05) * 0.03
+    // Gentle drift
+    groupRef.current.rotation.z = Math.sin(t * 0.03) * 0.015
 
-    // Pulsing node opacity
+    // Very subtle breathing pulse
     if (pointsRef.current) {
       const mat = pointsRef.current.material as THREE.PointsMaterial
-      mat.opacity = 0.55 + Math.sin(t * 0.8) * 0.2
+      mat.opacity = 0.22 + Math.sin(t * 0.5) * 0.06
     }
   })
 
-  // Warn-free: nodeCount is used to satisfy linter
   void nodeCount
 
   return (
     <group ref={groupRef}>
-      {/* Glowing nodes */}
+      {/* Primary desaturated clinical nodes */}
       <points ref={pointsRef} geometry={pointsGeometry}>
         <pointsMaterial
-          color="#34d399"
-          size={0.055}
+          color="#38bdf8"
+          size={0.045}
           sizeAttenuation
           transparent
-          opacity={0.75}
+          opacity={0.25}
           depthWrite={false}
         />
       </points>
 
-      {/* Connection lines */}
+      {/* Hairline desaturated synaptic connection lines */}
       <lineSegments geometry={linesGeometry}>
         <lineBasicMaterial
-          color="#2dd4bf"
+          color="#52525b"
           transparent
-          opacity={0.12}
+          opacity={0.06}
           depthWrite={false}
         />
       </lineSegments>
 
-      {/* Larger accent nodes — every 5th node */}
+      {/* Subtle secondary zinc accents */}
       <points geometry={pointsGeometry}>
         <pointsMaterial
-          color="#6ee7b7"
-          size={0.11}
+          color="#a1a1aa"
+          size={0.08}
           sizeAttenuation
           transparent
-          opacity={0.25}
+          opacity={0.12}
           depthWrite={false}
         />
       </points>
@@ -160,28 +161,27 @@ export function MedicalNetworkCanvas() {
   }, [])
 
   return (
-    <div className="absolute inset-0 z-0" aria-hidden="true">
+    <div className="absolute inset-0 z-0 pointer-events-none" aria-hidden="true">
       <Canvas
-        camera={{ position: [0, 0, 9], fov: 58 }}
+        camera={{ position: [0, 0, 9], fov: 56 }}
         gl={{
           antialias: true,
           alpha: true,
           powerPreference: 'high-performance',
         }}
         dpr={Math.min(window.devicePixelRatio, 2)}
-        style={{ background: 'transparent' }}
+        style={{ background: 'transparent', pointerEvents: 'none' }}
       >
-        {/* Subtle ambient fill */}
-        <ambientLight intensity={0.3} />
+        <ambientLight intensity={0.2} />
         <NeuralNetwork mouse={mouse} reducedMotion={reducedMotion.current} />
       </Canvas>
 
-      {/* Radial vignette — makes center text readable */}
+      {/* Dark vignette blending cleanly into zinc-950 */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
           background:
-            'radial-gradient(ellipse 70% 70% at 50% 50%, rgba(10,10,15,0.2) 0%, rgba(10,10,15,0.75) 100%)',
+            'radial-gradient(ellipse 65% 65% at 50% 50%, rgba(9,9,11,0.4) 0%, rgba(9,9,11,0.95) 100%)',
         }}
       />
     </div>

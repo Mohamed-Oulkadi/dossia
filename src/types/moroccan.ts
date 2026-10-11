@@ -29,7 +29,7 @@ export type MAD = number;
 export type PaymentMethod = 'Espèces' | 'Chèque' | 'TPE';
 
 /** Appointment status */
-export type AppointmentStatus = 'Confirmé' | 'En attente' | 'Annulé' | 'Terminé';
+export type AppointmentStatus = 'Confirmé' | 'En attente' | 'En consultation' | 'Terminé' | 'Annulé';
 
 /** Insurance type */
 export type InsuranceType = 'CNSS' | 'AMO' | 'RAMED' | 'Privé' | 'Aucun';
