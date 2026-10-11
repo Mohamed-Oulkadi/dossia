@@ -9,21 +9,16 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useAppStore } from '@/store/useAppStore'
-import { useAgendaStore } from '@/store/useAgendaStore'
-import { MOCK_PATIENTS, MOCK_DOCTOR, type Appointment, type PaymentMethod, type InsuranceType } from '@/types/moroccan'
+import { MOCK_PATIENTS, MOCK_DOCTOR, type PaymentMethod, type InsuranceType } from '@/types/moroccan'
 import { FileText, Printer, CheckCircle2, Loader2 } from 'lucide-react'
 import { useCreatePatient } from '@/hooks/use-patients'
+import { NewAppointmentModal } from './NewAppointmentModal'
 
 export function ActionModals() {
   const { activeModal, closeModal } = useAppStore()
-  const { addAppointment } = useAgendaStore()
-
-  // New Consultation form state
-  const [selectedPatientId, setSelectedPatientId] = useState(MOCK_PATIENTS[0]?.id || '')
-  const [timeSlot, setTimeSlot] = useState('11:30')
-  const [motif, setMotif] = useState('Consultation de suivi')
 
   // Payment form state
+  const [selectedPatientId, setSelectedPatientId] = useState(MOCK_PATIENTS[0]?.id || '')
   const [paymentAmount, setPaymentAmount] = useState('300')
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('Espèces')
   const [paymentRef, setPaymentRef] = useState('')
@@ -46,23 +41,7 @@ export function ActionModals() {
     setTimeout(() => setToastMessage(null), 3000)
   }
 
-  const handleCreateAppointment = (e: React.FormEvent) => {
-    e.preventDefault()
-    const today = new Date().toISOString().split('T')[0]
-    const newAppt: Appointment = {
-      id: `appt-${Date.now()}`,
-      patientId: selectedPatientId,
-      doctorId: MOCK_DOCTOR.id,
-      date: today,
-      heureDebut: timeSlot,
-      heureFin: `${parseInt(timeSlot.split(':')[0])}:${parseInt(timeSlot.split(':')[1]) + 30}`,
-      motif: motif,
-      status: 'En attente',
-    }
-    addAppointment(newAppt)
-    showToast('Rendez-vous programmé avec succès')
-    closeModal()
-  }
+
 
   const handleRecordPayment = (e: React.FormEvent) => {
     e.preventDefault()
@@ -80,81 +59,8 @@ export function ActionModals() {
         </div>
       )}
 
-      {/* ── Modal: Nouvelle Consultation ── */}
-      <Dialog open={activeModal === 'new-consultation'} onOpenChange={(open) => !open && closeModal()}>
-        <DialogContent className="sm:max-w-[420px]">
-          <DialogHeader>
-            <DialogTitle>Nouvelle Consultation</DialogTitle>
-            <DialogDescription>
-              Planifier un nouveau rendez-vous pour aujourd&apos;hui.
-            </DialogDescription>
-          </DialogHeader>
-
-          <form onSubmit={handleCreateAppointment} className="space-y-3 pt-2">
-            <div>
-              <label className="block text-[11px] font-medium text-zinc-600 dark:text-zinc-400 mb-1">
-                Patient
-              </label>
-              <select
-                value={selectedPatientId}
-                onChange={(e) => setSelectedPatientId(e.target.value)}
-                className="w-full h-8 rounded-md border border-zinc-300 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-2.5 text-xs text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-zinc-500 dark:focus:border-zinc-700"
-              >
-                {MOCK_PATIENTS.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.nomComplet} ({p.telephone}) — {p.assurance}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="grid grid-cols-2 gap-2">
-              <div>
-                <label className="block text-[11px] font-medium text-zinc-600 dark:text-zinc-400 mb-1">
-                  Heure de début
-                </label>
-                <Input
-                  type="time"
-                  value={timeSlot}
-                  onChange={(e) => setTimeSlot(e.target.value)}
-                  className="font-mono tabular-nums"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-[11px] font-medium text-zinc-600 dark:text-zinc-400 mb-1">
-                  Praticien
-                </label>
-                <div className="h-8 flex items-center px-2.5 rounded-md border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/50 text-xs text-zinc-700 dark:text-zinc-300 truncate">
-                  {MOCK_DOCTOR.nomComplet}
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-[11px] font-medium text-zinc-600 dark:text-zinc-400 mb-1">
-                Motif de consultation
-              </label>
-              <Input
-                type="text"
-                placeholder="Ex. Contrôle tension, consultation générale"
-                value={motif}
-                onChange={(e) => setMotif(e.target.value)}
-                required
-              />
-            </div>
-
-            <div className="flex items-center justify-end gap-2 pt-2 border-t border-zinc-200 dark:border-zinc-800">
-              <Button type="button" variant="ghost" size="sm" onClick={closeModal}>
-                Annuler
-              </Button>
-              <Button type="submit" size="sm" className="bg-emerald-600 hover:bg-emerald-500 text-white border-0">
-                Enregistrer RDV
-              </Button>
-            </div>
-          </form>
-        </DialogContent>
-      </Dialog>
+      {/* ── Modal: Nouvelle Consultation (Smart Agenda) ── */}
+      <NewAppointmentModal />
 
       {/* ── Modal: Ajouter un Paiement ── */}
       <Dialog open={activeModal === 'add-payment'} onOpenChange={(open) => !open && closeModal()}>
