@@ -11,7 +11,8 @@ import { Input } from '@/components/ui/input'
 import { useAppStore } from '@/store/useAppStore'
 import { useAgendaStore } from '@/store/useAgendaStore'
 import { MOCK_PATIENTS, MOCK_DOCTOR, type Appointment, type PaymentMethod, type InsuranceType } from '@/types/moroccan'
-import { FileText, Printer, CheckCircle2 } from 'lucide-react'
+import { FileText, Printer, CheckCircle2, Loader2 } from 'lucide-react'
+import { useCreatePatient } from '@/hooks/use-patients'
 
 export function ActionModals() {
   const { activeModal, closeModal } = useAppStore()
@@ -28,9 +29,15 @@ export function ActionModals() {
   const [paymentRef, setPaymentRef] = useState('')
 
   // New patient state
-  const [patientName, setPatientName] = useState('')
-  const [patientPhone, setPatientPhone] = useState('+212 6 ')
+  const [patientFirstName, setPatientFirstName] = useState('')
+  const [patientLastName, setPatientLastName] = useState('')
+  const [patientCin, setPatientCin] = useState('')
+  const [patientPhone, setPatientPhone] = useState('+2126')
+  const [patientBirthDate, setPatientBirthDate] = useState('1990-01-01')
+  const [patientCnss, setPatientCnss] = useState('')
   const [patientInsurance, setPatientInsurance] = useState<InsuranceType>('CNSS')
+
+  const createPatientMutation = useCreatePatient()
 
   const [toastMessage, setToastMessage] = useState<string | null>(null)
 
@@ -312,40 +319,101 @@ export function ActionModals() {
 
       {/* ── Modal: Nouveau Patient ── */}
       <Dialog open={activeModal === 'new-patient'} onOpenChange={(open) => !open && closeModal()}>
-        <DialogContent className="sm:max-w-[420px]">
+        <DialogContent className="sm:max-w-[480px]">
           <DialogHeader>
             <DialogTitle>Nouveau Dossier Patient</DialogTitle>
             <DialogDescription>
-              Création rapide d&apos;une fiche médicale patient.
+              Création d&apos;une fiche médicale patient enregistrée sur le serveur Dossia.
             </DialogDescription>
           </DialogHeader>
 
           <form
-            onSubmit={(e) => {
+            onSubmit={async (e) => {
               e.preventDefault()
-              showToast(`Patient ${patientName || 'ajouté'} créé avec succès`)
-              closeModal()
+              try {
+                await createPatientMutation.mutateAsync({
+                  firstName: patientFirstName.trim(),
+                  lastName: patientLastName.trim(),
+                  cin: patientCin.trim().toUpperCase(),
+                  phoneNumber: patientPhone.trim(),
+                  birthDate: patientBirthDate,
+                  cnssNumber: patientCnss.trim() || undefined,
+                  mutuelleType: patientInsurance,
+                })
+                setPatientFirstName('')
+                setPatientLastName('')
+                setPatientCin('')
+                setPatientPhone('+2126')
+                setPatientCnss('')
+                closeModal()
+              } catch {
+                // Handled by Sonner toast in api-client.ts
+              }
             }}
             className="space-y-3 pt-2"
           >
-            <div>
-              <label className="block text-[11px] font-medium text-zinc-600 dark:text-zinc-400 mb-1">
-                Nom complet (Français ou Arabe)
-              </label>
-              <Input
-                placeholder="Ex. Laila Chraibi / ليلى الشرايبي"
-                value={patientName}
-                onChange={(e) => setPatientName(e.target.value)}
-                required
-              />
-            </div>
-
+            {/* Nom & Prénom */}
             <div className="grid grid-cols-2 gap-2">
               <div>
                 <label className="block text-[11px] font-medium text-zinc-600 dark:text-zinc-400 mb-1">
-                  Téléphone (+212)
+                  Nom de famille *
                 </label>
                 <Input
+                  placeholder="Ex. Chraibi"
+                  value={patientLastName}
+                  onChange={(e) => setPatientLastName(e.target.value)}
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-[11px] font-medium text-zinc-600 dark:text-zinc-400 mb-1">
+                  Prénom *
+                </label>
+                <Input
+                  placeholder="Ex. Laila"
+                  value={patientFirstName}
+                  onChange={(e) => setPatientFirstName(e.target.value)}
+                  required
+                />
+              </div>
+            </div>
+
+            {/* CIN & Date de Naissance */}
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="block text-[11px] font-medium text-zinc-600 dark:text-zinc-400 mb-1">
+                  CIN Marocain *
+                </label>
+                <Input
+                  placeholder="Ex. JA123456"
+                  value={patientCin}
+                  onChange={(e) => setPatientCin(e.target.value)}
+                  className="font-mono uppercase"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-[11px] font-medium text-zinc-600 dark:text-zinc-400 mb-1">
+                  Date de naissance *
+                </label>
+                <Input
+                  type="date"
+                  value={patientBirthDate}
+                  onChange={(e) => setPatientBirthDate(e.target.value)}
+                  className="font-mono tabular-nums"
+                  required
+                />
+              </div>
+            </div>
+
+            {/* Téléphone & Couverture */}
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="block text-[11px] font-medium text-zinc-600 dark:text-zinc-400 mb-1">
+                  Téléphone (+212) *
+                </label>
+                <Input
+                  placeholder="+212661234567"
                   value={patientPhone}
                   onChange={(e) => setPatientPhone(e.target.value)}
                   className="font-mono tabular-nums"
@@ -355,7 +423,7 @@ export function ActionModals() {
 
               <div>
                 <label className="block text-[11px] font-medium text-zinc-600 dark:text-zinc-400 mb-1">
-                  Assurance
+                  Assurance / Mutuelle
                 </label>
                 <select
                   value={patientInsurance}
@@ -364,19 +432,44 @@ export function ActionModals() {
                 >
                   <option value="CNSS">CNSS</option>
                   <option value="AMO">AMO</option>
-                  <option value="RAMED">RAMED</option>
+                  <option value="CNOPS">CNOPS</option>
                   <option value="Privé">Privé</option>
                   <option value="Aucun">Sans couverture</option>
                 </select>
               </div>
             </div>
 
+            {/* Numéro CNSS / AMO */}
+            <div>
+              <label className="block text-[11px] font-medium text-zinc-600 dark:text-zinc-400 mb-1">
+                Numéro d&apos;immatriculation CNSS (Optionnel)
+              </label>
+              <Input
+                placeholder="Ex. 123456789"
+                value={patientCnss}
+                onChange={(e) => setPatientCnss(e.target.value)}
+                className="font-mono tabular-nums"
+              />
+            </div>
+
             <div className="flex items-center justify-end gap-2 pt-2 border-t border-zinc-200 dark:border-zinc-800">
-              <Button type="button" variant="ghost" size="sm" onClick={closeModal}>
+              <Button type="button" variant="ghost" size="sm" onClick={closeModal} disabled={createPatientMutation.isPending}>
                 Annuler
               </Button>
-              <Button type="submit" size="sm" className="bg-emerald-600 hover:bg-emerald-500 text-white border-0">
-                Créer le dossier
+              <Button
+                type="submit"
+                size="sm"
+                disabled={createPatientMutation.isPending}
+                className="bg-emerald-600 hover:bg-emerald-500 text-white border-0 gap-1.5"
+              >
+                {createPatientMutation.isPending ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin stroke-[1.5]" />
+                    <span>Création en cours…</span>
+                  </>
+                ) : (
+                  <span>Créer le dossier</span>
+                )}
               </Button>
             </div>
           </form>
