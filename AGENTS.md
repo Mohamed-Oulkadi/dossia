@@ -27,13 +27,15 @@ The repository is organized into three distinct operational domains:
 ```
 d:/My Projects/Dossia/
 ├── frontend/               # Single Page Application (Secretary Dashboard & Public Portal)
-├── backend/                # REST / tRPC APIs, Database, Auth, and Moroccan Regulatory Engine
+├── backend/                # Java 21+, Spring Boot, Spring Modulith Modular Monolith
 ├── ai/                     # Clinical Transcription, Darija/French NLP, and Assistant Agents
 ├── AGENTS.md               # Master Monorepo Governance (This File)
 └── skills/                 # Universal Cross-Cutting Knowledge Base
-    ├── 01-premium-ui-craft.md     # UI/UX design tokens & anti-pattern rules (Frontend)
-    ├── 02-moroccan-domain.md      # Moroccan healthcare business logic & regulations (All)
-    └── 03-testing-standards.md    # Testing standards & QA mandates (Frontend, Backend, AI)
+    ├── 01-premium-ui-craft.md          # UI/UX design tokens & anti-pattern rules (Frontend)
+    ├── 02-moroccan-domain.md           # Moroccan healthcare business logic & regulations (All)
+    ├── 03-testing-standards.md         # Testing standards & QA mandates (All)
+    ├── 04-spring-modulith-craft.md     # Spring Modulith modular architecture & Java 21 idioms (Backend)
+    └── 05-backend-moroccan-domain.md   # Moroccan backend schemas, BigDecimal MAD, INPE, CNDP (Backend)
 ```
 
 ### Boundary & Ownership Matrix
@@ -41,7 +43,7 @@ d:/My Projects/Dossia/
 | Service | Technology Foundation | Primary Responsibilities | Mandatory Governance |
 | :--- | :--- | :--- | :--- |
 | **`frontend/`** | React 18, TypeScript, Tailwind CSS v4, Zustand, Radix UI, Three.js | Dashboard layout, Smart Agenda, Command Palette, Modals, dual-theme rendering | [`skills/01-premium-ui-craft.md`](file:///d:/My%20Projects/Dossia/skills/01-premium-ui-craft.md) |
-| **`backend/`** | Python / Node / Go API, PostgreSQL, Prisma / SQLAlchemy | Patient records, appointment scheduling, billing ledgers, CNSS/AMO integration | [`skills/02-moroccan-domain.md`](file:///d:/My%20Projects/Dossia/skills/02-moroccan-domain.md) |
+| **`backend/`** | Java 21+, Spring Boot, Spring Modulith, PostgreSQL, Flyway | Bounded domain modules (patient, agenda, billing, cnss), JWT security, CNDP audit | [`backend/AGENTS.md`](file:///d:/My%20Projects/Dossia/backend/AGENTS.md), [`skills/04-spring-modulith-craft.md`](file:///d:/My%20Projects/Dossia/skills/04-spring-modulith-craft.md), [`skills/05-backend-moroccan-domain.md`](file:///d:/My%20Projects/Dossia/skills/05-backend-moroccan-domain.md) |
 | **`ai/`** | Python, Whisper, LLM inference pipelines, LangChain | Voice-to-text clinical notes, Darija-to-French medical transcription, extraction | [`skills/02-moroccan-domain.md`](file:///d:/My%20Projects/Dossia/skills/02-moroccan-domain.md) |
 
 ---

@@ -1,0 +1,23 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: dossia-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: dossia_db
+      POSTGRES_USER: dossia_user
+      POSTGRES_PASSWORD: dossia_dev_password_2026
+    ports:
+      - "5432:5432"
+    volumes:
+      - dossia_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dossia_user -d dossia_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+volumes:
+  dossia_pgdata:
+    driver: local
