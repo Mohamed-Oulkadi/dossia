@@ -15,15 +15,15 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 
     const variantStyles = {
       default:
-        'bg-zinc-100 text-zinc-900 hover:bg-zinc-200 border border-zinc-200 shadow-xs dark:bg-zinc-100 dark:text-zinc-950 dark:hover:bg-zinc-200 dark:border-zinc-200',
+        'bg-zinc-900 text-zinc-50 hover:bg-zinc-800 border border-zinc-900 shadow-xs dark:bg-zinc-100 dark:text-zinc-950 dark:hover:bg-zinc-200 dark:border-zinc-200',
       secondary:
-        'bg-zinc-800 text-zinc-100 hover:bg-zinc-700/80 border border-zinc-700/60 shadow-xs',
+        'bg-zinc-100 text-zinc-900 hover:bg-zinc-200 border border-zinc-200 shadow-xs dark:bg-zinc-800 dark:text-zinc-100 dark:hover:bg-zinc-700/80 dark:border-zinc-700/60',
       outline:
-        'border border-zinc-800 bg-transparent text-zinc-200 hover:bg-zinc-900 hover:text-zinc-100',
+        'border border-zinc-200 bg-white text-zinc-900 hover:bg-zinc-50 dark:border-zinc-800 dark:bg-transparent dark:text-zinc-200 dark:hover:bg-zinc-900 dark:hover:text-zinc-100',
       ghost:
-        'bg-transparent text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/60',
+        'bg-transparent text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:text-zinc-100 dark:hover:bg-zinc-800/60',
       destructive:
-        'bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/20',
+        'bg-red-50 text-red-700 hover:bg-red-100 border border-red-200 dark:bg-red-500/10 dark:text-red-400 dark:hover:bg-red-500/20 dark:border-red-500/20',
     }[variant]
 
     const sizeStyles = {

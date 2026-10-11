@@ -1,14 +1,15 @@
 /**
  * HeroSection — Premium marketing overlay for the Landing page
- * Refactored for Clinical Craft & Executive SaaS Design System
+ * Dual-Theme Support (Light Mode / Dark Mode)
  * 
  * - Purged AI tropes: no gradient text, no glow boxes, no neon colors
  * - Standardized Lucide icons: w-4 h-4 stroke-[1.5]
- * - 1px hairline border system (border-zinc-800)
- * - Surgical dark mode typography with pure zinc-100 headers
+ * - 1px hairline border system (border-zinc-200 dark:border-zinc-800)
+ * - Executive typography and dual-theme switcher
  */
 import { motion, type Variants } from 'framer-motion'
 import { Link } from 'react-router-dom'
+import { useAppStore } from '@/store/useAppStore'
 import {
   ArrowRight,
   ShieldCheck,
@@ -17,6 +18,8 @@ import {
   FileCheck2,
   Coins,
   ChevronRight,
+  Sun,
+  Moon,
 } from 'lucide-react'
 
 // ─────────────────────────────────────────────────
@@ -42,34 +45,55 @@ const itemVariants: Variants = {
 // Navbar
 // ─────────────────────────────────────────────────
 function Navbar() {
+  const { theme, toggleTheme } = useAppStore()
+
   return (
     <motion.nav
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, ease: 'easeOut' }}
-      className="fixed top-0 left-0 right-0 z-50 px-6 md:px-12 py-3 flex items-center justify-between border-b border-zinc-800 bg-zinc-950/80 backdrop-blur-md"
+      className="fixed top-0 left-0 right-0 z-50 px-6 md:px-12 py-3 flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md transition-colors"
     >
       {/* Wordmark */}
       <div className="flex items-center gap-2">
-        <div className="w-7 h-7 rounded-md bg-zinc-900 border border-zinc-800 flex items-center justify-center">
-          <Stethoscope className="w-4 h-4 text-emerald-500 stroke-[1.5]" />
+        <div className="w-7 h-7 rounded-md bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex items-center justify-center">
+          <Stethoscope className="w-4 h-4 text-emerald-600 dark:text-emerald-500 stroke-[1.5]" />
         </div>
-        <span className="text-sm font-semibold tracking-tight text-zinc-100">
+        <span className="text-sm font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
           Dossia
         </span>
-        <span className="text-[10px] font-mono px-1 py-0.2 bg-zinc-900 text-zinc-400 border border-zinc-800 rounded">
+        <span className="text-[10px] font-mono px-1 py-0.2 bg-zinc-100 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-800 rounded">
           SaaS Médical
         </span>
       </div>
 
       {/* Nav actions */}
       <div className="flex items-center gap-2">
+        {/* Theme toggle button */}
+        <button
+          onClick={toggleTheme}
+          title={theme === 'dark' ? 'Activer le mode clair' : 'Activer le mode sombre'}
+          className="
+            p-1.5 rounded-md border border-zinc-200 dark:border-zinc-800
+            bg-zinc-50 dark:bg-zinc-900
+            text-zinc-600 dark:text-zinc-400
+            hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800
+            transition-colors cursor-pointer mr-1
+          "
+        >
+          {theme === 'dark' ? (
+            <Sun className="w-4 h-4 text-amber-400 stroke-[1.5]" />
+          ) : (
+            <Moon className="w-4 h-4 text-zinc-700 stroke-[1.5]" />
+          )}
+        </button>
+
         <Link
           to="/app"
           className="
             px-3 py-1.5 rounded-md text-xs font-medium
-            border border-zinc-800 text-zinc-300
-            hover:border-zinc-700 hover:text-zinc-100
+            border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300
+            hover:border-zinc-400 dark:hover:border-zinc-700 hover:text-zinc-900 dark:hover:text-zinc-100
             transition-colors
           "
         >
@@ -79,7 +103,7 @@ function Navbar() {
           to="/app"
           className="
             px-3 py-1.5 rounded-md text-xs font-medium
-            bg-zinc-100 text-zinc-950 hover:bg-zinc-200
+            bg-zinc-900 dark:bg-zinc-100 text-zinc-50 dark:text-zinc-950 hover:bg-zinc-800 dark:hover:bg-zinc-200
             transition-colors flex items-center gap-1.5
           "
         >
@@ -93,8 +117,8 @@ function Navbar() {
 
 function TrustBadge({ icon: Icon, label }: { icon: React.ComponentType<{ className?: string }>; label: string }) {
   return (
-    <div className="flex items-center gap-1.5 text-xs text-zinc-400 font-mono">
-      <Icon className="w-3.5 h-3.5 text-emerald-400 stroke-[1.5]" />
+    <div className="flex items-center gap-1.5 text-xs text-zinc-600 dark:text-zinc-400 font-mono">
+      <Icon className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 stroke-[1.5]" />
       <span>{label}</span>
     </div>
   )
@@ -120,9 +144,9 @@ export function HeroSection() {
           <motion.div variants={itemVariants}>
             <div className="
               inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium
-              bg-zinc-900/80 border border-zinc-800 text-zinc-300
+              bg-zinc-100 dark:bg-zinc-900/80 border border-zinc-200 dark:border-zinc-800 text-zinc-800 dark:text-zinc-300
             ">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
               <span>Conforme ANAM · Norme CNSS &amp; AMO</span>
             </div>
           </motion.div>
@@ -130,16 +154,16 @@ export function HeroSection() {
           {/* Main headline */}
           <motion.h1
             variants={itemVariants}
-            className="text-4xl sm:text-5xl md:text-6xl font-semibold text-zinc-100 tracking-tight leading-tight"
+            className="text-4xl sm:text-5xl md:text-6xl font-semibold text-zinc-900 dark:text-zinc-100 tracking-tight leading-tight"
           >
             Le cœur digital de votre <br />
-            <span className="text-zinc-300">cabinet médical au Maroc.</span>
+            <span className="text-zinc-600 dark:text-zinc-300">cabinet médical au Maroc.</span>
           </motion.h1>
 
           {/* Description */}
           <motion.p
             variants={itemVariants}
-            className="text-sm md:text-base text-zinc-400 max-w-xl leading-relaxed"
+            className="text-sm md:text-base text-zinc-600 dark:text-zinc-400 max-w-xl leading-relaxed"
           >
             Gestion des consultations, télétransmission CNSS/AMO et encaissement en Dirhams (MAD).
             Conçu pour la cadence des secrétaires médicales et praticiens.
@@ -155,8 +179,8 @@ export function HeroSection() {
               id="cta-primary"
               className="
                 flex items-center gap-2 px-5 py-2.5 rounded-md
-                bg-zinc-100 text-zinc-950 font-medium text-xs
-                hover:bg-zinc-200 transition-colors
+                bg-zinc-900 dark:bg-zinc-100 text-zinc-50 dark:text-zinc-950 font-medium text-xs
+                hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-colors
               "
             >
               <span>Ouvrir l&apos;Agenda Cabinet</span>
@@ -168,13 +192,13 @@ export function HeroSection() {
               id="cta-demo"
               className="
                 flex items-center gap-2 px-5 py-2.5 rounded-md
-                border border-zinc-800 bg-zinc-900/50
-                text-zinc-300 font-medium text-xs
-                hover:border-zinc-700 hover:text-zinc-100
+                border border-zinc-300 dark:border-zinc-800 bg-white dark:bg-zinc-900/50
+                text-zinc-800 dark:text-zinc-300 font-medium text-xs
+                hover:border-zinc-400 dark:hover:border-zinc-700 hover:text-zinc-950 dark:hover:text-zinc-100
                 transition-colors
               "
             >
-              <FileCheck2 className="w-3.5 h-3.5 text-zinc-400 stroke-[1.5]" />
+              <FileCheck2 className="w-3.5 h-3.5 text-zinc-500 dark:text-zinc-400 stroke-[1.5]" />
               <span>Consulter une Fiche CNSS</span>
             </Link>
           </motion.div>
@@ -182,7 +206,7 @@ export function HeroSection() {
           {/* Trust badges row */}
           <motion.div
             variants={itemVariants}
-            className="flex flex-wrap items-center justify-center gap-5 mt-6 pt-6 border-t border-zinc-800/80 w-full"
+            className="flex flex-wrap items-center justify-center gap-5 mt-6 pt-6 border-t border-zinc-200 dark:border-zinc-800/80 w-full"
           >
             <TrustBadge icon={FileCheck2} label="Bordereaux CNSS / AMO" />
             <TrustBadge icon={Coins} label="Facturation en MAD" />

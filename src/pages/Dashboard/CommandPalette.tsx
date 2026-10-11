@@ -1,11 +1,11 @@
 /**
  * CommandPalette — Ctrl+K global action launcher
- * Refactored for Clinical Craft & Executive SaaS Design System
+ * Dual-Theme Support (Light Mode / Dark Mode)
  * 
  * - Standardized Lucide icons: w-4 h-4 stroke-[1.5]
- * - 1px hairline border system (border-zinc-800)
+ * - 1px hairline border system (border-zinc-200 dark:border-zinc-800)
  * - Restrained typography and tight rounded-lg radius
- * - Moroccan clinical actions (MAD payments, CNSS, AMO)
+ * - Quick Theme Toggle and Moroccan clinical actions
  */
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -20,6 +20,7 @@ import {
   Search,
   Calendar,
   CornerDownLeft,
+  SunMoon,
 } from 'lucide-react'
 
 // ─────────────────────────────────────────────────
@@ -39,7 +40,7 @@ interface PaletteAction {
 // CommandPalette component
 // ─────────────────────────────────────────────────
 export function CommandPalette() {
-  const { commandPaletteOpen, closeCommandPalette, openModal } = useAppStore()
+  const { commandPaletteOpen, closeCommandPalette, openModal, toggleTheme, theme } = useAppStore()
   const navigate = useNavigate()
   const [query, setQuery]   = useState('')
   const [selected, setSelected] = useState(0)
@@ -90,6 +91,15 @@ export function CommandPalette() {
       icon: FileText,
       category: 'Assurance Maladie',
       action: () => { openModal('generate-amo'); closeCommandPalette() },
+    },
+    {
+      id: 'toggle-theme',
+      label: theme === 'dark' ? 'Passer en Mode Clair' : 'Passer en Mode Sombre',
+      description: 'Basculer l’affichage entre clair et sombre',
+      shortcut: 'Alt+T',
+      icon: SunMoon,
+      category: 'Préférences',
+      action: () => { toggleTheme(); closeCommandPalette() },
     },
     {
       id: 'search-patient',
@@ -175,7 +185,7 @@ export function CommandPalette() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.12 }}
-            className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs"
+            className="fixed inset-0 z-50 bg-black/50 dark:bg-black/75 backdrop-blur-xs"
             onClick={closeCommandPalette}
           />
 
@@ -189,14 +199,14 @@ export function CommandPalette() {
             className="
               fixed top-[18%] left-1/2 -translate-x-1/2 z-50
               w-full max-w-lg
-              bg-zinc-950 border border-zinc-800
-              rounded-lg overflow-hidden shadow-lg
+              bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800
+              rounded-lg overflow-hidden shadow-xl
             "
             onKeyDown={handleKeyDown}
           >
             {/* Search input */}
-            <div className="flex items-center gap-2.5 px-3 py-2.5 border-b border-zinc-800">
-              <Search className="w-4 h-4 text-zinc-500 stroke-[1.5] flex-shrink-0" />
+            <div className="flex items-center gap-2.5 px-3 py-2.5 border-b border-zinc-200 dark:border-zinc-800">
+              <Search className="w-4 h-4 text-zinc-400 dark:text-zinc-500 stroke-[1.5] flex-shrink-0" />
               <input
                 ref={inputRef}
                 id="command-palette-input"
@@ -205,14 +215,14 @@ export function CommandPalette() {
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Rechercher une action ou naviguer…"
                 className="
-                  flex-1 bg-transparent text-zinc-100
-                  placeholder:text-zinc-500
+                  flex-1 bg-transparent text-zinc-900 dark:text-zinc-100
+                  placeholder:text-zinc-400 dark:placeholder:text-zinc-500
                   text-xs outline-none
                 "
               />
               <kbd className="
                 text-[9px] text-zinc-500
-                border border-zinc-800 bg-zinc-900
+                border border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-900
                 px-1.5 py-0.5 rounded font-mono
               ">
                 ESC
@@ -228,7 +238,7 @@ export function CommandPalette() {
               ) : (
                 Object.entries(grouped).map(([category, actions]) => (
                   <div key={category} className="mb-1 last:mb-0">
-                    <p className="px-2.5 pt-2 pb-1 text-[10px] uppercase tracking-wider text-zinc-500 font-medium">
+                    <p className="px-2.5 pt-2 pb-1 text-[10px] uppercase tracking-wider text-zinc-400 dark:text-zinc-500 font-medium">
                       {category}
                     </p>
                     {actions.map((action) => {
@@ -245,13 +255,13 @@ export function CommandPalette() {
                             w-full flex items-center gap-2.5 px-2.5 py-1.5 text-left rounded-md
                             transition-colors duration-75 text-xs cursor-pointer
                             ${isSelected
-                              ? 'bg-zinc-900 text-zinc-100 border border-zinc-800'
-                              : 'text-zinc-300 hover:bg-zinc-900/60 border border-transparent'
+                              ? 'bg-zinc-100 dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-800'
+                              : 'text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100/70 dark:hover:bg-zinc-900/60 border border-transparent'
                             }
                           `}
                         >
                           <span className="flex items-center justify-center flex-shrink-0">
-                            <Icon className={`w-4 h-4 stroke-[1.5] ${isSelected ? 'text-emerald-400' : 'text-zinc-400'}`} />
+                            <Icon className={`w-4 h-4 stroke-[1.5] ${isSelected ? 'text-emerald-600 dark:text-emerald-400' : 'text-zinc-500 dark:text-zinc-400'}`} />
                           </span>
                           <div className="flex-1 min-w-0">
                             <p className="font-medium text-xs truncate">{action.label}</p>
@@ -261,8 +271,8 @@ export function CommandPalette() {
                           </div>
                           {action.shortcut && (
                             <kbd className="
-                              text-[10px] text-zinc-400
-                              border border-zinc-800 bg-zinc-900
+                              text-[10px] text-zinc-500 dark:text-zinc-400
+                              border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900
                               px-1.5 py-0.5 rounded font-mono flex-shrink-0
                             ">
                               {action.shortcut}
@@ -282,19 +292,19 @@ export function CommandPalette() {
             {/* Footer hint */}
             <div className="
               flex items-center justify-between
-              px-3 py-1.5 border-t border-zinc-800
-              text-[10px] text-zinc-500 bg-zinc-950/80
+              px-3 py-1.5 border-t border-zinc-200 dark:border-zinc-800
+              text-[10px] text-zinc-500 bg-zinc-50 dark:bg-zinc-950/80
             ">
               <span className="flex items-center gap-1.5">
-                <kbd className="border border-zinc-800 bg-zinc-900 px-1 py-0.2 rounded font-mono">↑↓</kbd>
+                <kbd className="border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-1 py-0.2 rounded font-mono">↑↓</kbd>
                 Naviguer
               </span>
               <span className="flex items-center gap-1.5">
-                <kbd className="border border-zinc-800 bg-zinc-900 px-1 py-0.2 rounded font-mono">↵</kbd>
+                <kbd className="border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-1 py-0.2 rounded font-mono">↵</kbd>
                 Exécuter
               </span>
               <span className="flex items-center gap-1.5">
-                <kbd className="border border-zinc-800 bg-zinc-900 px-1 py-0.2 rounded font-mono">ESC</kbd>
+                <kbd className="border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-1 py-0.2 rounded font-mono">ESC</kbd>
                 Fermer
               </span>
             </div>

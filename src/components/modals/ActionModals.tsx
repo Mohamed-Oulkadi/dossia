@@ -67,8 +67,8 @@ export function ActionModals() {
     <>
       {/* Toast Feedback */}
       {toastMessage && (
-        <div className="fixed bottom-4 right-4 z-50 flex items-center gap-2 rounded-md border border-zinc-800 bg-zinc-900 px-3 py-2 text-xs text-zinc-100 shadow-md">
-          <CheckCircle2 className="w-4 h-4 text-emerald-400 stroke-[1.5]" />
+        <div className="fixed bottom-4 right-4 z-50 flex items-center gap-2 rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-3 py-2 text-xs text-zinc-900 dark:text-zinc-100 shadow-md">
+          <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 stroke-[1.5]" />
           <span>{toastMessage}</span>
         </div>
       )}
@@ -85,13 +85,13 @@ export function ActionModals() {
 
           <form onSubmit={handleCreateAppointment} className="space-y-3 pt-2">
             <div>
-              <label className="block text-[11px] font-medium text-zinc-400 mb-1">
+              <label className="block text-[11px] font-medium text-zinc-600 dark:text-zinc-400 mb-1">
                 Patient
               </label>
               <select
                 value={selectedPatientId}
                 onChange={(e) => setSelectedPatientId(e.target.value)}
-                className="w-full h-8 rounded-md border border-zinc-800 bg-zinc-900 px-2.5 text-xs text-zinc-100 focus:outline-none focus:border-zinc-700"
+                className="w-full h-8 rounded-md border border-zinc-300 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-2.5 text-xs text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-zinc-500 dark:focus:border-zinc-700"
               >
                 {MOCK_PATIENTS.map((p) => (
                   <option key={p.id} value={p.id}>
@@ -103,7 +103,7 @@ export function ActionModals() {
 
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <label className="block text-[11px] font-medium text-zinc-400 mb-1">
+                <label className="block text-[11px] font-medium text-zinc-600 dark:text-zinc-400 mb-1">
                   Heure de début
                 </label>
                 <Input
@@ -115,17 +115,17 @@ export function ActionModals() {
                 />
               </div>
               <div>
-                <label className="block text-[11px] font-medium text-zinc-400 mb-1">
+                <label className="block text-[11px] font-medium text-zinc-600 dark:text-zinc-400 mb-1">
                   Praticien
                 </label>
-                <div className="h-8 flex items-center px-2.5 rounded-md border border-zinc-800/80 bg-zinc-900/50 text-xs text-zinc-300 truncate">
+                <div className="h-8 flex items-center px-2.5 rounded-md border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/50 text-xs text-zinc-700 dark:text-zinc-300 truncate">
                   {MOCK_DOCTOR.nomComplet}
                 </div>
               </div>
             </div>
 
             <div>
-              <label className="block text-[11px] font-medium text-zinc-400 mb-1">
+              <label className="block text-[11px] font-medium text-zinc-600 dark:text-zinc-400 mb-1">
                 Motif de consultation
               </label>
               <Input
@@ -137,7 +137,7 @@ export function ActionModals() {
               />
             </div>
 
-            <div className="flex items-center justify-end gap-2 pt-2 border-t border-zinc-800/80">
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-zinc-200 dark:border-zinc-800">
               <Button type="button" variant="ghost" size="sm" onClick={closeModal}>
                 Annuler
               </Button>
@@ -161,13 +161,13 @@ export function ActionModals() {
 
           <form onSubmit={handleRecordPayment} className="space-y-3 pt-2">
             <div>
-              <label className="block text-[11px] font-medium text-zinc-400 mb-1">
+              <label className="block text-[11px] font-medium text-zinc-600 dark:text-zinc-400 mb-1">
                 Patient concerné
               </label>
               <select
                 value={selectedPatientId}
                 onChange={(e) => setSelectedPatientId(e.target.value)}
-                className="w-full h-8 rounded-md border border-zinc-800 bg-zinc-900 px-2.5 text-xs text-zinc-100 focus:outline-none focus:border-zinc-700"
+                className="w-full h-8 rounded-md border border-zinc-300 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-2.5 text-xs text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-zinc-500 dark:focus:border-zinc-700"
               >
                 {MOCK_PATIENTS.map((p) => (
                   <option key={p.id} value={p.id}>
@@ -179,7 +179,7 @@ export function ActionModals() {
 
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <label className="block text-[11px] font-medium text-zinc-400 mb-1">
+                <label className="block text-[11px] font-medium text-zinc-600 dark:text-zinc-400 mb-1">
                   Montant (MAD)
                 </label>
                 <div className="relative">
@@ -197,13 +197,13 @@ export function ActionModals() {
               </div>
 
               <div>
-                <label className="block text-[11px] font-medium text-zinc-400 mb-1">
+                <label className="block text-[11px] font-medium text-zinc-600 dark:text-zinc-400 mb-1">
                   Mode de règlement
                 </label>
                 <select
                   value={paymentMethod}
                   onChange={(e) => setPaymentMethod(e.target.value as PaymentMethod)}
-                  className="w-full h-8 rounded-md border border-zinc-800 bg-zinc-900 px-2.5 text-xs text-zinc-100 focus:outline-none focus:border-zinc-700"
+                  className="w-full h-8 rounded-md border border-zinc-300 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-2.5 text-xs text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-zinc-500 dark:focus:border-zinc-700"
                 >
                   <option value="Espèces">Espèces</option>
                   <option value="Chèque">Chèque</option>
@@ -214,7 +214,7 @@ export function ActionModals() {
 
             {paymentMethod !== 'Espèces' && (
               <div>
-                <label className="block text-[11px] font-medium text-zinc-400 mb-1">
+                <label className="block text-[11px] font-medium text-zinc-600 dark:text-zinc-400 mb-1">
                   Numéro de référence / Chèque
                 </label>
                 <Input
@@ -227,7 +227,7 @@ export function ActionModals() {
               </div>
             )}
 
-            <div className="flex items-center justify-end gap-2 pt-2 border-t border-zinc-800/80">
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-zinc-200 dark:border-zinc-800">
               <Button type="button" variant="ghost" size="sm" onClick={closeModal}>
                 Annuler
               </Button>
@@ -247,7 +247,7 @@ export function ActionModals() {
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <div className="flex items-center gap-2">
-              <FileText className="w-4 h-4 text-emerald-400 stroke-[1.5]" />
+              <FileText className="w-4 h-4 text-emerald-600 dark:text-emerald-400 stroke-[1.5]" />
               <DialogTitle>
                 Feuille de Soins — {activeModal === 'generate-cnss' ? 'CNSS' : 'AMO'}
               </DialogTitle>
@@ -257,38 +257,38 @@ export function ActionModals() {
             </DialogDescription>
           </DialogHeader>
 
-          <div className="rounded-md border border-zinc-800 bg-zinc-900/60 p-3 space-y-2 text-xs">
-            <div className="flex justify-between border-b border-zinc-800/80 pb-2">
-              <span className="text-zinc-400">Praticien Déclarant</span>
-              <span className="font-medium text-zinc-200">{MOCK_DOCTOR.nomComplet}</span>
+          <div className="rounded-md border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/60 p-3 space-y-2 text-xs">
+            <div className="flex justify-between border-b border-zinc-200 dark:border-zinc-800 pb-2">
+              <span className="text-zinc-500 dark:text-zinc-400">Praticien Déclarant</span>
+              <span className="font-medium text-zinc-900 dark:text-zinc-200">{MOCK_DOCTOR.nomComplet}</span>
             </div>
-            <div className="flex justify-between border-b border-zinc-800/80 pb-2">
-              <span className="text-zinc-400">Code INPE</span>
-              <span className="font-mono tabular-nums text-zinc-200">{MOCK_DOCTOR.inpe}</span>
+            <div className="flex justify-between border-b border-zinc-200 dark:border-zinc-800 pb-2">
+              <span className="text-zinc-500 dark:text-zinc-400">Code INPE</span>
+              <span className="font-mono tabular-nums text-zinc-900 dark:text-zinc-200">{MOCK_DOCTOR.inpe}</span>
             </div>
-            <div className="flex justify-between border-b border-zinc-800/80 pb-2">
-              <span className="text-zinc-400">Bénéficiaire</span>
-              <span className="font-medium text-zinc-200">{MOCK_PATIENTS[0].nomComplet}</span>
+            <div className="flex justify-between border-b border-zinc-200 dark:border-zinc-800 pb-2">
+              <span className="text-zinc-500 dark:text-zinc-400">Bénéficiaire</span>
+              <span className="font-medium text-zinc-900 dark:text-zinc-200">{MOCK_PATIENTS[0].nomComplet}</span>
             </div>
-            <div className="flex justify-between border-b border-zinc-800/80 pb-2">
-              <span className="text-zinc-400">Immatriculation {activeModal === 'generate-cnss' ? 'CNSS' : 'AMO'}</span>
-              <span className="font-mono tabular-nums text-zinc-200">
+            <div className="flex justify-between border-b border-zinc-200 dark:border-zinc-800 pb-2">
+              <span className="text-zinc-500 dark:text-zinc-400">Immatriculation {activeModal === 'generate-cnss' ? 'CNSS' : 'AMO'}</span>
+              <span className="font-mono tabular-nums text-zinc-900 dark:text-zinc-200">
                 {MOCK_PATIENTS[0].cnss ?? '23456789'}
               </span>
             </div>
-            <div className="flex justify-between border-b border-zinc-800/80 pb-2">
-              <span className="text-zinc-400">Honoraires Consultation</span>
-              <span className="font-mono tabular-nums font-semibold text-zinc-100">300.00 MAD</span>
+            <div className="flex justify-between border-b border-zinc-200 dark:border-zinc-800 pb-2">
+              <span className="text-zinc-500 dark:text-zinc-400">Honoraires Consultation</span>
+              <span className="font-mono tabular-nums font-semibold text-zinc-900 dark:text-zinc-100">300.00 MAD</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-zinc-400">Date de dispensation</span>
-              <span className="font-mono tabular-nums text-zinc-200">
+              <span className="text-zinc-500 dark:text-zinc-400">Date de dispensation</span>
+              <span className="font-mono tabular-nums text-zinc-900 dark:text-zinc-200">
                 {new Date().toLocaleDateString('fr-MA')}
               </span>
             </div>
           </div>
 
-          <div className="flex items-center justify-between pt-2 border-t border-zinc-800/80">
+          <div className="flex items-center justify-between pt-2 border-t border-zinc-200 dark:border-zinc-800">
             <span className="text-[11px] text-zinc-500">Document normalisé conforme ANAM</span>
             <div className="flex items-center gap-2">
               <Button type="button" variant="ghost" size="sm" onClick={closeModal}>
@@ -297,7 +297,7 @@ export function ActionModals() {
               <Button
                 type="button"
                 size="sm"
-                className="gap-1.5 bg-zinc-100 text-zinc-950 hover:bg-zinc-200"
+                className="gap-1.5"
                 onClick={() => {
                   window.print()
                 }}
@@ -329,7 +329,7 @@ export function ActionModals() {
             className="space-y-3 pt-2"
           >
             <div>
-              <label className="block text-[11px] font-medium text-zinc-400 mb-1">
+              <label className="block text-[11px] font-medium text-zinc-600 dark:text-zinc-400 mb-1">
                 Nom complet (Français ou Arabe)
               </label>
               <Input
@@ -342,7 +342,7 @@ export function ActionModals() {
 
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <label className="block text-[11px] font-medium text-zinc-400 mb-1">
+                <label className="block text-[11px] font-medium text-zinc-600 dark:text-zinc-400 mb-1">
                   Téléphone (+212)
                 </label>
                 <Input
@@ -354,13 +354,13 @@ export function ActionModals() {
               </div>
 
               <div>
-                <label className="block text-[11px] font-medium text-zinc-400 mb-1">
+                <label className="block text-[11px] font-medium text-zinc-600 dark:text-zinc-400 mb-1">
                   Assurance
                 </label>
                 <select
                   value={patientInsurance}
                   onChange={(e) => setPatientInsurance(e.target.value as InsuranceType)}
-                  className="w-full h-8 rounded-md border border-zinc-800 bg-zinc-900 px-2.5 text-xs text-zinc-100 focus:outline-none focus:border-zinc-700"
+                  className="w-full h-8 rounded-md border border-zinc-300 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-2.5 text-xs text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-zinc-500 dark:focus:border-zinc-700"
                 >
                   <option value="CNSS">CNSS</option>
                   <option value="AMO">AMO</option>
@@ -371,7 +371,7 @@ export function ActionModals() {
               </div>
             </div>
 
-            <div className="flex items-center justify-end gap-2 pt-2 border-t border-zinc-800/80">
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-zinc-200 dark:border-zinc-800">
               <Button type="button" variant="ghost" size="sm" onClick={closeModal}>
                 Annuler
               </Button>

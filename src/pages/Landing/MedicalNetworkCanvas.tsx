@@ -1,8 +1,8 @@
 /**
  * MedicalNetworkCanvas — R3F Three.js synaptic network background
- * Refactored for Clinical Craft & Executive SaaS Design System
+ * Dual-Theme Support (Light Mode / Dark Mode)
  * 
- * - Desaturated, surgical dark-mode aesthetic
+ * - Desaturated, surgical clinical aesthetic
  * - Low opacity nodes (0.25) & hairline lines (0.05)
  * - Damped cursor parallax (0.02 lerp)
  * - pointer-events-none container ensuring zero scroll interference
@@ -10,6 +10,7 @@
 import { useRef, useMemo, useEffect } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
+import { useAppStore } from '@/store/useAppStore'
 
 // ─────────────────────────────────────────────────
 // Inner R3F component
@@ -17,9 +18,10 @@ import * as THREE from 'three'
 interface NeuralNetworkProps {
   mouse: React.MutableRefObject<[number, number]>
   reducedMotion: boolean
+  isDark: boolean
 }
 
-function NeuralNetwork({ mouse, reducedMotion }: NeuralNetworkProps) {
+function NeuralNetwork({ mouse, reducedMotion, isDark }: NeuralNetworkProps) {
   const groupRef = useRef<THREE.Group>(null)
   const pointsRef = useRef<THREE.Points>(null)
   const { size } = useThree()
@@ -97,22 +99,26 @@ function NeuralNetwork({ mouse, reducedMotion }: NeuralNetworkProps) {
     // Very subtle breathing pulse
     if (pointsRef.current) {
       const mat = pointsRef.current.material as THREE.PointsMaterial
-      mat.opacity = 0.22 + Math.sin(t * 0.5) * 0.06
+      mat.opacity = (isDark ? 0.22 : 0.28) + Math.sin(t * 0.5) * 0.06
     }
   })
 
   void nodeCount
+
+  const nodeColor = isDark ? '#38bdf8' : '#0284c7'
+  const lineColor = isDark ? '#52525b' : '#94a3b8'
+  const accentColor = isDark ? '#a1a1aa' : '#64748b'
 
   return (
     <group ref={groupRef}>
       {/* Primary desaturated clinical nodes */}
       <points ref={pointsRef} geometry={pointsGeometry}>
         <pointsMaterial
-          color="#38bdf8"
+          color={nodeColor}
           size={0.045}
           sizeAttenuation
           transparent
-          opacity={0.25}
+          opacity={isDark ? 0.25 : 0.3}
           depthWrite={false}
         />
       </points>
@@ -120,21 +126,21 @@ function NeuralNetwork({ mouse, reducedMotion }: NeuralNetworkProps) {
       {/* Hairline desaturated synaptic connection lines */}
       <lineSegments geometry={linesGeometry}>
         <lineBasicMaterial
-          color="#52525b"
+          color={lineColor}
           transparent
-          opacity={0.06}
+          opacity={isDark ? 0.06 : 0.12}
           depthWrite={false}
         />
       </lineSegments>
 
-      {/* Subtle secondary zinc accents */}
+      {/* Subtle secondary accents */}
       <points geometry={pointsGeometry}>
         <pointsMaterial
-          color="#a1a1aa"
+          color={accentColor}
           size={0.08}
           sizeAttenuation
           transparent
-          opacity={0.12}
+          opacity={isDark ? 0.12 : 0.18}
           depthWrite={false}
         />
       </points>
@@ -146,8 +152,10 @@ function NeuralNetwork({ mouse, reducedMotion }: NeuralNetworkProps) {
 // Exported canvas wrapper
 // ─────────────────────────────────────────────────
 export function MedicalNetworkCanvas() {
+  const { theme } = useAppStore()
   const mouse = useRef<[number, number]>([0, 0])
   const reducedMotion = useRef(false)
+  const isDark = theme === 'dark'
 
   useEffect(() => {
     reducedMotion.current =
@@ -172,16 +180,17 @@ export function MedicalNetworkCanvas() {
         dpr={Math.min(window.devicePixelRatio, 2)}
         style={{ background: 'transparent', pointerEvents: 'none' }}
       >
-        <ambientLight intensity={0.2} />
-        <NeuralNetwork mouse={mouse} reducedMotion={reducedMotion.current} />
+        <ambientLight intensity={isDark ? 0.2 : 0.4} />
+        <NeuralNetwork mouse={mouse} reducedMotion={reducedMotion.current} isDark={isDark} />
       </Canvas>
 
-      {/* Dark vignette blending cleanly into zinc-950 */}
+      {/* Radial vignette blending cleanly into theme background */}
       <div
-        className="absolute inset-0 pointer-events-none"
+        className="absolute inset-0 pointer-events-none transition-colors duration-300"
         style={{
-          background:
-            'radial-gradient(ellipse 65% 65% at 50% 50%, rgba(9,9,11,0.4) 0%, rgba(9,9,11,0.95) 100%)',
+          background: isDark
+            ? 'radial-gradient(ellipse 65% 65% at 50% 50%, rgba(9,9,11,0.4) 0%, rgba(9,9,11,0.95) 100%)'
+            : 'radial-gradient(ellipse 65% 65% at 50% 50%, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.92) 100%)',
         }}
       />
     </div>
