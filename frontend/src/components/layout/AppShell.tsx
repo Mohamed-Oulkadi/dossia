@@ -22,10 +22,10 @@ import {
   Search,
   PanelLeftClose,
   PanelLeftOpen,
-  Stethoscope,
   Sun,
   Moon,
 } from 'lucide-react'
+import { DossiaLogo } from '@/components/ui/DossiaLogo'
 
 // ─────────────────────────────────────────────────
 // Sidebar nav items
@@ -69,10 +69,10 @@ function Sidebar() {
       <div className="h-12 flex items-center gap-2.5 px-3.5 border-b border-zinc-200 dark:border-zinc-800">
         <div className="
           w-7 h-7 flex-shrink-0 rounded-md
-          bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800
-          flex items-center justify-center text-zinc-900 dark:text-zinc-100
+          bg-emerald-500/10 dark:bg-emerald-500/15 border border-emerald-500/20 dark:border-emerald-500/30
+          flex items-center justify-center text-emerald-600 dark:text-emerald-400
         ">
-          <Stethoscope className="w-4 h-4 text-emerald-600 dark:text-emerald-500 stroke-[1.5]" />
+          <DossiaLogo className="w-4.5 h-4.5 text-emerald-600 dark:text-emerald-400" />
         </div>
         {!sidebarCollapsed && (
           <div className="flex items-center gap-1.5 overflow-hidden">
