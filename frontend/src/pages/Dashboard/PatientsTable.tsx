@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { usePatients } from '@/hooks/use-patients'
+import { usePatients, type Patient } from '@/hooks/use-patients'
+import { PatientAmoModal } from '@/components/cnss/PatientAmoModal'
 import { useAppStore } from '@/store/useAppStore'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -14,12 +15,14 @@ import {
   ChevronLeft,
   ChevronRight,
   ShieldAlert,
+  FileCheck2,
 } from 'lucide-react'
 
 export function PatientsTable() {
   const { openModal } = useAppStore()
   const [page, setPage] = useState(0)
   const [searchQuery, setSearchQuery] = useState('')
+  const [selectedPatientForAmo, setSelectedPatientForAmo] = useState<Patient | null>(null)
 
   const { data, isLoading, isError, error, refetch, isFetching } = usePatients(page, 20)
 
@@ -254,13 +257,25 @@ export function PatientsTable() {
 
                   {/* Actions */}
                   <td className="py-2 px-3 text-right whitespace-nowrap">
-                    <button
-                      type="button"
-                      onClick={() => openModal('new-consultation')}
-                      className="text-[11px] font-medium text-emerald-600 dark:text-emerald-400 hover:underline cursor-pointer mr-2.5"
-                    >
-                      Nouvelle Consultation
-                    </button>
+                    <div className="flex items-center justify-end gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setSelectedPatientForAmo(patient)}
+                        className="h-6 px-2 text-[11px] gap-1 text-teal-700 dark:text-teal-400 border-teal-300 dark:border-teal-800 bg-teal-50/60 dark:bg-teal-950/40 hover:bg-teal-100 dark:hover:bg-teal-900/50 cursor-pointer"
+                        title="Dossier AMO & Feuilles de Soins"
+                      >
+                        <FileCheck2 className="w-3 h-3 stroke-[1.5]" />
+                        <span>Dossier AMO</span>
+                      </Button>
+                      <button
+                        type="button"
+                        onClick={() => openModal('new-consultation')}
+                        className="text-[11px] font-medium text-emerald-600 dark:text-emerald-400 hover:underline cursor-pointer"
+                      >
+                        Consultation
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -299,6 +314,13 @@ export function PatientsTable() {
           </div>
         </div>
       )}
+
+      {/* ── Patient AMO / Feuille de Soins Modal ── */}
+      <PatientAmoModal
+        patient={selectedPatientForAmo}
+        isOpen={Boolean(selectedPatientForAmo)}
+        onClose={() => setSelectedPatientForAmo(null)}
+      />
     </div>
   )
 }

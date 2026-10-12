@@ -1,5 +1,6 @@
 package com.dossia.backend.billing.service;
 
+import com.dossia.backend.billing.BillingService;
 import com.dossia.backend.billing.domain.Invoice;
 import com.dossia.backend.billing.domain.InvoiceStatus;
 import com.dossia.backend.billing.domain.Payment;

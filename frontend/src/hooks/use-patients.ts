@@ -84,3 +84,21 @@ export function useCreatePatient() {
     },
   })
 }
+
+/**
+ * Hook to update an existing patient
+ */
+export function useUpdatePatient() {
+  const queryClient = useQueryClient()
+
+  return useMutation<Patient, Error, { id: string; payload: PatientUpdateRequest }>({
+    mutationFn: async ({ id, payload }) => {
+      const { data } = await apiClient.put<Patient>(`/patients/${id}`, payload)
+      return data
+    },
+    onSuccess: (updated) => {
+      queryClient.invalidateQueries({ queryKey: ['patients'] })
+      toast.success(`Dossier patient mis à jour (${updated.lastName} ${updated.firstName})`)
+    },
+  })
+}

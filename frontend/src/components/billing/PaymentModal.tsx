@@ -15,7 +15,8 @@ import {
   type PaymentMethod,
   type InvoiceResponse,
 } from '@/hooks/use-billing'
-import { usePatients } from '@/hooks/use-patients'
+import { usePatients, useUpdatePatient } from '@/hooks/use-patients'
+import { useGenerateFeuilleDeSoins, openCnssPdfInPrintTab } from '@/hooks/use-cnss'
 import {
   Banknote,
   CreditCard,
@@ -25,6 +26,7 @@ import {
   CheckCircle2,
   Loader2,
   AlertCircle,
+  FileCheck2,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -56,10 +58,18 @@ export function PaymentModal({
   const [bankName, setBankName] = useState<string>('')
   const [completedInvoice, setCompletedInvoice] = useState<InvoiceResponse | null>(null)
   const [isPrinting, setIsPrinting] = useState<boolean>(false)
+  const [cnssInput, setCnssInput] = useState<string>('')
+  const [isSavingCnss, setIsSavingCnss] = useState<boolean>(false)
+  const [isGeneratingAmo, setIsGeneratingAmo] = useState<boolean>(false)
 
   const { data: patientsPage } = usePatients(0, 50)
-
   const directEncaissement = useDirectEncaissement()
+  const generateAmoMutation = useGenerateFeuilleDeSoins()
+  const updatePatientMutation = useUpdatePatient()
+
+  const currentPatient = patientsPage?.content.find(
+    (p) => p.id === (completedInvoice?.patientId || selectedPatientId)
+  )
 
   useEffect(() => {
     if (open) {
@@ -70,8 +80,48 @@ export function PaymentModal({
       setBankName('')
       setCompletedInvoice(null)
       setIsPrinting(false)
+      setCnssInput('')
+      setIsSavingCnss(false)
+      setIsGeneratingAmo(false)
     }
   }, [open, initialPatientId, defaultAmount])
+
+  const handleSaveCnss = async () => {
+    if (!currentPatient || !cnssInput.trim()) return
+    setIsSavingCnss(true)
+    try {
+      await updatePatientMutation.mutateAsync({
+        id: currentPatient.id,
+        payload: {
+          firstName: currentPatient.firstName,
+          lastName: currentPatient.lastName,
+          cin: currentPatient.cin,
+          phoneNumber: currentPatient.phoneNumber,
+          birthDate: currentPatient.birthDate,
+          cnssNumber: cnssInput.trim(),
+          mutuelleType: currentPatient.mutuelleType || 'CNSS',
+        },
+      })
+      setCnssInput('')
+    } finally {
+      setIsSavingCnss(false)
+    }
+  }
+
+  const handleGenerateFeuilleDeSoins = async () => {
+    if (!completedInvoice) return
+    setIsGeneratingAmo(true)
+    try {
+      const res = await generateAmoMutation.mutateAsync({
+        patientId: completedInvoice.patientId,
+        invoiceId: completedInvoice.id,
+        consultationId: completedInvoice.consultationId || null,
+      })
+      await openCnssPdfInPrintTab(res.id)
+    } finally {
+      setIsGeneratingAmo(false)
+    }
+  }
 
   const handlePresetClick = (val: number) => {
     setAmount(val)
@@ -120,11 +170,11 @@ export function PaymentModal({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[440px] p-5">
+      <DialogContent className="sm:max-w-[460px] p-5">
         <DialogHeader className="pb-2 border-b border-zinc-100 dark:border-zinc-800">
           <DialogTitle className="text-sm font-semibold tracking-tight text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            {completedInvoice ? "Reçu d'encaissement" : 'Encaisser une prestation'}
+            {completedInvoice ? "Reçu d'encaissement & AMO" : 'Encaisser une prestation'}
           </DialogTitle>
           <DialogDescription className="text-xs text-zinc-500">
             {completedInvoice
@@ -135,7 +185,7 @@ export function PaymentModal({
         </DialogHeader>
 
         {completedInvoice ? (
-          <div className="py-4 space-y-4 text-center">
+          <div className="py-4 space-y-3.5 text-center">
             <div className="w-12 h-12 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 mx-auto flex items-center justify-center">
               <CheckCircle2 className="w-6 h-6 stroke-[2]" />
             </div>
@@ -166,7 +216,51 @@ export function PaymentModal({
               </div>
             </div>
 
-            <div className="flex items-center gap-2 pt-2">
+            {/* Data Completeness Guard: Missing CNSS Number Warning */}
+            {currentPatient && !currentPatient.cnssNumber && (
+              <div className="p-2.5 rounded-md bg-amber-500/10 border border-amber-500/30 text-left space-y-2">
+                <div className="flex items-start gap-1.5 text-amber-800 dark:text-amber-300 text-[11px] font-medium">
+                  <AlertCircle className="w-3.5 h-3.5 mt-0.5 shrink-0 stroke-[1.5]" />
+                  <span>
+                    Attention : Le numéro d'immatriculation CNSS est manquant pour ce patient. Veuillez le renseigner avant de générer le formulaire.
+                  </span>
+                </div>
+                <div className="flex items-center gap-1.5 pt-0.5">
+                  <Input
+                    placeholder="Ex: 102938475"
+                    value={cnssInput}
+                    onChange={(e) => setCnssInput(e.target.value)}
+                    className="h-7 text-xs font-mono"
+                  />
+                  <Button
+                    size="sm"
+                    type="button"
+                    className="h-7 px-2.5 text-xs bg-amber-600 hover:bg-amber-700 text-white shrink-0 cursor-pointer"
+                    onClick={handleSaveCnss}
+                    disabled={isSavingCnss || !cnssInput.trim()}
+                  >
+                    {isSavingCnss ? <Loader2 className="w-3 h-3 animate-spin" /> : 'Enregistrer'}
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* 1-Click Feuille de Soins (AMO) Action */}
+            <Button
+              variant="outline"
+              className="w-full h-8.5 text-xs border-teal-400 dark:border-teal-700 bg-teal-50/60 dark:bg-teal-950/40 text-teal-800 dark:text-teal-300 hover:bg-teal-100 dark:hover:bg-teal-900/50 cursor-pointer disabled:opacity-50"
+              onClick={handleGenerateFeuilleDeSoins}
+              disabled={isGeneratingAmo || !currentPatient?.cnssNumber}
+            >
+              {isGeneratingAmo ? (
+                <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+              ) : (
+                <FileCheck2 className="w-3.5 h-3.5 mr-1.5 text-teal-600 dark:text-teal-400 stroke-[1.5]" />
+              )}
+              Générer Feuille de Soins (AMO)
+            </Button>
+
+            <div className="flex items-center gap-2 pt-1">
               <Button
                 variant="outline"
                 className="flex-1 h-8 text-xs cursor-pointer"

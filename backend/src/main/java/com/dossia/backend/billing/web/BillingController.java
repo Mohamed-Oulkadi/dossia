@@ -1,7 +1,7 @@
 package com.dossia.backend.billing.web;
 
 import com.dossia.backend.billing.dto.*;
-import com.dossia.backend.billing.service.BillingService;
+import com.dossia.backend.billing.BillingService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

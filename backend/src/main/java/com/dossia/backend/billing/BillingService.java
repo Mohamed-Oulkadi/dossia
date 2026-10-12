@@ -1,4 +1,4 @@
-package com.dossia.backend.billing.service;
+package com.dossia.backend.billing;
 
 import com.dossia.backend.billing.dto.*;
 
@@ -6,6 +6,10 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Public service interface for the Billing Bounded Context.
+ * Exposed to other modules (such as CNSS) following Spring Modulith conventions.
+ */
 public interface BillingService {
 
     InvoiceResponse createInvoice(InvoiceCreateRequest request);
