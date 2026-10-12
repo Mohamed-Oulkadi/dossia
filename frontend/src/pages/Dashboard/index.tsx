@@ -7,6 +7,7 @@ import { AppShell } from '@/components/layout/AppShell'
 import { SmartAgenda } from './SmartAgenda'
 import { PatientsTable } from './PatientsTable'
 import ConsultationWorkspace from '@/pages/ConsultationWorkspace'
+import CaissePage from '@/pages/Caisse'
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts'
 import { useAppStore } from '@/store/useAppStore'
 import { useLocation } from 'react-router-dom'
@@ -25,6 +26,7 @@ export default function DashboardPage() {
 
   const isPatientsRoute = location.pathname.startsWith('/app/patients')
   const isConsultationRoute = location.pathname.startsWith('/app/consultation')
+  const isCaisseRoute = location.pathname.startsWith('/app/paiements') || location.pathname.startsWith('/app/caisse')
 
   return (
     <AppShell>
@@ -32,6 +34,8 @@ export default function DashboardPage() {
         <ConsultationWorkspace />
       ) : isPatientsRoute ? (
         <PatientsTable />
+      ) : isCaisseRoute ? (
+        <CaissePage />
       ) : (
         <SmartAgenda />
       )}

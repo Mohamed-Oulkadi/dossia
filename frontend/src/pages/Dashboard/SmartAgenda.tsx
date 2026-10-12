@@ -20,6 +20,7 @@ import { useAppStore } from '@/store/useAppStore'
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { PaymentModal } from '@/components/billing/PaymentModal'
 import {
   CalendarPlus,
   Clock,
@@ -261,6 +262,7 @@ export function SmartAgenda() {
   const [statusFilter, setStatusFilter] = useState<string>('Tous')
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid')
   const [selectedAppointmentId, setSelectedAppointmentId] = useState<string | null>(null)
+  const [isBillingModalOpen, setIsBillingModalOpen] = useState<boolean>(false)
 
   // Live Query from Spring Boot backend
   const { data: appointments = [], isLoading, isError, refetch } = useDailyAgenda(
@@ -769,14 +771,25 @@ export function SmartAgenda() {
             <Button
               size="sm"
               variant="outline"
-              className="w-full justify-start text-xs"
-              onClick={() => openModal('add-payment')}
+              className="w-full justify-start text-xs cursor-pointer hover:bg-emerald-50 dark:hover:bg-emerald-950/40 hover:text-emerald-700 dark:hover:text-emerald-300"
+              onClick={() => setIsBillingModalOpen(true)}
             >
-              <CreditCard className="w-3.5 h-3.5 stroke-[1.5]" />
+              <CreditCard className="w-3.5 h-3.5 stroke-[1.5] text-emerald-600" />
               <span>Encaisser Honoraires (MAD)</span>
             </Button>
           </div>
         </div>
+      )}
+
+      {/* ── Fast Encaissement Modal for selected appointment ── */}
+      {selectedAppointment && (
+        <PaymentModal
+          open={isBillingModalOpen}
+          onOpenChange={setIsBillingModalOpen}
+          patientId={selectedAppointment.patientId}
+          patientName={selectedAppointment.patientName}
+          defaultAmount={300}
+        />
       )}
     </div>
   )
