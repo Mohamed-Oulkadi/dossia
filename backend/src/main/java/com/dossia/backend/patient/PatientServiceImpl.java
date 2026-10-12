@@ -1,5 +1,6 @@
 package com.dossia.backend.patient;
 
+import com.dossia.backend.auth.SecurityUtils;
 import com.dossia.backend.common.exception.DuplicateCinException;
 import com.dossia.backend.common.exception.ResourceNotFoundException;
 import com.dossia.backend.patient.dto.PatientCreateRequest;
@@ -18,17 +19,27 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class PatientServiceImpl implements PatientService {
 
+    public static final UUID DEFAULT_CLINIC_ID = UUID.fromString("11111111-1111-1111-1111-111111111111");
+
     private final PatientRepository patientRepository;
+
+    private UUID resolveClinicId() {
+        UUID current = SecurityUtils.getCurrentClinicId();
+        return current != null ? current : DEFAULT_CLINIC_ID;
+    }
 
     @Override
     @Transactional
     public PatientResponse createPatient(PatientCreateRequest request) {
+        UUID clinicId = resolveClinicId();
         String normalizedCin = request.cin().trim().toUpperCase();
-        if (patientRepository.existsByCin(normalizedCin)) {
-            throw new DuplicateCinException("Un patient avec le CIN " + normalizedCin + " existe déjà.");
+
+        if (patientRepository.existsByClinicIdAndCin(clinicId, normalizedCin)) {
+            throw new DuplicateCinException("Un patient avec le CIN " + normalizedCin + " existe déjà dans votre cabinet.");
         }
 
         Patient patient = Patient.builder()
+                .clinicId(clinicId)
                 .firstName(request.firstName().trim())
                 .lastName(request.lastName().trim())
                 .cin(normalizedCin)
@@ -45,27 +56,30 @@ public class PatientServiceImpl implements PatientService {
     @Override
     @Transactional(readOnly = true)
     public PatientResponse getPatientById(UUID id) {
-        return patientRepository.findById(id)
+        UUID clinicId = resolveClinicId();
+        return patientRepository.findByClinicIdAndId(clinicId, id)
                 .map(this::toResponse)
-                .orElseThrow(() -> new ResourceNotFoundException("Patient avec l'identifiant " + id + " introuvable."));
+                .orElseThrow(() -> new ResourceNotFoundException("Patient avec l'identifiant " + id + " introuvable dans votre cabinet."));
     }
 
     @Override
     @Transactional(readOnly = true)
     public Page<PatientResponse> getPatients(Pageable pageable) {
-        return patientRepository.findAll(pageable)
+        UUID clinicId = resolveClinicId();
+        return patientRepository.findAllByClinicId(clinicId, pageable)
                 .map(this::toResponse);
     }
 
     @Override
     @Transactional
     public PatientResponse updatePatient(UUID id, PatientUpdateRequest request) {
-        Patient patient = patientRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Patient avec l'identifiant " + id + " introuvable."));
+        UUID clinicId = resolveClinicId();
+        Patient patient = patientRepository.findByClinicIdAndId(clinicId, id)
+                .orElseThrow(() -> new ResourceNotFoundException("Patient avec l'identifiant " + id + " introuvable dans votre cabinet."));
 
         String normalizedCin = request.cin().trim().toUpperCase();
-        if (patientRepository.existsByCinAndIdNot(normalizedCin, id)) {
-            throw new DuplicateCinException("Un autre patient possède déjà le CIN " + normalizedCin + ".");
+        if (patientRepository.existsByClinicIdAndCinAndIdNot(clinicId, normalizedCin, id)) {
+            throw new DuplicateCinException("Un autre patient de votre cabinet possède déjà le CIN " + normalizedCin + ".");
         }
 
         patient.setFirstName(request.firstName().trim());
@@ -83,8 +97,9 @@ public class PatientServiceImpl implements PatientService {
     @Override
     @Transactional
     public void deletePatient(UUID id) {
-        Patient patient = patientRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Patient avec l'identifiant " + id + " introuvable."));
+        UUID clinicId = resolveClinicId();
+        Patient patient = patientRepository.findByClinicIdAndId(clinicId, id)
+                .orElseThrow(() -> new ResourceNotFoundException("Patient avec l'identifiant " + id + " introuvable dans votre cabinet."));
 
         // Soft delete per CNDP Loi 09-08 medical retention standard
         patient.setDeletedAt(Instant.now());

@@ -15,6 +15,20 @@ import java.util.UUID;
 @Repository
 public interface InvoiceRepository extends JpaRepository<Invoice, UUID> {
 
+    @Query("SELECT i FROM Invoice i LEFT JOIN FETCH i.payments WHERE i.clinicId = :clinicId AND i.id = :id")
+    Optional<Invoice> findByClinicIdAndIdWithPayments(@Param("clinicId") UUID clinicId, @Param("id") UUID id);
+
+    Optional<Invoice> findByClinicIdAndId(UUID clinicId, UUID id);
+
+    List<Invoice> findByClinicIdAndPatientIdOrderByIssueDateDesc(UUID clinicId, UUID patientId);
+
+    List<Invoice> findByClinicIdAndPatientIdAndStatusInOrderByIssueDateDesc(UUID clinicId, UUID patientId, Collection<InvoiceStatus> statuses);
+
+    List<Invoice> findByClinicIdAndStatusOrderByIssueDateDesc(UUID clinicId, InvoiceStatus status);
+
+    List<Invoice> findAllByClinicIdOrderByIssueDateDesc(UUID clinicId);
+
+    // Fallbacks for non-clinic test scopes
     @Query("SELECT i FROM Invoice i LEFT JOIN FETCH i.payments WHERE i.id = :id")
     Optional<Invoice> findByIdWithPayments(@Param("id") UUID id);
 

@@ -5,6 +5,7 @@ import com.dossia.backend.agenda.domain.AppointmentStatus;
 import com.dossia.backend.agenda.dto.AppointmentCreateRequest;
 import com.dossia.backend.agenda.dto.AppointmentResponse;
 import com.dossia.backend.agenda.repository.AppointmentRepository;
+import com.dossia.backend.auth.SecurityUtils;
 import com.dossia.backend.common.exception.ResourceNotFoundException;
 import com.dossia.backend.patient.PatientService;
 import com.dossia.backend.patient.dto.PatientResponse;
@@ -28,12 +29,19 @@ import java.util.UUID;
 public class AgendaServiceImpl implements AgendaService {
 
     public static final ZoneId CASABLANCA_ZONE = ZoneId.of("Africa/Casablanca");
+    public static final UUID DEFAULT_CLINIC_ID = UUID.fromString("11111111-1111-1111-1111-111111111111");
 
     private final AppointmentRepository appointmentRepository;
     private final PatientService patientService;
 
+    private UUID resolveClinicId() {
+        UUID current = SecurityUtils.getCurrentClinicId();
+        return current != null ? current : DEFAULT_CLINIC_ID;
+    }
+
     @Override
     public List<AppointmentResponse> getDailySchedule(LocalDate date, String doctorName) {
+        UUID clinicId = resolveClinicId();
         LocalDate queryDate = (date != null) ? date : LocalDate.now(CASABLANCA_ZONE);
         ZonedDateTime startOfDay = queryDate.atStartOfDay(CASABLANCA_ZONE);
         ZonedDateTime endOfDay = startOfDay.plusDays(1);
@@ -42,6 +50,7 @@ public class AgendaServiceImpl implements AgendaService {
         Instant endInstant = endOfDay.toInstant();
 
         List<Appointment> appointments = appointmentRepository.findDailyAppointments(
+                clinicId,
                 startInstant,
                 endInstant,
                 (doctorName != null && !doctorName.isBlank()) ? doctorName.trim() : null
@@ -55,6 +64,8 @@ public class AgendaServiceImpl implements AgendaService {
     @Override
     @Transactional(isolation = Isolation.READ_COMMITTED)
     public AppointmentResponse createAppointment(AppointmentCreateRequest request) {
+        UUID clinicId = resolveClinicId();
+
         // Enforce Casablanca timezone normalization
         ZonedDateTime startInCasablanca = request.startTime().withZoneSameInstant(CASABLANCA_ZONE);
         ZonedDateTime endInCasablanca = request.endTime().withZoneSameInstant(CASABLANCA_ZONE);
@@ -63,10 +74,11 @@ public class AgendaServiceImpl implements AgendaService {
             throw new IllegalArgumentException("L'heure de fin du rendez-vous doit être postérieure à l'heure de début.");
         }
 
-        // Verify patient existence via public PatientService contract (No cross-module repository access)
+        // Verify patient existence via public PatientService contract
         PatientResponse patient = patientService.getPatientById(request.patientId());
 
         Appointment appointment = Appointment.builder()
+                .clinicId(clinicId)
                 .patientId(patient.id())
                 .doctorName(request.doctorName().trim())
                 .startTime(startInCasablanca.toInstant())
@@ -77,7 +89,7 @@ public class AgendaServiceImpl implements AgendaService {
                 .build();
 
         Appointment saved = appointmentRepository.save(appointment);
-        log.info("Created appointment {} for patient {} with Dr. {}", saved.getId(), patient.id(), saved.getDoctorName());
+        log.info("Created appointment {} for patient {} in clinic {} with Dr. {}", saved.getId(), patient.id(), clinicId, saved.getDoctorName());
 
         return mapToResponse(saved, patient);
     }
@@ -85,7 +97,8 @@ public class AgendaServiceImpl implements AgendaService {
     @Override
     @Transactional(isolation = Isolation.READ_COMMITTED)
     public AppointmentResponse updateAppointmentStatus(UUID id, AppointmentStatus newStatus) {
-        Appointment appointment = appointmentRepository.findById(id)
+        UUID clinicId = resolveClinicId();
+        Appointment appointment = appointmentRepository.findByClinicIdAndId(clinicId, id)
                 .orElseThrow(() -> new ResourceNotFoundException("Rendez-vous introuvable avec l'identifiant: " + id));
 
         AppointmentStatus previousStatus = appointment.getStatus();
@@ -98,7 +111,8 @@ public class AgendaServiceImpl implements AgendaService {
 
     @Override
     public AppointmentResponse getAppointmentById(UUID id) {
-        Appointment appointment = appointmentRepository.findById(id)
+        UUID clinicId = resolveClinicId();
+        Appointment appointment = appointmentRepository.findByClinicIdAndId(clinicId, id)
                 .orElseThrow(() -> new ResourceNotFoundException("Rendez-vous introuvable avec l'identifiant: " + id));
         return mapToResponse(appointment);
     }

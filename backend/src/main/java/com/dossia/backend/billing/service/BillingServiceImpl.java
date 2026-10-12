@@ -1,5 +1,6 @@
 package com.dossia.backend.billing.service;
 
+import com.dossia.backend.auth.SecurityUtils;
 import com.dossia.backend.billing.BillingService;
 import com.dossia.backend.billing.domain.Invoice;
 import com.dossia.backend.billing.domain.InvoiceStatus;
@@ -31,15 +32,22 @@ import java.util.*;
 public class BillingServiceImpl implements BillingService {
 
     private static final ZoneId CASABLANCA_ZONE = ZoneId.of("Africa/Casablanca");
+    public static final UUID DEFAULT_CLINIC_ID = UUID.fromString("11111111-1111-1111-1111-111111111111");
 
     private final InvoiceRepository invoiceRepository;
     private final PaymentRepository paymentRepository;
     private final PatientService patientService;
     private final ReceiptPdfGenerator receiptPdfGenerator;
 
+    private UUID resolveClinicId() {
+        UUID current = SecurityUtils.getCurrentClinicId();
+        return current != null ? current : DEFAULT_CLINIC_ID;
+    }
+
     @Override
     @Transactional(isolation = Isolation.READ_COMMITTED)
     public InvoiceResponse createInvoice(InvoiceCreateRequest request) {
+        UUID clinicId = resolveClinicId();
         PatientResponse patient = patientService.getPatientById(request.patientId());
 
         BigDecimal amount = request.totalAmount() != null
@@ -47,6 +55,7 @@ public class BillingServiceImpl implements BillingService {
                 : BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
 
         Invoice invoice = Invoice.builder()
+                .clinicId(clinicId)
                 .patientId(request.patientId())
                 .consultationId(request.consultationId())
                 .totalAmount(amount)
@@ -63,7 +72,8 @@ public class BillingServiceImpl implements BillingService {
     @Override
     @Transactional(isolation = Isolation.READ_COMMITTED)
     public PaymentResponse registerPayment(PaymentCreateRequest request) {
-        Invoice invoice = invoiceRepository.findByIdWithPayments(request.invoiceId())
+        UUID clinicId = resolveClinicId();
+        Invoice invoice = invoiceRepository.findByClinicIdAndIdWithPayments(clinicId, request.invoiceId())
                 .orElseThrow(() -> new ResourceNotFoundException("Facture introuvable avec l'identifiant: " + request.invoiceId()));
 
         BigDecimal amount = request.amount().setScale(2, RoundingMode.HALF_UP);
@@ -87,10 +97,12 @@ public class BillingServiceImpl implements BillingService {
     @Override
     @Transactional(isolation = Isolation.READ_COMMITTED)
     public InvoiceResponse directEncaissement(DirectPaymentRequest request) {
+        UUID clinicId = resolveClinicId();
         PatientResponse patient = patientService.getPatientById(request.patientId());
         BigDecimal amount = request.amount().setScale(2, RoundingMode.HALF_UP);
 
         Invoice invoice = Invoice.builder()
+                .clinicId(clinicId)
                 .patientId(request.patientId())
                 .consultationId(request.consultationId())
                 .totalAmount(amount)
@@ -197,7 +209,8 @@ public class BillingServiceImpl implements BillingService {
     @Override
     @Transactional(readOnly = true)
     public InvoiceResponse getInvoiceById(UUID id) {
-        Invoice invoice = invoiceRepository.findByIdWithPayments(id)
+        UUID clinicId = resolveClinicId();
+        Invoice invoice = invoiceRepository.findByClinicIdAndIdWithPayments(clinicId, id)
                 .orElseThrow(() -> new ResourceNotFoundException("Facture introuvable avec l'identifiant: " + id));
 
         PatientResponse patient = patientService.getPatientById(invoice.getPatientId());
@@ -208,7 +221,8 @@ public class BillingServiceImpl implements BillingService {
     @Override
     @Transactional(readOnly = true)
     public byte[] generateReceiptPdf(UUID invoiceId) {
-        Invoice invoice = invoiceRepository.findByIdWithPayments(invoiceId)
+        UUID clinicId = resolveClinicId();
+        Invoice invoice = invoiceRepository.findByClinicIdAndIdWithPayments(clinicId, invoiceId)
                 .orElseThrow(() -> new ResourceNotFoundException("Facture introuvable avec l'identifiant: " + invoiceId));
 
         PatientResponse patient = patientService.getPatientById(invoice.getPatientId());
@@ -218,10 +232,11 @@ public class BillingServiceImpl implements BillingService {
     @Override
     @Transactional(readOnly = true)
     public List<InvoiceResponse> getPendingInvoices(UUID patientId) {
+        UUID clinicId = resolveClinicId();
         List<InvoiceStatus> pendingStatuses = List.of(InvoiceStatus.NON_PAYE, InvoiceStatus.PARTIEL);
         List<Invoice> invoices = patientId != null
-                ? invoiceRepository.findByPatientIdAndStatusInOrderByIssueDateDesc(patientId, pendingStatuses)
-                : invoiceRepository.findAll().stream()
+                ? invoiceRepository.findByClinicIdAndPatientIdAndStatusInOrderByIssueDateDesc(clinicId, patientId, pendingStatuses)
+                : invoiceRepository.findAllByClinicIdOrderByIssueDateDesc(clinicId).stream()
                     .filter(i -> pendingStatuses.contains(i.getStatus()))
                     .toList();
 

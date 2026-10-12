@@ -29,6 +29,7 @@ import java.util.UUID;
 public class ConsultationServiceImpl implements ConsultationService {
 
     private static final ZoneId CASABLANCA_ZONE = ZoneId.of("Africa/Casablanca");
+    public static final UUID DEFAULT_CLINIC_ID = UUID.fromString("11111111-1111-1111-1111-111111111111");
 
     private final ConsultationRepository consultationRepository;
     private final PrescriptionRepository prescriptionRepository;
@@ -36,13 +37,20 @@ public class ConsultationServiceImpl implements ConsultationService {
     private final OrdonnancePdfGenerator ordonnancePdfGenerator;
     private final ApplicationEventPublisher eventPublisher;
 
+    private UUID resolveClinicId() {
+        UUID current = com.dossia.backend.auth.SecurityUtils.getCurrentClinicId();
+        return current != null ? current : DEFAULT_CLINIC_ID;
+    }
+
     @Override
     @Transactional(isolation = Isolation.READ_COMMITTED)
     public ConsultationResponse createConsultation(ConsultationCreateRequest request) {
+        UUID clinicId = resolveClinicId();
         // Verify patient identity via public PatientService contract (No cross-module repository access)
         PatientResponse patient = patientService.getPatientById(request.patientId());
 
         Consultation consultation = Consultation.builder()
+                .clinicId(clinicId)
                 .patientId(patient.id())
                 .appointmentId(request.appointmentId())
                 .motif(request.motif().trim())
@@ -79,7 +87,8 @@ public class ConsultationServiceImpl implements ConsultationService {
 
     @Override
     public ConsultationResponse getConsultationById(UUID id) {
-        Consultation consultation = consultationRepository.findById(id)
+        UUID clinicId = resolveClinicId();
+        Consultation consultation = consultationRepository.findByClinicIdAndId(clinicId, id)
                 .orElseThrow(() -> new ResourceNotFoundException("Consultation introuvable avec l'ID: " + id));
 
         PatientResponse patient = null;
@@ -94,8 +103,9 @@ public class ConsultationServiceImpl implements ConsultationService {
 
     @Override
     public List<ConsultationResponse> getPatientConsultations(UUID patientId) {
+        UUID clinicId = resolveClinicId();
         PatientResponse patient = patientService.getPatientById(patientId);
-        List<Consultation> consultations = consultationRepository.findByPatientIdOrderByCreatedAtDesc(patientId);
+        List<Consultation> consultations = consultationRepository.findByClinicIdAndPatientIdOrderByCreatedAtDesc(clinicId, patientId);
 
         return consultations.stream()
                 .map(c -> mapToResponse(c, patient))
@@ -104,7 +114,8 @@ public class ConsultationServiceImpl implements ConsultationService {
 
     @Override
     public byte[] generateOrdonnancePdf(UUID consultationId) {
-        Consultation consultation = consultationRepository.findById(consultationId)
+        UUID clinicId = resolveClinicId();
+        Consultation consultation = consultationRepository.findByClinicIdAndId(clinicId, consultationId)
                 .orElseThrow(() -> new ResourceNotFoundException("Consultation introuvable avec l'ID: " + consultationId));
 
         Prescription prescription = consultation.getPrescription();

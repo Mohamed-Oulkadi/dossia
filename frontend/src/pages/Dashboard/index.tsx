@@ -10,6 +10,7 @@ import ConsultationWorkspace from '@/pages/ConsultationWorkspace'
 import CaissePage from '@/pages/Caisse'
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts'
 import { useAppStore } from '@/store/useAppStore'
+import { RoleGuard } from '@/components/auth/RoleGuard'
 import { useLocation } from 'react-router-dom'
 
 export default function DashboardPage() {
@@ -25,13 +26,17 @@ export default function DashboardPage() {
   ])
 
   const isPatientsRoute = location.pathname.startsWith('/app/patients')
-  const isConsultationRoute = location.pathname.startsWith('/app/consultation')
+  const isConsultationRoute =
+    location.pathname.startsWith('/app/consultation') ||
+    location.pathname.startsWith('/app/ordonnances')
   const isCaisseRoute = location.pathname.startsWith('/app/paiements') || location.pathname.startsWith('/app/caisse')
 
   return (
     <AppShell>
       {isConsultationRoute ? (
-        <ConsultationWorkspace />
+        <RoleGuard allowedRoles={['DOCTOR']}>
+          <ConsultationWorkspace />
+        </RoleGuard>
       ) : isPatientsRoute ? (
         <PatientsTable />
       ) : isCaisseRoute ? (

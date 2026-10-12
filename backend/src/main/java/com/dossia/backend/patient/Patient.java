@@ -26,6 +26,9 @@ public class Patient extends AuditableEntity {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
+    @Column(name = "clinic_id", nullable = false)
+    private UUID clinicId;
+
     @Column(name = "first_name", nullable = false, length = 100)
     private String firstName;
 

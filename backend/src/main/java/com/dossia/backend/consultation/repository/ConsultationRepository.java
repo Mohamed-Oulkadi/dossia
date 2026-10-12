@@ -9,6 +9,13 @@ import java.util.UUID;
 
 public interface ConsultationRepository extends JpaRepository<Consultation, UUID> {
 
+    Optional<Consultation> findByClinicIdAndId(UUID clinicId, UUID id);
+
+    List<Consultation> findByClinicIdAndPatientIdOrderByCreatedAtDesc(UUID clinicId, UUID patientId);
+
+    Optional<Consultation> findByClinicIdAndAppointmentId(UUID clinicId, UUID appointmentId);
+
+    // Backward-compatible query methods for test contexts
     List<Consultation> findByPatientIdOrderByCreatedAtDesc(UUID patientId);
 
     Optional<Consultation> findByAppointmentId(UUID appointmentId);
