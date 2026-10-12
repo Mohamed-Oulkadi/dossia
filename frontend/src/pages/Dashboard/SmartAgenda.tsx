@@ -8,6 +8,7 @@
  * - Strict Moroccan Standards: font-mono tabular-nums, Casablanca timezone normalization
  */
 import { useState, useMemo } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
   useDailyAgenda,
   useUpdateAppointmentStatus,
@@ -29,6 +30,7 @@ import {
   ChevronLeft,
   ChevronRight,
   MoreVertical,
+  Stethoscope,
   FileText,
   CreditCard,
   X,
@@ -249,6 +251,7 @@ function StatusActionMenu({
 // SmartAgenda Component
 // ─────────────────────────────────────────────────
 export function SmartAgenda() {
+  const navigate = useNavigate()
   const { openCommandPalette, openModal } = useAppStore()
 
   // Date navigation state (Defaults to today in YYYY-MM-DD)
@@ -744,6 +747,18 @@ export function SmartAgenda() {
           <div className="pt-3 border-t border-zinc-200 dark:border-zinc-800 space-y-2">
             <Button
               size="sm"
+              className="w-full justify-start text-xs bg-emerald-600 hover:bg-emerald-500 text-white border-0 gap-1.5"
+              onClick={() =>
+                navigate(
+                  `/app/consultation?appointmentId=${selectedAppointment.id}&patientId=${selectedAppointment.patientId}`
+                )
+              }
+            >
+              <Stethoscope className="w-3.5 h-3.5" />
+              <span>Démarrer la consultation (Workspace)</span>
+            </Button>
+            <Button
+              size="sm"
               variant="outline"
               className="w-full justify-start text-xs"
               onClick={() => openModal('generate-cnss')}
@@ -753,6 +768,7 @@ export function SmartAgenda() {
             </Button>
             <Button
               size="sm"
+              variant="outline"
               className="w-full justify-start text-xs"
               onClick={() => openModal('add-payment')}
             >
