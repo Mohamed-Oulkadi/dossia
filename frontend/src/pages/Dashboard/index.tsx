@@ -1,9 +1,13 @@
 /**
  * Dashboard — entry point for /app routes
  *
- * Secretary-First: AppShell with SmartAgenda (calendar) or PatientsTable (records)
+ * Role-Based Workspaces & Dynamic Layouts:
+ * - DOCTOR: Cockpit Médical & Salle d'Attente Interactive
+ * - SECRETARY: Split-screen SLA 3s (Planning Arrivées + Caisse Rapide)
+ * - Guards: CNDP Loi 09-08 strictly shields /app/consultation* to DOCTOR only
  */
 import { AppShell } from '@/components/layout/AppShell'
+import { HomeDashboard } from './HomeDashboard'
 import { SmartAgenda } from './SmartAgenda'
 import { PatientsTable } from './PatientsTable'
 import ConsultationWorkspace from '@/pages/ConsultationWorkspace'
@@ -28,8 +32,12 @@ export default function DashboardPage() {
   const isPatientsRoute = location.pathname.startsWith('/app/patients')
   const isConsultationRoute =
     location.pathname.startsWith('/app/consultation') ||
+    location.pathname.startsWith('/app/consultations') ||
     location.pathname.startsWith('/app/ordonnances')
-  const isCaisseRoute = location.pathname.startsWith('/app/paiements') || location.pathname.startsWith('/app/caisse')
+  const isCaisseRoute =
+    location.pathname.startsWith('/app/paiements') ||
+    location.pathname.startsWith('/app/caisse')
+  const isFullAgendaRoute = location.pathname.startsWith('/app/agenda')
 
   return (
     <AppShell>
@@ -41,9 +49,12 @@ export default function DashboardPage() {
         <PatientsTable />
       ) : isCaisseRoute ? (
         <CaissePage />
-      ) : (
+      ) : isFullAgendaRoute ? (
         <SmartAgenda />
+      ) : (
+        <HomeDashboard />
       )}
     </AppShell>
   )
 }
+export { HomeDashboard, SmartAgenda, PatientsTable }

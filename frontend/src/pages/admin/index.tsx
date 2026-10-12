@@ -1,0 +1,5 @@
+export { AdminDashboard as default, AdminDashboard } from './AdminDashboard'
+export { AdminClinicDetailPage } from './AdminClinicDetailPage'
+export { AdminSubscriptionsPage } from './AdminSubscriptionsPage'
+export { AdminAuditPage } from './AdminAuditPage'
+export { NewClinicModal } from './NewClinicModal'

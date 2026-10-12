@@ -19,8 +19,15 @@ import {
   CheckCircle2,
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import { useAuthStore } from '@/store/useAuthStore'
 
 export function RoiCalculator() {
+  const { isAuthenticated, role } = useAuthStore()
+  const appDestination = !isAuthenticated
+    ? '/login'
+    : role === 'SUPER_ADMIN'
+      ? '/admin'
+      : '/app'
   const [patientsPerDay, setPatientsPerDay] = useState(30)
   const [consultationFee, setConsultationFee] = useState(250)
   const [noShowRate, setNoShowRate] = useState(10)
@@ -220,7 +227,7 @@ export function RoiCalculator() {
 
           {/* Action CTA */}
           <Link
-            to="/app"
+            to={appDestination}
             className="
               w-full py-2.5 px-4 rounded-md text-xs font-medium
               bg-emerald-600 hover:bg-emerald-500 text-white

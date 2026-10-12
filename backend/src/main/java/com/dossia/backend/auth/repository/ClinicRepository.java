@@ -13,4 +13,8 @@ public interface ClinicRepository extends JpaRepository<Clinic, UUID> {
     Optional<Clinic> findByIce(String ice);
 
     boolean existsByIce(String ice);
+
+    java.util.List<Clinic> findAllByOrderByCreatedAtDesc();
+
+    long countBySubscriptionStatus(com.dossia.backend.auth.domain.SubscriptionStatus status);
 }

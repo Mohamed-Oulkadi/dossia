@@ -16,4 +16,6 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     boolean existsByEmail(String email);
 
     List<User> findAllByClinicId(UUID clinicId);
+
+    long countByRole(com.dossia.backend.auth.domain.UserRole role);
 }

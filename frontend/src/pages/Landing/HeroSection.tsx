@@ -9,6 +9,7 @@
  */
 import { motion, type Variants } from 'framer-motion'
 import { Link } from 'react-router-dom'
+import { useAuthStore } from '@/store/useAuthStore'
 import { useAppStore } from '@/store/useAppStore'
 import {
   ArrowRight,
@@ -46,6 +47,12 @@ const itemVariants: Variants = {
 // ─────────────────────────────────────────────────
 function Navbar() {
   const { theme, toggleTheme } = useAppStore()
+  const { isAuthenticated, role } = useAuthStore()
+  const appDestination = !isAuthenticated
+    ? '/login'
+    : role === 'SUPER_ADMIN'
+      ? '/admin'
+      : '/app'
 
   return (
     <motion.nav
@@ -89,7 +96,7 @@ function Navbar() {
         </button>
 
         <Link
-          to="/app"
+          to={isAuthenticated ? appDestination : '/login'}
           className="
             px-3 py-1.5 rounded-md text-xs font-medium
             border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300
@@ -97,17 +104,17 @@ function Navbar() {
             transition-colors
           "
         >
-          Connexion
+          {isAuthenticated ? 'Mon Espace' : 'Connexion'}
         </Link>
         <Link
-          to="/app"
+          to={appDestination}
           className="
-            px-3 py-1.5 rounded-md text-xs font-medium
+            px-3.5 py-1.5 rounded-md text-xs font-medium
             bg-zinc-900 dark:bg-zinc-100 text-zinc-50 dark:text-zinc-950 hover:bg-zinc-800 dark:hover:bg-zinc-200
             transition-colors flex items-center gap-1.5
           "
         >
-          <span>Accéder au cabinet</span>
+          <span>{role === 'SUPER_ADMIN' ? 'Espace Super Admin' : 'Accéder au cabinet'}</span>
           <ChevronRight className="w-3.5 h-3.5 stroke-[1.5]" />
         </Link>
       </div>
@@ -128,6 +135,13 @@ function TrustBadge({ icon: Icon, label }: { icon: React.ComponentType<{ classNa
 // Main HeroSection
 // ─────────────────────────────────────────────────
 export function HeroSection() {
+  const { isAuthenticated, role } = useAuthStore()
+  const appDestination = !isAuthenticated
+    ? '/login'
+    : role === 'SUPER_ADMIN'
+      ? '/admin'
+      : '/app'
+
   return (
     <>
       <Navbar />
@@ -175,7 +189,7 @@ export function HeroSection() {
             className="flex flex-col sm:flex-row items-center gap-3 pt-2"
           >
             <Link
-              to="/app"
+              to={appDestination}
               id="cta-primary"
               className="
                 flex items-center gap-2 px-5 py-2.5 rounded-md
@@ -183,12 +197,12 @@ export function HeroSection() {
                 hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-colors
               "
             >
-              <span>Ouvrir l&apos;Agenda Cabinet</span>
+              <span>{role === 'SUPER_ADMIN' ? 'Espace Super Admin' : 'Ouvrir l\'Agenda Cabinet'}</span>
               <ArrowRight className="w-3.5 h-3.5 stroke-[1.5]" />
             </Link>
 
             <Link
-              to="/app"
+              to={appDestination}
               id="cta-demo"
               className="
                 flex items-center gap-2 px-5 py-2.5 rounded-md
@@ -199,7 +213,7 @@ export function HeroSection() {
               "
             >
               <FileCheck2 className="w-3.5 h-3.5 text-zinc-500 dark:text-zinc-400 stroke-[1.5]" />
-              <span>Consulter une Fiche CNSS</span>
+              <span>{role === 'SUPER_ADMIN' ? 'Console SaaS' : 'Consulter une Fiche CNSS'}</span>
             </Link>
           </motion.div>
 

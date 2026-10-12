@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { useAuthStore, type UserRole } from '@/store/useAuthStore'
 import { apiClient } from '@/lib/api-client'
@@ -69,8 +69,14 @@ const DEMO_ACCOUNTS: DemoAccount[] = [
 export default function LoginPage() {
   const navigate = useNavigate()
   const location = useLocation()
-  const { login } = useAuthStore()
+  const { login, isAuthenticated, role } = useAuthStore()
   const { theme, toggleTheme } = useAppStore()
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate(role === 'SUPER_ADMIN' ? '/admin' : '/app', { replace: true })
+    }
+  }, [isAuthenticated, role, navigate])
 
   const [email, setEmail] = useState('dr.amrani@dossia.ma')
   const [password, setPassword] = useState('Dossia2026!')
@@ -96,7 +102,13 @@ export default function LoginPage() {
         description: `Bienvenue, ${user.firstName} ${user.lastName} (${user.role})`,
       })
 
-      const destination = (location.state as { from?: { pathname?: string } })?.from?.pathname || '/app'
+      const fromPath = (location.state as { from?: { pathname?: string } })?.from?.pathname
+      let destination: string
+      if (user.role === 'SUPER_ADMIN') {
+        destination = fromPath && !fromPath.startsWith('/app') ? fromPath : '/admin'
+      } else {
+        destination = fromPath && !fromPath.startsWith('/admin') ? fromPath : '/app'
+      }
       navigate(destination, { replace: true })
     } catch (err: unknown) {
       const errorObj = err as { response?: { data?: { detail?: string; title?: string } } }

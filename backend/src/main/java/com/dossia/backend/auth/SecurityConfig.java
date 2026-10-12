@@ -91,6 +91,9 @@ public class SecurityConfig {
                                 "/api/v1/cnss/**"
                         ).hasAnyRole("DOCTOR", "SECRETARY")
 
+                        // SUPER_ADMIN ONLY: Multi-tenancy, clinic provisioning, subscriptions, platform audit
+                        .requestMatchers("/api/v1/admin/**").hasRole("SUPER_ADMIN")
+
                         // Authenticated fallback
                         .anyRequest().authenticated()
                 )

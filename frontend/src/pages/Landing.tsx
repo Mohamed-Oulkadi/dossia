@@ -11,6 +11,7 @@
 import { lazy, Suspense, useState } from 'react'
 import { motion, type Variants } from 'framer-motion'
 import { Link } from 'react-router-dom'
+import { useAuthStore } from '@/store/useAuthStore'
 import { useAppStore } from '@/store/useAppStore'
 import { DossiaLogo } from '@/components/ui/DossiaLogo'
 import { RoiCalculator } from '@/components/landing/RoiCalculator'
@@ -64,7 +65,14 @@ const itemVariants: Variants = {
 
 export default function Landing() {
   const { theme, toggleTheme } = useAppStore()
+  const { isAuthenticated, role } = useAuthStore()
   const [demoRequested, setDemoRequested] = useState(false)
+
+  const appDestination = !isAuthenticated
+    ? '/login'
+    : role === 'SUPER_ADMIN'
+      ? '/admin'
+      : '/app'
 
   const handleDemoClick = () => {
     setDemoRequested(true)
@@ -124,17 +132,17 @@ export default function Landing() {
           </button>
 
           <Link
-            to="/app"
+            to={isAuthenticated ? appDestination : '/login'}
             className="px-3 py-1.5 rounded-md text-xs font-medium border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:border-zinc-400 dark:hover:border-zinc-700 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"
           >
-            Connexion
+            {isAuthenticated ? 'Mon Espace' : 'Connexion'}
           </Link>
 
           <Link
-            to="/app"
+            to={appDestination}
             className="px-3.5 py-1.5 rounded-md text-xs font-medium bg-emerald-600 hover:bg-emerald-500 text-white transition-colors flex items-center gap-1.5 shadow-xs"
           >
-            <span>Accéder au Cabinet</span>
+            <span>{role === 'SUPER_ADMIN' ? 'Espace Super Admin' : 'Accéder au Cabinet'}</span>
             <ChevronRight className="w-3.5 h-3.5 stroke-[1.5]" />
           </Link>
         </div>
@@ -193,11 +201,11 @@ export default function Landing() {
             </button>
 
             <Link
-              to="/app"
+              to={appDestination}
               id="cta-product"
               className="px-5 py-2.5 rounded-md text-xs font-medium border border-zinc-300 dark:border-zinc-800 bg-white dark:bg-zinc-900/60 text-zinc-800 dark:text-zinc-200 hover:border-zinc-400 dark:hover:border-zinc-700 hover:text-zinc-950 dark:hover:text-zinc-100 transition-colors flex items-center gap-2"
             >
-              <span>Voir le Produit</span>
+              <span>{role === 'SUPER_ADMIN' ? 'Espace Super Admin' : 'Voir le Produit'}</span>
               <ChevronRight className="w-3.5 h-3.5 stroke-[1.5]" />
             </Link>
           </motion.div>
@@ -402,10 +410,10 @@ export default function Landing() {
                 Confirmer la demande de démo
               </button>
               <Link
-                to="/app"
+                to={appDestination}
                 className="w-full sm:w-auto px-5 py-2.5 rounded-md text-xs font-medium border border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
               >
-                Accéder immédiatement au logiciel
+                {role === 'SUPER_ADMIN' ? 'Accéder à l’administration SaaS' : 'Accéder immédiatement au logiciel'}
               </Link>
             </div>
           )}
@@ -428,8 +436,8 @@ export default function Landing() {
             <span>·</span>
             <span>Norme ANAM INPE</span>
             <span>·</span>
-            <Link to="/app" className="hover:text-zinc-600 dark:hover:text-zinc-200 transition-colors">
-              Portail Cabinet
+            <Link to={appDestination} className="hover:text-zinc-600 dark:hover:text-zinc-200 transition-colors">
+              {role === 'SUPER_ADMIN' ? 'Portail Super Admin' : 'Portail Cabinet'}
             </Link>
           </div>
         </div>

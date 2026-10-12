@@ -1,5 +1,5 @@
 import React from 'react'
-import { Link } from 'react-router-dom'
+import { Link, Navigate } from 'react-router-dom'
 import { useAuthStore, type UserRole } from '@/store/useAuthStore'
 import { ShieldAlert, ArrowLeft } from 'lucide-react'
 
@@ -7,15 +7,41 @@ interface RoleGuardProps {
   allowedRoles: UserRole[]
   children: React.ReactNode
   fallback?: React.ReactNode
+  redirectTo?: string
 }
 
-export function RoleGuard({ allowedRoles, children, fallback }: RoleGuardProps) {
+export function RoleGuard({ allowedRoles, children, fallback, redirectTo }: RoleGuardProps) {
   const { role, user } = useAuthStore()
 
   if (!role || !allowedRoles.includes(role)) {
+    // 1. Explicit redirect takes top priority
+    if (redirectTo) {
+      return <Navigate to={redirectTo} replace />
+    }
+
+    // 2. SUPER_ADMIN attempting to access clinic routes is seamlessly redirected to /admin
+    if (role === 'SUPER_ADMIN' && !allowedRoles.includes('SUPER_ADMIN')) {
+      return <Navigate to="/admin" replace />
+    }
+
+    // 3. DOCTOR or SECRETARY attempting to access admin-only routes is seamlessly redirected to /app
+    if (
+      (role === 'DOCTOR' || role === 'SECRETARY') &&
+      allowedRoles.includes('SUPER_ADMIN') &&
+      !allowedRoles.includes(role)
+    ) {
+      return <Navigate to="/app" replace />
+    }
+
+    // 4. Custom fallback component if provided
     if (fallback) {
       return <>{fallback}</>
     }
+
+    // 5. CNDP Loi 09-08 warning screen (e.g. Secretary attempting to view doctor-only diagnoses)
+    const backDestination = role === 'SUPER_ADMIN' ? '/admin' : '/app'
+    const backLabel =
+      role === 'SUPER_ADMIN' ? 'Retourner à l’Administration' : 'Retourner à l’Agenda'
 
     return (
       <div className="flex-1 flex items-center justify-center p-6 bg-zinc-50 dark:bg-zinc-950">
@@ -39,11 +65,11 @@ export function RoleGuard({ allowedRoles, children, fallback }: RoleGuardProps) 
           </div>
 
           <Link
-            to="/app"
+            to={backDestination}
             className="inline-flex items-center justify-center gap-2 w-full h-8 px-3 rounded-md bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 text-xs font-medium hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-colors"
           >
             <ArrowLeft className="w-3.5 h-3.5 stroke-[1.5]" />
-            Retourner à l’Agenda
+            {backLabel}
           </Link>
         </div>
       </div>
@@ -52,3 +78,4 @@ export function RoleGuard({ allowedRoles, children, fallback }: RoleGuardProps) 
 
   return <>{children}</>
 }
+export default RoleGuard
