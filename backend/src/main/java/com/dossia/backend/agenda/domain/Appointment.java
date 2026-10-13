@@ -50,6 +50,12 @@ public class Appointment extends AuditableEntity {
     @Column(name = "notes", columnDefinition = "TEXT")
     private String notes;
 
+    @Column(name = "arrived_at")
+    private Instant arrivedAt;
+
+    @Column(name = "called_at")
+    private Instant calledAt;
+
     @Version
     @Column(name = "version", nullable = false)
     private Long version;

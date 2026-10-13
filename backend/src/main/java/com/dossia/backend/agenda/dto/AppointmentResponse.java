@@ -18,6 +18,8 @@ public record AppointmentResponse(
         AppointmentStatus status,
         AppointmentType type,
         String notes,
+        Instant arrivedAt,
+        Instant calledAt,
         Instant createdAt,
         Instant updatedAt
 ) {}

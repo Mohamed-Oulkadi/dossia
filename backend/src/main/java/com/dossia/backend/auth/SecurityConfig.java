@@ -81,6 +81,7 @@ public class SecurityConfig {
 
                         // DOCTOR ONLY: Clinical records, diagnoses, and medical consultations (Secretaries & SuperAdmins blocked)
                         .requestMatchers("/api/v1/consultations/**").hasRole("DOCTOR")
+                        .requestMatchers(HttpMethod.POST, "/api/v1/agenda/*/call").hasRole("DOCTOR")
 
                         // CLINIC OPERATIONAL ROLES: Patients, appointments, billing, and CNSS sheets
                         // Super Admin strictly blocked per CNDP Law 09-08

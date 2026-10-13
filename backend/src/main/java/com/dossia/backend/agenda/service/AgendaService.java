@@ -16,5 +16,7 @@ public interface AgendaService {
 
     AppointmentResponse updateAppointmentStatus(UUID id, AppointmentStatus status);
 
+    AppointmentResponse callPatient(UUID id, String roomLabel);
+
     AppointmentResponse getAppointmentById(UUID id);
 }

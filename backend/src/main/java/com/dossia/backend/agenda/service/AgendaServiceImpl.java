@@ -4,6 +4,8 @@ import com.dossia.backend.agenda.domain.Appointment;
 import com.dossia.backend.agenda.domain.AppointmentStatus;
 import com.dossia.backend.agenda.dto.AppointmentCreateRequest;
 import com.dossia.backend.agenda.dto.AppointmentResponse;
+import com.dossia.backend.agenda.event.PatientCalledEvent;
+import com.dossia.backend.agenda.event.WaitingRoomUpdatedEvent;
 import com.dossia.backend.agenda.repository.AppointmentRepository;
 import com.dossia.backend.auth.SecurityUtils;
 import com.dossia.backend.common.exception.ResourceNotFoundException;
@@ -11,6 +13,7 @@ import com.dossia.backend.patient.PatientService;
 import com.dossia.backend.patient.dto.PatientResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,6 +36,7 @@ public class AgendaServiceImpl implements AgendaService {
 
     private final AppointmentRepository appointmentRepository;
     private final PatientService patientService;
+    private final ApplicationEventPublisher eventPublisher;
 
     private UUID resolveClinicId() {
         UUID current = SecurityUtils.getCurrentClinicId();
@@ -84,12 +88,15 @@ public class AgendaServiceImpl implements AgendaService {
                 .startTime(startInCasablanca.toInstant())
                 .endTime(endInCasablanca.toInstant())
                 .status(AppointmentStatus.EN_ATTENTE)
+                .arrivedAt(Instant.now())
                 .type(request.type())
                 .notes(request.notes())
                 .build();
 
         Appointment saved = appointmentRepository.save(appointment);
         log.info("Created appointment {} for patient {} in clinic {} with Dr. {}", saved.getId(), patient.id(), clinicId, saved.getDoctorName());
+
+        eventPublisher.publishEvent(new WaitingRoomUpdatedEvent(clinicId, saved.getId(), saved.getStatus().name()));
 
         return mapToResponse(saved, patient);
     }
@@ -103,10 +110,62 @@ public class AgendaServiceImpl implements AgendaService {
 
         AppointmentStatus previousStatus = appointment.getStatus();
         appointment.setStatus(newStatus);
+        if (newStatus == AppointmentStatus.EN_ATTENTE && appointment.getArrivedAt() == null) {
+            appointment.setArrivedAt(Instant.now());
+        }
         Appointment updated = appointmentRepository.save(appointment);
 
         log.info("Transitioned appointment {} status from {} to {}", id, previousStatus, newStatus);
+        eventPublisher.publishEvent(new WaitingRoomUpdatedEvent(clinicId, updated.getId(), updated.getStatus().name()));
+
         return mapToResponse(updated);
+    }
+
+    @Override
+    @Transactional(isolation = Isolation.READ_COMMITTED)
+    public AppointmentResponse callPatient(UUID id, String roomLabel) {
+        UUID clinicId = resolveClinicId();
+        Appointment appointment = appointmentRepository.findByClinicIdAndId(clinicId, id)
+                .orElseThrow(() -> new ResourceNotFoundException("Rendez-vous introuvable avec l'identifiant: " + id));
+
+        Instant now = Instant.now();
+        appointment.setCalledAt(now);
+        appointment.setStatus(AppointmentStatus.EN_CONSULTATION);
+        Appointment updated = appointmentRepository.save(appointment);
+
+        PatientResponse patient = null;
+        try {
+            patient = patientService.getPatientById(updated.getPatientId());
+        } catch (Exception e) {
+            log.warn("Could not retrieve patient details for patientId: {}", updated.getPatientId());
+        }
+
+        String patientFullName = (patient != null)
+                ? (patient.firstName() + " " + patient.lastName()).trim()
+                : "Patient";
+
+        String effectiveRoom = (roomLabel != null && !roomLabel.isBlank())
+                ? roomLabel.trim()
+                : "Cabinet Médical";
+
+        log.info("Doctor {} called patient {} ({}) to {} in clinic {}",
+                updated.getDoctorName(), patientFullName, id, effectiveRoom, clinicId);
+
+        eventPublisher.publishEvent(new PatientCalledEvent(
+                clinicId,
+                updated.getId(),
+                patientFullName,
+                updated.getDoctorName(),
+                effectiveRoom
+        ));
+
+        eventPublisher.publishEvent(new WaitingRoomUpdatedEvent(
+                clinicId,
+                updated.getId(),
+                updated.getStatus().name()
+        ));
+
+        return mapToResponse(updated, patient);
     }
 
     @Override
@@ -144,6 +203,8 @@ public class AgendaServiceImpl implements AgendaService {
                 appointment.getStatus(),
                 appointment.getType(),
                 appointment.getNotes(),
+                appointment.getArrivedAt(),
+                appointment.getCalledAt(),
                 appointment.getCreatedAt(),
                 appointment.getUpdatedAt()
         );

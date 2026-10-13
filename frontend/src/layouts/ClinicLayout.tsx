@@ -5,6 +5,7 @@ import { CommandPalette } from '@/pages/Dashboard/CommandPalette'
 import { ActionModals } from '@/components/modals/ActionModals'
 import { useAppStore } from '@/store/useAppStore'
 import { useAuthStore } from '@/store/useAuthStore'
+import { useWaitingRoomStream } from '@/hooks/use-waiting-room-stream'
 import { Search, Sun, Moon, LogOut } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -15,6 +16,7 @@ interface ClinicLayoutProps {
 export function ClinicLayout({ children }: ClinicLayoutProps) {
   const { openCommandPalette, theme, toggleTheme } = useAppStore()
   const { user, role, logout } = useAuthStore()
+  const { isConnected } = useWaitingRoomStream()
   const navigate = useNavigate()
 
   const handleLogout = () => {
@@ -81,7 +83,16 @@ export function ClinicLayout({ children }: ClinicLayoutProps) {
           </button>
 
           {/* Right Controls */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5">
+            {/* Real-time SSE Connection Indicator */}
+            <div
+              title={isConnected ? 'Synchronisation salle d’attente en temps réel active' : 'Connexion en cours…'}
+              className="hidden sm:flex items-center gap-1.5 px-2 py-0.5 rounded-full border border-zinc-200 dark:border-zinc-800 bg-zinc-100/60 dark:bg-zinc-900/40 text-[10px] font-mono text-zinc-600 dark:text-zinc-400 select-none shadow-2xs"
+            >
+              <span className={`w-1.5 h-1.5 rounded-full ${isConnected ? 'bg-emerald-500 animate-pulse' : 'bg-amber-400'}`} />
+              <span className="font-medium">{isConnected ? 'En direct' : 'Connexion…'}</span>
+            </div>
+
             {/* Theme Toggle */}
             <button
               id="theme-toggle-btn"

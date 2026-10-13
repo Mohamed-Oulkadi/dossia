@@ -11,6 +11,7 @@ import {
 } from '@/hooks/use-billing'
 import { useAppStore } from '@/store/useAppStore'
 import { PaymentModal } from '@/components/billing/PaymentModal'
+import { WaitingRoomQueue } from '@/components/agenda/WaitingRoomQueue'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 import {
@@ -178,10 +179,15 @@ export function SecretaryHome() {
 
       {/* Main Split Layout: 60% Left (Appointments & Check-in) | 40% Right (Caisse Rapide) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 flex-1">
-        {/* Left Column (7 cols ~ 60%): Today's Schedule & 1-Click Check-In */}
-        <div className="lg:col-span-7 flex flex-col bg-white dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-800 rounded-lg shadow-clinical-card overflow-hidden">
-          {/* Header & Quick Search */}
-          <div className="p-3 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between gap-3 bg-slate-100/70 dark:bg-zinc-950/40">
+        {/* Left Column (7 cols ~ 60%): Live Waiting Room Queue & Today's Schedule */}
+        <div className="lg:col-span-7 flex flex-col space-y-4">
+          {/* Live Waiting Room Real-Time Queue */}
+          <WaitingRoomQueue selectedDate={selectedDate} maxItems={4} />
+
+          {/* Today's Schedule & 1-Click Check-In Card */}
+          <div className="flex flex-col bg-white dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-800 rounded-lg shadow-clinical-card overflow-hidden">
+            {/* Header & Quick Search */}
+            <div className="p-3 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between gap-3 bg-slate-100/70 dark:bg-zinc-950/40">
             <div className="flex items-center gap-2">
               <Clock className="w-4 h-4 text-zinc-500" />
               <span className="text-xs font-semibold text-zinc-900 dark:text-zinc-100">
@@ -334,6 +340,7 @@ export function SecretaryHome() {
             <span className="font-mono tabular-nums">{filteredAppointments.length} patients</span>
           </div>
         </div>
+      </div>
 
         {/* Right Column (5 cols ~ 40%): Caisse Rapide & Rapprochement Journalier */}
         <div className="lg:col-span-5 flex flex-col bg-white dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-800 rounded-lg shadow-clinical-card overflow-hidden">

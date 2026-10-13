@@ -22,6 +22,8 @@ export interface Appointment {
   status: AppointmentStatus
   type: AppointmentType
   notes?: string | null
+  arrivedAt?: string | null
+  calledAt?: string | null
   createdAt: string
   updatedAt: string
 }
@@ -114,3 +116,32 @@ export function useUpdateAppointmentStatus() {
     },
   })
 }
+
+export interface CallPatientPayload {
+  id: string
+  roomLabel?: string
+}
+
+/**
+ * Hook for Doctor to call patient from waiting room into consultation room (triggers real-time SSE)
+ */
+export function useCallPatient() {
+  const queryClient = useQueryClient()
+
+  return useMutation<Appointment, Error, CallPatientPayload>({
+    mutationFn: async ({ id, roomLabel }) => {
+      const { data } = await apiClient.post<Appointment>(`/agenda/${id}/call`, {
+        roomLabel: roomLabel || 'Cabinet de Consultation',
+      })
+      return data
+    },
+    onSuccess: (updatedAppointment) => {
+      queryClient.invalidateQueries({ queryKey: ['agenda'] })
+      queryClient.invalidateQueries({ queryKey: ['waiting-room'] })
+      toast.success(`Patient appelé en consultation`, {
+        description: `${updatedAppointment.patientName} a été notifié à l'accueil.`,
+      })
+    },
+  })
+}
+

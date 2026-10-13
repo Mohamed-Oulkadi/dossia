@@ -1,24 +1,17 @@
 import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import {
-  useDailyAgenda,
-  useUpdateAppointmentStatus,
-  type Appointment,
-} from '@/hooks/use-agenda'
+import { useDailyAgenda } from '@/hooks/use-agenda'
 import { useAuthStore } from '@/store/useAuthStore'
 import { Button } from '@/components/ui/button'
-import { toast } from 'sonner'
+import { WaitingRoomQueue } from '@/components/agenda/WaitingRoomQueue'
 import {
   Stethoscope,
   Users,
-  Clock,
   ArrowRight,
   CheckCircle2,
   FileText,
   CreditCard,
   Pill,
-  Phone,
-  ShieldCheck,
 } from 'lucide-react'
 
 export function DoctorHome() {
@@ -27,8 +20,7 @@ export function DoctorHome() {
   const todayStr = useMemo(() => new Date().toISOString().split('T')[0], [])
   const [selectedDate] = useState<string>(todayStr)
 
-  const { data: appointments = [], isLoading } = useDailyAgenda(selectedDate)
-  const updateStatusMutation = useUpdateAppointmentStatus()
+  const { data: appointments = [] } = useDailyAgenda(selectedDate)
 
   // Waiting Room Patients (status EN_ATTENTE)
   const waitingPatients = appointments.filter((a) => a.status === 'EN_ATTENTE')
@@ -37,20 +29,6 @@ export function DoctorHome() {
 
   // Estimated revenue for completed consultations (default 350 MAD consultation tarif)
   const estimatedHonorairesMAD = completedAppointments.length * 350
-
-  const handleCallPatient = (apt: Appointment) => {
-    updateStatusMutation.mutate(
-      { id: apt.id, status: 'EN_CONSULTATION', date: selectedDate },
-      {
-        onSuccess: () => {
-          toast.success(`Patient appelé : ${apt.patientName}`, {
-            description: 'Ouverture du cockpit clinique et du dossier médical.',
-          })
-          navigate(`/app/consultation?patientId=${apt.patientId}&appointmentId=${apt.id}`)
-        },
-      }
-    )
-  }
 
   const handleResumeActiveConsultation = () => {
     if (inConsultationPatient) {
@@ -187,108 +165,16 @@ export function DoctorHome() {
         </div>
       )}
 
-      {/* Main Waiting Room Queue Section */}
-      <div className="bg-white dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-800 rounded-lg shadow-clinical-card overflow-hidden flex flex-col">
-        {/* Table Header */}
-        <div className="p-3.5 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between bg-slate-100/70 dark:bg-zinc-950/40">
-          <div className="flex items-center gap-2">
-            <Clock className="w-4 h-4 text-amber-500" />
-            <h2 className="text-xs font-semibold text-zinc-900 dark:text-zinc-100">
-              File d&apos;Attente Active (Salle d&apos;Attente)
-            </h2>
-            <span className="text-[10px] font-mono px-2 py-0.2 rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20 font-medium">
-              {waitingPatients.length} prêt{waitingPatients.length > 1 ? 's' : ''}
-            </span>
-          </div>
-
-          <span className="text-[11px] text-zinc-600 dark:text-zinc-400">
-            Patients pointés à l&apos;accueil par le secrétariat
-          </span>
-        </div>
-
-        {/* Patients Queue List */}
-        <div className="divide-y divide-zinc-200 dark:divide-zinc-800/70">
-          {isLoading ? (
-            <div className="py-8 text-center text-xs text-zinc-500 font-mono">
-              Synchronisation de la salle d&apos;attente…
-            </div>
-          ) : waitingPatients.length === 0 ? (
-            <div className="py-10 text-center space-y-1">
-              <div className="w-10 h-10 mx-auto rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-zinc-400">
-                <Users className="w-5 h-5 stroke-[1.5]" />
-              </div>
-              <div className="text-xs font-medium text-zinc-700 dark:text-zinc-300">
-                Salle d&apos;attente vide
-              </div>
-              <div className="text-[11px] text-zinc-500 max-w-sm mx-auto">
-                Aucun patient en attente pour le moment. Dès que le secrétariat pointe une arrivée, elle apparaîtra ici instantanément.
-              </div>
-            </div>
-          ) : (
-            waitingPatients.map((apt, index) => (
-              <div
-                key={apt.id}
-                className="p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-slate-50/90 dark:hover:bg-zinc-800/30 transition-colors"
-              >
-                {/* Left: Patient Position & Details */}
-                <div className="flex items-start sm:items-center gap-3">
-                  <div className="w-7 h-7 rounded-full bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center text-xs font-mono font-bold text-zinc-800 dark:text-zinc-300 flex-shrink-0 shadow-2xs">
-                    {index + 1}
-                  </div>
-
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-semibold text-zinc-900 dark:text-zinc-100">
-                        {apt.patientName}
-                      </span>
-                      <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700">
-                        {apt.type}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center gap-3 mt-0.5 text-[11px] text-zinc-500 font-mono">
-                      <span className="flex items-center gap-1">
-                        <Phone className="w-3 h-3 text-zinc-400" />
-                        {apt.patientPhone}
-                      </span>
-                      <span>·</span>
-                      <span className="flex items-center gap-1 text-amber-600 dark:text-amber-400">
-                        <Clock className="w-3 h-3" />
-                        RDV prévu : {apt.startTime}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Right: Call Patient in Consultation CTA */}
-                <div className="flex items-center gap-2 sm:self-center">
-                  <Button
-                    size="sm"
-                    onClick={() => handleCallPatient(apt)}
-                    className="h-8 text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-medium cursor-pointer gap-1.5 shadow-2xs"
-                  >
-                    <Stethoscope className="w-3.5 h-3.5 stroke-[2]" />
-                    Appeler en Consultation
-                  </Button>
-                </div>
-              </div>
-            ))
-          )}
-        </div>
-
-        {/* Footer */}
-        <div className="p-3 border-t border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-950/30 flex items-center justify-between text-xs text-zinc-500">
-          <div className="flex items-center gap-1.5">
-            <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-            <span>
-              Conformité ordonnance : Tout acte et prescription est tracé sous l&apos;INPE du praticien connecté.
-            </span>
-          </div>
-          <span className="font-mono text-[11px] tabular-nums">
-            {waitingPatients.length} en attente
-          </span>
-        </div>
-      </div>
+      {/* Real-Time Live Waiting Room Queue & Doctor Pager */}
+      <WaitingRoomQueue
+        selectedDate={selectedDate}
+        showDoctorPager={true}
+        onPatientCalled={(apt) => {
+          navigate(
+            `/app/consultation?appointmentId=${apt.id}&patientId=${apt.patientId}`
+          )
+        }}
+      />
 
       {/* Quick Access to Clinical Resources */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
