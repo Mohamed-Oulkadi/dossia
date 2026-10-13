@@ -80,9 +80,9 @@ export default function CaissePage() {
   }).format(new Date(selectedDate + 'T12:00:00'))
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-zinc-50/60 dark:bg-zinc-950/60 overflow-y-auto">
+    <div className="flex-1 flex flex-col h-full bg-slate-50 dark:bg-zinc-950/60 overflow-y-auto">
       {/* ── Top Header Bar ── */}
-      <div className="flex-shrink-0 px-6 py-4 bg-white dark:bg-zinc-900/80 border-b border-zinc-200 dark:border-zinc-800">
+      <div className="flex-shrink-0 px-6 py-4 bg-white dark:bg-zinc-900/80 border-b border-zinc-200 dark:border-zinc-800 shadow-2xs">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
             <div className="flex items-center gap-2">
@@ -165,7 +165,7 @@ export default function CaissePage() {
         {/* ── 3 Distinct Top Metric Cards (Skills 01-premium-ui-craft: subtle borders, no heavy shadows) ── */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           {/* Card 1: Total Espèces */}
-          <div className="p-4 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-2xs">
+          <div className="p-4 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-clinical-card">
             <div className="flex items-center justify-between text-zinc-500 mb-2">
               <span className="text-[11px] font-medium uppercase tracking-wider">
                 Total Espèces (MAD)
@@ -185,7 +185,7 @@ export default function CaissePage() {
           </div>
 
           {/* Card 2: Total TPE */}
-          <div className="p-4 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-2xs">
+          <div className="p-4 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-clinical-card">
             <div className="flex items-center justify-between text-zinc-500 mb-2">
               <span className="text-[11px] font-medium uppercase tracking-wider">
                 Total TPE (MAD)
@@ -205,7 +205,7 @@ export default function CaissePage() {
           </div>
 
           {/* Card 3: Total Chèques */}
-          <div className="p-4 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-2xs">
+          <div className="p-4 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-clinical-card">
             <div className="flex items-center justify-between text-zinc-500 mb-2">
               <span className="text-[11px] font-medium uppercase tracking-wider">
                 Total Chèques (MAD)
@@ -225,7 +225,7 @@ export default function CaissePage() {
           </div>
 
           {/* Card 4: Total Global (Summary) */}
-          <div className="p-4 rounded-lg bg-zinc-900 text-white dark:bg-zinc-900/90 border border-zinc-800 shadow-2xs">
+          <div className="p-4 rounded-lg bg-zinc-900 text-white dark:bg-zinc-900/90 border border-zinc-800 shadow-clinical-card">
             <div className="flex items-center justify-between text-zinc-400 mb-2">
               <span className="text-[11px] font-medium uppercase tracking-wider">
                 Recette Globale (MAD)
@@ -246,7 +246,7 @@ export default function CaissePage() {
         </div>
 
         {/* ── Clôture de Caisse (End-of-day Journal Table) ── */}
-        <div className="rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 overflow-hidden shadow-2xs">
+        <div className="rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 overflow-hidden shadow-clinical-card">
           <div className="px-4 py-3 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <h2 className="text-xs font-semibold uppercase tracking-wider text-zinc-700 dark:text-zinc-300">
@@ -282,7 +282,7 @@ export default function CaissePage() {
                 variant="outline"
                 size="sm"
                 onClick={() => setIsPaymentModalOpen(true)}
-                className="h-8 text-xs cursor-pointer"
+                className="h-8 text-xs cursor-pointer border-zinc-300 dark:border-zinc-800"
               >
                 <Plus className="w-3.5 h-3.5 mr-1.5" />
                 Encaisser le premier acte
@@ -292,7 +292,7 @@ export default function CaissePage() {
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/40 text-[10px] font-medium uppercase tracking-wider text-zinc-500">
+                  <tr className="border-b border-zinc-200 dark:border-zinc-800 bg-slate-100/70 dark:bg-zinc-900/60 text-[10px] font-medium uppercase tracking-wider text-zinc-600 dark:text-zinc-400">
                     <th className="py-2.5 px-4 font-medium">Heure</th>
                     <th className="py-2.5 px-4 font-medium">Patient</th>
                     <th className="py-2.5 px-4 font-medium">CIN</th>
@@ -312,7 +312,7 @@ export default function CaissePage() {
                     return (
                       <tr
                         key={tx.paymentId}
-                        className="hover:bg-zinc-50/60 dark:hover:bg-zinc-800/30 transition-colors"
+                        className="hover:bg-slate-50/90 dark:hover:bg-zinc-800/30 transition-colors"
                       >
                         {/* Heure */}
                         <td className="py-2.5 px-4 font-mono text-zinc-500 tabular-nums">

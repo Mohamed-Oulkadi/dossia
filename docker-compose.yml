@@ -1,5 +1,13 @@
+# ==============================================================================
+# Dossia — Master Docker Compose Orchestration
+# Unified SaaS Reverse Proxy Architecture with CNDP Loi 09-08 Network Isolation
+# ==============================================================================
+
 services:
-  postgres:
+  # ----------------------------------------------------------------------------
+  # 1. Database Tier: PostgreSQL 16 (Strictly isolated on backend-net)
+  # ----------------------------------------------------------------------------
+  db:
     image: postgres:16-alpine
     container_name: dossia-postgres
     restart: unless-stopped
@@ -7,8 +15,6 @@ services:
       POSTGRES_DB: dossia_db
       POSTGRES_USER: dossia_user
       POSTGRES_PASSWORD: dossia_dev_password_2026
-    ports:
-      - "5432:5432"
     volumes:
       - dossia_pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -17,6 +23,77 @@ services:
       timeout: 5s
       retries: 5
       start_period: 10s
+    networks:
+      - backend-net
+    # Port 5432 is strictly unexposed to the host per CNDP audit & security mandates
+
+  # ----------------------------------------------------------------------------
+  # 2. Application Tier: Spring Boot 3 / Java 21 Modular Monolith
+  # ----------------------------------------------------------------------------
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: dossia-backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: dossia_db
+      DB_USER: dossia_user
+      DB_PASSWORD: dossia_dev_password_2026
+      SPRING_PROFILES_ACTIVE: prod
+    networks:
+      - backend-net
+      - frontend-net
+    # Port 8080 is internal only; traffic is strictly routed via Nginx reverse proxy
+
+  # ----------------------------------------------------------------------------
+  # 3. Web Client Tier: React 18 / Vite SPA (Internal Nginx server)
+  # ----------------------------------------------------------------------------
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: dossia-frontend
+    restart: unless-stopped
+    networks:
+      - frontend-net
+    # Port 80 is internal only; traffic is accessed exclusively through the gateway
+
+  # ----------------------------------------------------------------------------
+  # 4. Gateway Tier: Nginx Unified Reverse Proxy
+  # ----------------------------------------------------------------------------
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: dossia-nginx
+    restart: unless-stopped
+    depends_on:
+      - backend
+      - frontend
+    ports:
+      - "80:80"
+      # - "443:443" # Reserved for production TLS / Let's Encrypt certificates
+    volumes:
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    networks:
+      - frontend-net
+
+# ==============================================================================
+# Network & Volume Definitions
+# ==============================================================================
+networks:
+  # Internal network: db & backend only; no host exposure
+  backend-net:
+    driver: bridge
+    internal: true
+
+  # DMZ network: backend, frontend, and nginx reverse proxy
+  frontend-net:
+    driver: bridge
 
 volumes:
   dossia_pgdata:

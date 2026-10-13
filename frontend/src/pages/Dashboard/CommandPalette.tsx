@@ -255,13 +255,13 @@ export function CommandPalette() {
                             w-full flex items-center gap-2.5 px-2.5 py-1.5 text-left rounded-md
                             transition-colors duration-75 text-xs cursor-pointer
                             ${isSelected
-                              ? 'bg-zinc-100 dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-800'
-                              : 'text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100/70 dark:hover:bg-zinc-900/60 border border-transparent'
+                              ? 'bg-emerald-50 dark:bg-zinc-900 text-emerald-950 dark:text-zinc-100 border border-emerald-200 dark:border-zinc-800 shadow-2xs font-medium'
+                              : 'text-zinc-800 dark:text-zinc-300 hover:bg-zinc-100/70 dark:hover:bg-zinc-900/60 border border-transparent'
                             }
                           `}
                         >
                           <span className="flex items-center justify-center flex-shrink-0">
-                            <Icon className={`w-4 h-4 stroke-[1.5] ${isSelected ? 'text-emerald-600 dark:text-emerald-400' : 'text-zinc-500 dark:text-zinc-400'}`} />
+                            <Icon className={`w-4 h-4 stroke-[1.5] ${isSelected ? 'text-emerald-700 dark:text-emerald-400' : 'text-zinc-500 dark:text-zinc-400'}`} />
                           </span>
                           <div className="flex-1 min-w-0">
                             <p className="font-medium text-xs truncate">{action.label}</p>

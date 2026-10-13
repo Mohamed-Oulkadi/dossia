@@ -97,7 +97,7 @@ export function SecretaryHome() {
   }
 
   return (
-    <div className="flex-1 flex flex-col min-w-0 overflow-y-auto bg-zinc-50 dark:bg-zinc-950 p-4 sm:p-5 space-y-4">
+    <div className="flex-1 flex flex-col min-w-0 overflow-y-auto bg-slate-50 dark:bg-zinc-950 p-4 sm:p-5 space-y-4">
       {/* Top Banner: Secretary High-Efficiency Status Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-zinc-200 dark:border-zinc-800">
         <div>
@@ -105,11 +105,11 @@ export function SecretaryHome() {
             <h1 className="text-base font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
               Poste Secrétariat & Accueil
             </h1>
-            <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 font-medium">
+            <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-700 dark:text-blue-400 border border-blue-500/20 font-medium">
               SLA 3s · Accueil & Encaissement
             </span>
           </div>
-          <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+          <p className="text-xs text-zinc-600 dark:text-zinc-400 mt-0.5">
             Gestion des arrivées en temps réel, pointage salle d&apos;attente et caisse journalière en Dirham (MAD).
           </p>
         </div>
@@ -138,35 +138,35 @@ export function SecretaryHome() {
 
       {/* KPI Counters Bar */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="p-3 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-2xs">
-          <div className="text-[11px] font-medium text-zinc-500">Rendez-vous prévus</div>
+        <div className="p-3 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-800 shadow-clinical-card">
+          <div className="text-[11px] font-medium text-zinc-600 dark:text-zinc-400">Rendez-vous prévus</div>
           <div className="text-lg font-bold font-mono tabular-nums text-zinc-900 dark:text-zinc-100 mt-0.5">
             {totalAppointments}
           </div>
         </div>
 
-        <div className="p-3 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-2xs">
-          <div className="text-[11px] font-medium text-amber-600 dark:text-amber-400 flex items-center gap-1">
+        <div className="p-3 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-800 shadow-clinical-card">
+          <div className="text-[11px] font-medium text-amber-700 dark:text-amber-400 flex items-center gap-1">
             <Clock className="w-3 h-3" />
             En Salle d&apos;Attente
           </div>
-          <div className="text-lg font-bold font-mono tabular-nums text-amber-600 dark:text-amber-400 mt-0.5">
+          <div className="text-lg font-bold font-mono tabular-nums text-amber-700 dark:text-amber-400 mt-0.5">
             {waitingPatients.length}
           </div>
         </div>
 
-        <div className="p-3 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-2xs">
-          <div className="text-[11px] font-medium text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+        <div className="p-3 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-800 shadow-clinical-card">
+          <div className="text-[11px] font-medium text-emerald-700 dark:text-emerald-400 flex items-center gap-1">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
             En Consultation
           </div>
-          <div className="text-lg font-bold font-mono tabular-nums text-emerald-600 dark:text-emerald-400 mt-0.5">
+          <div className="text-lg font-bold font-mono tabular-nums text-emerald-700 dark:text-emerald-400 mt-0.5">
             {inConsultation.length}
           </div>
         </div>
 
-        <div className="p-3 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-2xs">
-          <div className="text-[11px] font-medium text-zinc-500 flex items-center gap-1">
+        <div className="p-3 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-800 shadow-clinical-card">
+          <div className="text-[11px] font-medium text-zinc-600 dark:text-zinc-400 flex items-center gap-1">
             <CheckCircle2 className="w-3 h-3 text-zinc-400" />
             Consultations Terminées
           </div>
@@ -179,9 +179,9 @@ export function SecretaryHome() {
       {/* Main Split Layout: 60% Left (Appointments & Check-in) | 40% Right (Caisse Rapide) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 flex-1">
         {/* Left Column (7 cols ~ 60%): Today's Schedule & 1-Click Check-In */}
-        <div className="lg:col-span-7 flex flex-col bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg shadow-2xs overflow-hidden">
+        <div className="lg:col-span-7 flex flex-col bg-white dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-800 rounded-lg shadow-clinical-card overflow-hidden">
           {/* Header & Quick Search */}
-          <div className="p-3 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between gap-3 bg-zinc-50/50 dark:bg-zinc-950/40">
+          <div className="p-3 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between gap-3 bg-slate-100/70 dark:bg-zinc-950/40">
             <div className="flex items-center gap-2">
               <Clock className="w-4 h-4 text-zinc-500" />
               <span className="text-xs font-semibold text-zinc-900 dark:text-zinc-100">
@@ -196,7 +196,7 @@ export function SecretaryHome() {
                 value={filterQuery}
                 onChange={(e) => setFilterQuery(e.target.value)}
                 placeholder="Rechercher patient, tél…"
-                className="w-full h-7 pl-8 pr-2 rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-xs text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                className="w-full h-7 pl-8 pr-2 rounded-md border border-zinc-300 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-xs text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-none focus:border-emerald-500 shadow-2xs"
               />
             </div>
           </div>
@@ -214,7 +214,7 @@ export function SecretaryHome() {
             ) : (
               <table className="w-full text-left border-collapse text-xs">
                 <thead>
-                  <tr className="border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50/80 dark:bg-zinc-950/50 text-[11px] font-medium text-zinc-500 uppercase tracking-wider select-none">
+                  <tr className="border-b border-zinc-200 dark:border-zinc-800 bg-slate-100/70 dark:bg-zinc-950/50 text-[11px] font-medium text-zinc-600 dark:text-zinc-400 uppercase tracking-wider select-none">
                     <th className="py-2 px-3 font-semibold">Heure</th>
                     <th className="py-2 px-3 font-semibold">Patient</th>
                     <th className="py-2 px-3 font-semibold">Type</th>
@@ -222,7 +222,7 @@ export function SecretaryHome() {
                     <th className="py-2 px-3 font-semibold text-right">Action Rapide</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-zinc-200/70 dark:divide-zinc-800/70">
+                <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800/70">
                   {filteredAppointments.map((apt) => {
                     const isArrived = apt.status === 'EN_ATTENTE'
                     const isInConsultation = apt.status === 'EN_CONSULTATION'
@@ -231,7 +231,7 @@ export function SecretaryHome() {
                     return (
                       <tr
                         key={apt.id}
-                        className="hover:bg-zinc-50/70 dark:hover:bg-zinc-800/30 transition-colors"
+                        className="hover:bg-slate-50/90 dark:hover:bg-zinc-800/30 transition-colors"
                       >
                         {/* Time */}
                         <td className="py-2.5 px-3 font-mono text-[11px] font-semibold tabular-nums text-zinc-800 dark:text-zinc-200 whitespace-nowrap">
@@ -336,22 +336,22 @@ export function SecretaryHome() {
         </div>
 
         {/* Right Column (5 cols ~ 40%): Caisse Rapide & Rapprochement Journalier */}
-        <div className="lg:col-span-5 flex flex-col bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg shadow-2xs overflow-hidden">
+        <div className="lg:col-span-5 flex flex-col bg-white dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-800 rounded-lg shadow-clinical-card overflow-hidden">
           {/* Header */}
-          <div className="p-3 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between bg-zinc-50/50 dark:bg-zinc-950/40">
+          <div className="p-3 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between bg-slate-100/70 dark:bg-zinc-950/40">
             <div className="flex items-center gap-2">
               <Banknote className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
               <span className="text-xs font-semibold text-zinc-900 dark:text-zinc-100">
                 Caisse Rapide du Jour
               </span>
             </div>
-            <span className="text-[10px] font-mono text-zinc-500">
+            <span className="text-[10px] font-mono text-zinc-600 dark:text-zinc-400">
               {new Date().toLocaleDateString('fr-MA', { day: '2-digit', month: 'short', year: 'numeric' })}
             </span>
           </div>
 
           {/* Total Encaissé Card */}
-          <div className="p-4 border-b border-zinc-200 dark:border-zinc-800 bg-emerald-50/40 dark:bg-emerald-950/10">
+          <div className="p-4 border-b border-zinc-200 dark:border-zinc-800 bg-emerald-50/70 dark:bg-emerald-950/10">
             <div className="text-[11px] font-medium text-emerald-800 dark:text-emerald-400">
               Total Encaissé Aujourd&apos;hui
             </div>
@@ -359,7 +359,7 @@ export function SecretaryHome() {
               <span className="text-2xl font-bold font-mono tabular-nums text-zinc-900 dark:text-zinc-100">
                 {formatMAD(summary.totalGlobal)}
               </span>
-              <span className="text-xs font-mono font-medium text-emerald-600 dark:text-emerald-400">
+              <span className="text-xs font-mono font-medium text-emerald-700 dark:text-emerald-400">
                 MAD
               </span>
             </div>
@@ -370,22 +370,22 @@ export function SecretaryHome() {
 
           {/* Breakdown by Payment Method */}
           <div className="p-3 border-b border-zinc-200 dark:border-zinc-800 grid grid-cols-3 gap-2 text-center">
-            <div className="p-2 rounded bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200/80 dark:border-zinc-700/60">
-              <div className="text-[10px] text-zinc-500 font-medium">Espèces</div>
+            <div className="p-2 rounded bg-slate-50 dark:bg-zinc-800/60 border border-zinc-200/90 dark:border-zinc-700/60 shadow-2xs">
+              <div className="text-[10px] text-zinc-600 dark:text-zinc-400 font-medium">Espèces</div>
               <div className="text-xs font-mono font-bold tabular-nums text-zinc-900 dark:text-zinc-100 mt-0.5">
                 {formatMAD(summary.totalCash)}
               </div>
             </div>
 
-            <div className="p-2 rounded bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200/80 dark:border-zinc-700/60">
-              <div className="text-[10px] text-zinc-500 font-medium">TPE</div>
+            <div className="p-2 rounded bg-slate-50 dark:bg-zinc-800/60 border border-zinc-200/90 dark:border-zinc-700/60 shadow-2xs">
+              <div className="text-[10px] text-zinc-600 dark:text-zinc-400 font-medium">TPE</div>
               <div className="text-xs font-mono font-bold tabular-nums text-zinc-900 dark:text-zinc-100 mt-0.5">
                 {formatMAD(summary.totalTpe)}
               </div>
             </div>
 
-            <div className="p-2 rounded bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200/80 dark:border-zinc-700/60">
-              <div className="text-[10px] text-zinc-500 font-medium">Chèque / Vir.</div>
+            <div className="p-2 rounded bg-slate-50 dark:bg-zinc-800/60 border border-zinc-200/90 dark:border-zinc-700/60 shadow-2xs">
+              <div className="text-[10px] text-zinc-600 dark:text-zinc-400 font-medium">Chèque / Vir.</div>
               <div className="text-xs font-mono font-bold tabular-nums text-zinc-900 dark:text-zinc-100 mt-0.5">
                 {formatMAD(summary.totalCheck + summary.totalTransfer)}
               </div>
@@ -394,11 +394,11 @@ export function SecretaryHome() {
 
           {/* Transactions List */}
           <div className="flex-1 p-3 space-y-2 overflow-y-auto max-h-[300px]">
-            <div className="text-[11px] font-semibold text-zinc-600 dark:text-zinc-400 uppercase tracking-wider flex items-center justify-between">
+            <div className="text-[11px] font-semibold text-zinc-700 dark:text-zinc-400 uppercase tracking-wider flex items-center justify-between">
               <span>Derniers Règlements</span>
               <button
                 onClick={() => setIsPaymentModalOpen(true)}
-                className="text-[10px] text-emerald-600 dark:text-emerald-400 hover:underline cursor-pointer"
+                className="text-[10px] text-emerald-700 dark:text-emerald-400 font-medium hover:underline cursor-pointer"
               >
                 + Nouveau Renseignement
               </button>
@@ -417,7 +417,7 @@ export function SecretaryHome() {
                 {ledger?.transactions.slice(0, 6).map((tx) => (
                   <div
                     key={tx.paymentId}
-                    className="flex items-center justify-between p-2 rounded-md bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-200/70 dark:border-zinc-800 text-xs"
+                    className="flex items-center justify-between p-2 rounded-md bg-slate-50/80 dark:bg-zinc-800/40 border border-zinc-200/80 dark:border-zinc-800 text-xs hover:bg-slate-100/70 transition-colors"
                   >
                     <div>
                       <div className="font-medium text-zinc-900 dark:text-zinc-100">

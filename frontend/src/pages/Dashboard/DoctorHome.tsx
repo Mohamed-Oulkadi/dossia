@@ -61,7 +61,7 @@ export function DoctorHome() {
   }
 
   return (
-    <div className="flex-1 flex flex-col min-w-0 overflow-y-auto bg-zinc-50 dark:bg-zinc-950 p-4 sm:p-5 space-y-5">
+    <div className="flex-1 flex flex-col min-w-0 overflow-y-auto bg-slate-50 dark:bg-zinc-950 p-4 sm:p-5 space-y-5">
       {/* Top Banner: Doctor Cockpit Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-zinc-200 dark:border-zinc-800">
         <div>
@@ -69,11 +69,11 @@ export function DoctorHome() {
             <h1 className="text-base font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
               Cockpit Médical · Dr. {user ? `${user.firstName} ${user.lastName}` : 'Rachid Amrani'}
             </h1>
-            <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 font-medium">
+            <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 font-medium">
               Espace Praticien
             </span>
           </div>
-          <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+          <p className="text-xs text-zinc-600 dark:text-zinc-400 mt-0.5">
             File d&apos;attente active, consultations cliniques et prescription conforme INPE / CNDP Loi 09-08.
           </p>
         </div>
@@ -103,8 +103,8 @@ export function DoctorHome() {
       {/* Doctor Clinical KPIs Row */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {/* KPI 1: Waiting Room Count */}
-        <div className="p-4 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-2xs space-y-1">
-          <div className="flex items-center justify-between text-zinc-500">
+        <div className="p-4 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-800 shadow-clinical-card space-y-1">
+          <div className="flex items-center justify-between text-zinc-600 dark:text-zinc-400">
             <span className="text-xs font-medium">En Salle d&apos;Attente</span>
             <span className="relative flex h-2.5 w-2.5">
               {waitingPatients.length > 0 && (
@@ -114,7 +114,7 @@ export function DoctorHome() {
             </span>
           </div>
           <div className="flex items-baseline gap-2 pt-1">
-            <span className="text-2xl font-bold font-mono tabular-nums text-amber-600 dark:text-amber-400">
+            <span className="text-2xl font-bold font-mono tabular-nums text-amber-700 dark:text-amber-400">
               {waitingPatients.length}
             </span>
             <span className="text-xs text-zinc-500">
@@ -124,8 +124,8 @@ export function DoctorHome() {
         </div>
 
         {/* KPI 2: Completed Consultations */}
-        <div className="p-4 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-2xs space-y-1">
-          <div className="flex items-center justify-between text-zinc-500">
+        <div className="p-4 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-800 shadow-clinical-card space-y-1">
+          <div className="flex items-center justify-between text-zinc-600 dark:text-zinc-400">
             <span className="text-xs font-medium">Consultations Terminées</span>
             <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
           </div>
@@ -140,8 +140,8 @@ export function DoctorHome() {
         </div>
 
         {/* KPI 3: Estimated Daily Act Honoraires */}
-        <div className="p-4 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-2xs space-y-1">
-          <div className="flex items-center justify-between text-zinc-500">
+        <div className="p-4 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-800 shadow-clinical-card space-y-1">
+          <div className="flex items-center justify-between text-zinc-600 dark:text-zinc-400">
             <span className="text-xs font-medium">Honoraires Estimés du Jour</span>
             <CreditCard className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
           </div>
@@ -149,7 +149,7 @@ export function DoctorHome() {
             <span className="text-2xl font-bold font-mono tabular-nums text-zinc-900 dark:text-zinc-100">
               {estimatedHonorairesMAD.toLocaleString('fr-MA')}
             </span>
-            <span className="text-xs font-mono font-medium text-emerald-600 dark:text-emerald-400">
+            <span className="text-xs font-mono font-medium text-emerald-700 dark:text-emerald-400">
               MAD
             </span>
           </div>
@@ -158,19 +158,19 @@ export function DoctorHome() {
 
       {/* Active Consultation Banner (if a patient is currently in the doctor's room) */}
       {inConsultationPatient && (
-        <div className="p-3.5 rounded-lg bg-emerald-50/70 dark:bg-emerald-950/20 border border-emerald-500/30 flex items-center justify-between gap-3 shadow-2xs">
+        <div className="p-3.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-500/30 flex items-center justify-between gap-3 shadow-clinical-card">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center flex-shrink-0">
+            <div className="w-8 h-8 rounded-full bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 flex items-center justify-center flex-shrink-0">
               <Stethoscope className="w-4 h-4 stroke-[2]" />
             </div>
             <div>
-              <div className="text-xs font-semibold text-emerald-900 dark:text-emerald-200 flex items-center gap-2">
+              <div className="text-xs font-semibold text-emerald-950 dark:text-emerald-200 flex items-center gap-2">
                 <span>Consultation en cours : {inConsultationPatient.patientName}</span>
-                <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-700 dark:text-emerald-300">
+                <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-800 dark:text-emerald-300">
                   {inConsultationPatient.type}
                 </span>
               </div>
-              <div className="text-[11px] text-emerald-700 dark:text-emerald-400 font-mono">
+              <div className="text-[11px] text-emerald-800 dark:text-emerald-400 font-mono">
                 Débutée à {inConsultationPatient.startTime} · Examen clinique ou prescription en attente
               </div>
             </div>
@@ -179,7 +179,7 @@ export function DoctorHome() {
           <Button
             size="sm"
             onClick={handleResumeActiveConsultation}
-            className="h-7 text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-medium cursor-pointer gap-1.5"
+            className="h-7 text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-medium cursor-pointer gap-1.5 shadow-2xs"
           >
             Reprendre la Consultation
             <ArrowRight className="w-3.5 h-3.5" />
@@ -188,26 +188,26 @@ export function DoctorHome() {
       )}
 
       {/* Main Waiting Room Queue Section */}
-      <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg shadow-2xs overflow-hidden flex flex-col">
+      <div className="bg-white dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-800 rounded-lg shadow-clinical-card overflow-hidden flex flex-col">
         {/* Table Header */}
-        <div className="p-3.5 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between bg-zinc-50/60 dark:bg-zinc-950/40">
+        <div className="p-3.5 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between bg-slate-100/70 dark:bg-zinc-950/40">
           <div className="flex items-center gap-2">
             <Clock className="w-4 h-4 text-amber-500" />
             <h2 className="text-xs font-semibold text-zinc-900 dark:text-zinc-100">
               File d&apos;Attente Active (Salle d&apos;Attente)
             </h2>
-            <span className="text-[10px] font-mono px-2 py-0.2 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 font-medium">
+            <span className="text-[10px] font-mono px-2 py-0.2 rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20 font-medium">
               {waitingPatients.length} prêt{waitingPatients.length > 1 ? 's' : ''}
             </span>
           </div>
 
-          <span className="text-[11px] text-zinc-500">
+          <span className="text-[11px] text-zinc-600 dark:text-zinc-400">
             Patients pointés à l&apos;accueil par le secrétariat
           </span>
         </div>
 
         {/* Patients Queue List */}
-        <div className="divide-y divide-zinc-200/70 dark:divide-zinc-800/70">
+        <div className="divide-y divide-zinc-200 dark:divide-zinc-800/70">
           {isLoading ? (
             <div className="py-8 text-center text-xs text-zinc-500 font-mono">
               Synchronisation de la salle d&apos;attente…
@@ -228,11 +228,11 @@ export function DoctorHome() {
             waitingPatients.map((apt, index) => (
               <div
                 key={apt.id}
-                className="p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-zinc-50/80 dark:hover:bg-zinc-800/30 transition-colors"
+                className="p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-slate-50/90 dark:hover:bg-zinc-800/30 transition-colors"
               >
                 {/* Left: Patient Position & Details */}
                 <div className="flex items-start sm:items-center gap-3">
-                  <div className="w-7 h-7 rounded-full bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center text-xs font-mono font-bold text-zinc-700 dark:text-zinc-300 flex-shrink-0">
+                  <div className="w-7 h-7 rounded-full bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center text-xs font-mono font-bold text-zinc-800 dark:text-zinc-300 flex-shrink-0 shadow-2xs">
                     {index + 1}
                   </div>
 

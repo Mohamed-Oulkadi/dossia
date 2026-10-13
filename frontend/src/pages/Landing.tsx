@@ -83,13 +83,13 @@ export default function Landing() {
   }
 
   return (
-    <div className="min-h-screen bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 selection:bg-emerald-500/20 selection:text-emerald-700 dark:selection:text-emerald-300">
+    <div className="min-h-screen bg-slate-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 selection:bg-emerald-500/20 selection:text-emerald-700 dark:selection:text-emerald-300">
       {/* ── Fixed Navbar ── */}
       <motion.nav
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, ease: 'easeOut' }}
-        className="fixed top-0 left-0 right-0 z-50 px-4 sm:px-8 py-3 flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md transition-colors"
+        className="fixed top-0 left-0 right-0 z-50 px-4 sm:px-8 py-3 flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 bg-white/90 dark:bg-zinc-950/80 backdrop-blur-md transition-colors shadow-2xs"
       >
         <div className="flex items-center gap-6">
           <Link to="/" className="flex items-center gap-2">
@@ -99,7 +99,7 @@ export default function Landing() {
             <span className="text-sm font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
               Dossia
             </span>
-            <span className="text-[10px] font-mono px-1 py-0.2 bg-zinc-100 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-800 rounded">
+            <span className="text-[10px] font-mono px-1 py-0.2 bg-zinc-100 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-800 rounded font-medium">
               SaaS Médical
             </span>
           </Link>
@@ -122,7 +122,7 @@ export default function Landing() {
           <button
             onClick={toggleTheme}
             title={theme === 'dark' ? 'Activer le mode clair' : 'Activer le mode sombre'}
-            className="p-1.5 rounded-md border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer mr-1"
+            className="p-1.5 rounded-md border border-zinc-200 dark:border-zinc-800 bg-zinc-100/70 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-200/60 dark:hover:bg-zinc-800 transition-colors cursor-pointer mr-1"
           >
             {theme === 'dark' ? (
               <Sun className="w-4 h-4 text-amber-400 stroke-[1.5]" />
@@ -133,14 +133,14 @@ export default function Landing() {
 
           <Link
             to={isAuthenticated ? appDestination : '/login'}
-            className="px-3 py-1.5 rounded-md text-xs font-medium border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:border-zinc-400 dark:hover:border-zinc-700 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"
+            className="px-3 py-1.5 rounded-md text-xs font-medium border border-zinc-300 dark:border-zinc-800 bg-white dark:bg-transparent text-zinc-800 dark:text-zinc-300 hover:border-zinc-400 dark:hover:border-zinc-700 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors shadow-2xs"
           >
             {isAuthenticated ? 'Mon Espace' : 'Connexion'}
           </Link>
 
           <Link
             to={appDestination}
-            className="px-3.5 py-1.5 rounded-md text-xs font-medium bg-emerald-600 hover:bg-emerald-500 text-white transition-colors flex items-center gap-1.5 shadow-xs"
+            className="px-3.5 py-1.5 rounded-md text-xs font-medium bg-emerald-600 hover:bg-emerald-500 text-white transition-colors flex items-center gap-1.5 shadow-2xs"
           >
             <span>{role === 'SUPER_ADMIN' ? 'Espace Super Admin' : 'Accéder au Cabinet'}</span>
             <ChevronRight className="w-3.5 h-3.5 stroke-[1.5]" />
@@ -150,6 +150,15 @@ export default function Landing() {
 
       {/* ── Hero Section (with Three.js WebGL background) ── */}
       <section className="relative min-h-[92vh] flex flex-col items-center justify-center px-4 pt-28 pb-16 overflow-hidden">
+        {/* Soft Clinical Radial Glow */}
+        <div
+          className="absolute inset-0 pointer-events-none z-0"
+          style={{
+            background:
+              'radial-gradient(ellipse 80% 55% at 50% 25%, rgba(16,185,129,0.08) 0%, rgba(248,250,252,0) 70%)',
+          }}
+        />
+
         <Suspense fallback={<CanvasFallback />}>
           <HeroCanvas />
         </Suspense>

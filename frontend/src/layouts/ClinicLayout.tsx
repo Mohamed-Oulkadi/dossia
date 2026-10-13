@@ -45,7 +45,7 @@ export function ClinicLayout({ children }: ClinicLayoutProps) {
   const clinicName = user?.clinicName || 'Clinique Ibn Sina Agadir'
 
   return (
-    <div className="flex h-screen overflow-hidden bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 font-sans transition-colors">
+    <div className="flex h-screen overflow-hidden bg-slate-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 font-sans transition-colors">
       {/* Collapsible Role-Aware Sidebar */}
       <Sidebar />
 
@@ -55,7 +55,7 @@ export function ClinicLayout({ children }: ClinicLayoutProps) {
         <header className="
           flex-shrink-0 h-12 flex items-center justify-between
           px-4 border-b border-zinc-200 dark:border-zinc-800
-          bg-white/90 dark:bg-zinc-950/90 backdrop-blur-xs select-none transition-colors
+          bg-white/95 dark:bg-zinc-950/90 backdrop-blur-xs select-none transition-colors shadow-2xs
         ">
           {/* Command Palette Trigger */}
           <button
@@ -63,8 +63,8 @@ export function ClinicLayout({ children }: ClinicLayoutProps) {
             onClick={openCommandPalette}
             className="
               flex items-center gap-2 px-2.5 py-1 rounded-md
-              border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/60
-              text-zinc-500 dark:text-zinc-400 text-xs
+              border border-zinc-200 dark:border-zinc-800 bg-zinc-100/70 dark:bg-zinc-900/60
+              text-zinc-600 dark:text-zinc-400 text-xs
               hover:border-zinc-300 dark:hover:border-zinc-700 hover:text-zinc-900 dark:hover:text-zinc-200
               transition-colors cursor-pointer
               w-56 sm:w-64
@@ -74,7 +74,7 @@ export function ClinicLayout({ children }: ClinicLayoutProps) {
             <span className="flex-1 text-left text-[11px]">Rechercher ou agir…</span>
             <kbd className="
               text-[10px] border border-zinc-200 dark:border-zinc-800
-              px-1.5 py-0.5 rounded font-mono text-zinc-600 dark:text-zinc-400 bg-white dark:bg-zinc-900
+              px-1.5 py-0.5 rounded font-mono text-zinc-600 dark:text-zinc-400 bg-white dark:bg-zinc-900 shadow-2xs
             ">
               Ctrl K
             </kbd>
@@ -89,9 +89,9 @@ export function ClinicLayout({ children }: ClinicLayoutProps) {
               title={theme === 'dark' ? 'Passer en mode clair' : 'Passer en mode sombre'}
               className="
                 p-1.5 rounded-md border border-zinc-200 dark:border-zinc-800
-                bg-zinc-50 dark:bg-zinc-900/60
+                bg-zinc-100/70 dark:bg-zinc-900/60
                 text-zinc-600 dark:text-zinc-400
-                hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800
+                hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-200/60 dark:hover:bg-zinc-800
                 transition-colors cursor-pointer
               "
             >
@@ -105,15 +105,15 @@ export function ClinicLayout({ children }: ClinicLayoutProps) {
             {/* Authenticated User Identity */}
             <div className="hidden md:flex flex-col items-end">
               <div className="flex items-center gap-1.5">
-                <span className="text-xs font-medium text-zinc-900 dark:text-zinc-200">
+                <span className="text-xs font-semibold text-zinc-900 dark:text-zinc-200">
                   {displayName}
                 </span>
-                <span className={`text-[9px] font-mono px-1 py-0.2 rounded border ${
+                <span className={`text-[9px] font-mono px-1.5 py-0.2 rounded border font-medium ${
                   role === 'DOCTOR'
-                    ? 'text-emerald-600 dark:text-emerald-400 border-emerald-500/20 bg-emerald-500/10'
+                    ? 'text-emerald-700 dark:text-emerald-400 border-emerald-500/25 bg-emerald-50 dark:bg-emerald-500/10'
                     : role === 'SECRETARY'
-                    ? 'text-blue-600 dark:text-blue-400 border-blue-500/20 bg-blue-500/10'
-                    : 'text-zinc-600 dark:text-zinc-400 border-zinc-500/20 bg-zinc-500/10'
+                    ? 'text-blue-700 dark:text-blue-400 border-blue-500/25 bg-blue-50 dark:bg-blue-500/10'
+                    : 'text-zinc-700 dark:text-zinc-400 border-zinc-500/25 bg-zinc-100 dark:bg-zinc-500/10'
                 }`}>
                   {roleLabel}
                 </span>
@@ -127,7 +127,7 @@ export function ClinicLayout({ children }: ClinicLayoutProps) {
             <div className="
               w-7 h-7 rounded-md flex items-center justify-center text-xs
               bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800
-              text-zinc-800 dark:text-zinc-200 font-mono font-medium
+              text-zinc-800 dark:text-zinc-200 font-mono font-medium shadow-2xs
             ">
               {initials}
             </div>
@@ -138,7 +138,7 @@ export function ClinicLayout({ children }: ClinicLayoutProps) {
               title="Se déconnecter"
               className="
                 p-1.5 rounded-md border border-zinc-200 dark:border-zinc-800
-                bg-zinc-50 dark:bg-zinc-900/60
+                bg-zinc-100/70 dark:bg-zinc-900/60
                 text-zinc-500 hover:text-red-600 dark:hover:text-red-400
                 hover:bg-red-50 dark:hover:bg-red-950/20
                 transition-colors cursor-pointer
@@ -150,7 +150,7 @@ export function ClinicLayout({ children }: ClinicLayoutProps) {
         </header>
 
         {/* Content Outlet or Children */}
-        <main className="flex-1 overflow-hidden flex flex-col bg-zinc-50 dark:bg-zinc-950">
+        <main className="flex-1 overflow-hidden flex flex-col bg-slate-50 dark:bg-zinc-950">
           {children ? children : <Outlet />}
         </main>
       </div>

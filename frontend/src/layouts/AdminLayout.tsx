@@ -45,9 +45,9 @@ export function AdminLayout({ children }: AdminLayoutProps = {}) {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 transition-colors">
+    <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 transition-colors">
       {/* SaaS Admin Topbar */}
-      <header className="h-14 flex-shrink-0 flex items-center justify-between px-6 border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 select-none">
+      <header className="h-14 flex-shrink-0 flex items-center justify-between px-6 border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 shadow-2xs select-none">
         {/* Left: Brand & Admin Tag */}
         <div className="flex items-center gap-6">
           <Link to="/admin" className="flex items-center gap-2.5 group">
@@ -79,12 +79,12 @@ export function AdminLayout({ children }: AdminLayoutProps = {}) {
                     flex items-center gap-2 px-3 py-1.5 rounded-md text-xs transition-colors
                     ${
                       isActive
-                        ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 font-medium border border-zinc-200 dark:border-zinc-700'
-                        : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 hover:bg-zinc-100/60 dark:hover:bg-zinc-900 border border-transparent'
+                        ? 'bg-emerald-50/90 dark:bg-zinc-800 text-emerald-950 dark:text-zinc-100 font-semibold border border-emerald-200/80 dark:border-zinc-700 shadow-2xs'
+                        : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 hover:bg-zinc-100/70 dark:hover:bg-zinc-900 border border-transparent'
                     }
                   `}
                 >
-                  <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-emerald-600 dark:text-emerald-400' : 'text-zinc-500'}`} />
+                  <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-emerald-700 dark:text-emerald-400' : 'text-zinc-500'}`} />
                   <span>{item.label}</span>
                 </Link>
               )

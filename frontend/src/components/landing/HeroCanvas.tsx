@@ -57,7 +57,7 @@ function PulseNetwork({ mouse, isDark }: PulseNetworkProps) {
   // Colors buffer for proximity lighting
   const colors = useMemo(() => {
     const col = new Float32Array(nodeCount * 3)
-    const baseColor = isDark ? new THREE.Color('#52525b') : new THREE.Color('#71717a')
+    const baseColor = isDark ? new THREE.Color('#52525b') : new THREE.Color('#334155')
     for (let i = 0; i < nodeCount; i++) {
       col[i * 3] = baseColor.r
       col[i * 3 + 1] = baseColor.g
@@ -109,8 +109,8 @@ function PulseNetwork({ mouse, isDark }: PulseNetworkProps) {
     const posArray = posAttr.array as Float32Array
     const colArray = colAttr.array as Float32Array
 
-    const baseColor = isDark ? new THREE.Color('#52525b') : new THREE.Color('#94a3b8')
-    const activeEmerald = new THREE.Color('#10b981')
+    const baseColor = isDark ? new THREE.Color('#52525b') : new THREE.Color('#334155')
+    const activeEmerald = isDark ? new THREE.Color('#10b981') : new THREE.Color('#059669')
 
     // 2. Animate nodes & proximity glow
     for (let i = 0; i < nodeCount; i++) {
@@ -197,7 +197,7 @@ function PulseNetwork({ mouse, isDark }: PulseNetworkProps) {
         <lineBasicMaterial
           color={isDark ? '#10b981' : '#059669'}
           transparent
-          opacity={isDark ? 0.07 : 0.05}
+          opacity={isDark ? 0.07 : 0.16}
           depthWrite={false}
         />
       </lineSegments>
@@ -232,7 +232,7 @@ export function HeroCanvas() {
 
   return (
     <div
-      className="absolute inset-0 z-0 pointer-events-none overflow-hidden transition-opacity duration-1000 opacity-25 dark:opacity-30"
+      className="absolute inset-0 z-0 pointer-events-none overflow-hidden transition-opacity duration-1000 opacity-60 dark:opacity-30"
       aria-hidden="true"
     >
       <Canvas

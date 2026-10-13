@@ -14,7 +14,7 @@ export interface ProblemDetail {
 }
 
 export const apiClient = axios.create({
-  baseURL: 'http://localhost:8080/api/v1',
+  baseURL: '/api/v1',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -81,8 +81,8 @@ apiClient.interceptors.response.use(
         }
       }
     } else if (error.request) {
-      toast.error('Serveur inaccessible (Port 8080)', {
-        description: 'Vérifiez que le serveur Spring Boot est démarré.',
+      toast.error('Serveur inaccessible', {
+        description: 'Impossible de joindre le serveur. Vérifiez votre connexion réseau.',
       })
     } else {
       toast.error('Erreur réseau', {

@@ -200,15 +200,15 @@ export default function ConsultationWorkspace() {
   }
 
   return (
-    <div className="flex-1 overflow-hidden flex flex-col bg-zinc-50 dark:bg-zinc-950">
+    <div className="flex-1 overflow-hidden flex flex-col bg-slate-50 dark:bg-zinc-950">
       {/* ── Top Bar / Clinical Header ── */}
-      <div className="px-4 py-2.5 border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 flex items-center justify-between flex-shrink-0">
+      <div className="px-4 py-2.5 border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 flex items-center justify-between flex-shrink-0 shadow-2xs">
         <div className="flex items-center gap-3">
           <Button
             variant="ghost"
             size="sm"
             onClick={() => navigate('/app')}
-            className="h-8 px-2 gap-1 text-xs text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100"
+            className="h-8 px-2 gap-1 text-xs text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             <span>Retour Agenda</span>
@@ -221,7 +221,7 @@ export default function ConsultationWorkspace() {
             <h1 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 tracking-tight">
               Espace Consultation &amp; Ordonnances
             </h1>
-            <Badge variant="outline" className="font-mono text-[10px] text-zinc-500">
+            <Badge variant="outline" className="font-mono text-[10px] text-zinc-600 dark:text-zinc-400">
               Dr. Amina Benjelloun
             </Badge>
           </div>
@@ -234,7 +234,7 @@ export default function ConsultationWorkspace() {
             variant="outline"
             size="sm"
             onClick={handlePrintOrdonnance}
-            className="h-8 gap-1.5 text-xs border-zinc-200 dark:border-zinc-800"
+            className="h-8 gap-1.5 text-xs border-zinc-300 dark:border-zinc-800"
           >
             <Printer className="w-3.5 h-3.5 text-zinc-600 dark:text-zinc-400 stroke-[1.5]" />
             <span>Imprimer l&apos;Ordonnance (PDF)</span>
@@ -245,7 +245,7 @@ export default function ConsultationWorkspace() {
             type="submit"
             size="sm"
             disabled={createConsultation.isPending}
-            className="h-8 gap-1.5 text-xs bg-emerald-600 hover:bg-emerald-500 text-white border-0 font-medium"
+            className="h-8 gap-1.5 text-xs bg-emerald-600 hover:bg-emerald-500 text-white border-0 font-medium cursor-pointer shadow-2xs"
           >
             {createConsultation.isPending ? (
               <>
@@ -263,7 +263,7 @@ export default function ConsultationWorkspace() {
       </div>
 
       {/* ── Patient Identity Banner ── */}
-      <div className="px-4 py-2 border-b border-zinc-200 dark:border-zinc-800/80 bg-zinc-50/60 dark:bg-zinc-900/30 flex items-center justify-between text-xs">
+      <div className="px-4 py-2 border-b border-zinc-200 dark:border-zinc-800/80 bg-slate-100/70 dark:bg-zinc-900/30 flex items-center justify-between text-xs">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
             <span className="text-[11px] font-medium text-zinc-500">Patient:</span>
@@ -332,7 +332,7 @@ export default function ConsultationWorkspace() {
           {/* Vitals Grid */}
           <div className="grid grid-cols-3 gap-2">
             {/* Tension */}
-            <div className="p-2 rounded-md border border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/40">
+            <div className="p-2.5 rounded-md border border-zinc-200 dark:border-zinc-800 bg-slate-50/80 dark:bg-zinc-900/40 shadow-2xs">
               <div className="flex items-center justify-between text-zinc-500 mb-1">
                 <span className="text-[10px] font-medium uppercase">Tension</span>
                 <Activity className="w-3 h-3 text-rose-500 stroke-[1.5]" />
@@ -358,7 +358,7 @@ export default function ConsultationWorkspace() {
             </div>
 
             {/* Poids */}
-            <div className="p-2 rounded-md border border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/40">
+            <div className="p-2.5 rounded-md border border-zinc-200 dark:border-zinc-800 bg-slate-50/80 dark:bg-zinc-900/40 shadow-2xs">
               <div className="flex items-center justify-between text-zinc-500 mb-1">
                 <span className="text-[10px] font-medium uppercase">Poids</span>
                 <Scale className="w-3 h-3 text-emerald-500 stroke-[1.5]" />
@@ -384,7 +384,7 @@ export default function ConsultationWorkspace() {
             </div>
 
             {/* Fréquence Cardiaque */}
-            <div className="p-2 rounded-md border border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/40">
+            <div className="p-2.5 rounded-md border border-zinc-200 dark:border-zinc-800 bg-slate-50/80 dark:bg-zinc-900/40 shadow-2xs">
               <div className="flex items-center justify-between text-zinc-500 mb-1">
                 <span className="text-[10px] font-medium uppercase">Pouls / FC</span>
                 <Heart className="w-3 h-3 text-rose-500 stroke-[1.5]" />
@@ -451,7 +451,7 @@ export default function ConsultationWorkspace() {
         </div>
 
         {/* ── Right Column: Prescription Builder / Rédacteur d'Ordonnance (7 cols) ── */}
-        <div className="lg:col-span-7 overflow-y-auto p-4 space-y-4 bg-zinc-50/40 dark:bg-zinc-900/20">
+        <div className="lg:col-span-7 overflow-y-auto p-4 space-y-4 bg-slate-50/50 dark:bg-zinc-900/20">
           <div className="flex items-center justify-between pb-1 border-b border-zinc-200 dark:border-zinc-800">
             <div className="flex items-center gap-2">
               <Pill className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400 stroke-[1.5]" />
@@ -469,7 +469,7 @@ export default function ConsultationWorkspace() {
             {fields.map((field, index) => (
               <div
                 key={field.id}
-                className="p-3 rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 shadow-2xs space-y-2 group"
+                className="p-3 rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 shadow-clinical-card space-y-2 group"
               >
                 <div className="flex items-center justify-between">
                   <span className="font-mono text-[10px] font-semibold text-zinc-500">

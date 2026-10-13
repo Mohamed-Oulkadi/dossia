@@ -77,7 +77,7 @@ export function PatientsTable() {
   return (
     <div className="flex-1 flex flex-col h-full bg-white dark:bg-zinc-950 overflow-hidden select-none">
       {/* ── Action Toolbar ── */}
-      <div className="h-12 px-4 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between gap-3 bg-zinc-50/50 dark:bg-zinc-900/30">
+      <div className="h-12 px-4 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between gap-3 bg-slate-100/70 dark:bg-zinc-900/30">
         <div className="flex items-center gap-2.5">
           <div className="relative w-64 md:w-80">
             <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-400 stroke-[1.5]" />
@@ -86,10 +86,10 @@ export function PatientsTable() {
               placeholder="Rechercher par CIN, nom, téléphone..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-8 h-8 text-xs bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800"
+              className="pl-8 h-8 text-xs bg-white dark:bg-zinc-900 border-zinc-300 dark:border-zinc-800 shadow-2xs"
             />
           </div>
-          <span className="text-[11px] text-zinc-500 font-mono hidden sm:inline">
+          <span className="text-[11px] text-zinc-600 dark:text-zinc-400 font-mono hidden sm:inline">
             {data ? `${data.totalElements} patient(s)` : 'Chargement...'}
           </span>
         </div>
@@ -100,7 +100,7 @@ export function PatientsTable() {
             size="sm"
             onClick={() => refetch()}
             disabled={isFetching}
-            className="h-8 gap-1.5 text-xs text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-zinc-800"
+            className="h-8 gap-1.5 text-xs text-zinc-800 dark:text-zinc-300 border-zinc-300 dark:border-zinc-800"
             title="Rafraîchir les dossiers"
           >
             <RefreshCw className={`w-3.5 h-3.5 stroke-[1.5] ${isFetching ? 'animate-spin' : ''}`} />
@@ -196,7 +196,7 @@ export function PatientsTable() {
         {!isLoading && !isError && filteredPatients.length > 0 && (
           <table className="w-full text-left border-collapse text-xs">
             <thead>
-              <tr className="border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50/60 dark:bg-zinc-900/60 text-[11px] font-medium text-zinc-500 uppercase tracking-wider">
+              <tr className="border-b border-zinc-200 dark:border-zinc-800 bg-slate-100/70 dark:bg-zinc-900/60 text-[11px] font-medium text-zinc-600 dark:text-zinc-400 uppercase tracking-wider select-none">
                 <th className="py-2.5 px-3">CIN</th>
                 <th className="py-2.5 px-3">Nom &amp; Prénom</th>
                 <th className="py-2.5 px-3">Téléphone</th>
@@ -206,11 +206,11 @@ export function PatientsTable() {
                 <th className="py-2.5 px-3 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-zinc-200/70 dark:divide-zinc-800/70">
+            <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800/70">
               {filteredPatients.map((patient) => (
                 <tr
                   key={patient.id}
-                  className="h-10 hover:bg-zinc-50 dark:hover:bg-zinc-900/50 transition-colors group"
+                  className="h-10 hover:bg-slate-50/90 dark:hover:bg-zinc-900/50 transition-colors group"
                 >
                   {/* CIN */}
                   <td className="py-2 px-3 font-mono font-medium text-zinc-900 dark:text-zinc-100 whitespace-nowrap">

@@ -126,9 +126,9 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col justify-between bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 transition-colors">
+    <div className="min-h-screen flex flex-col justify-between bg-slate-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 transition-colors">
       {/* Top Header */}
-      <header className="h-14 flex items-center justify-between px-6 border-b border-zinc-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-xs">
+      <header className="h-14 flex items-center justify-between px-6 border-b border-zinc-200 dark:border-zinc-800 bg-white/95 dark:bg-zinc-950/80 backdrop-blur-xs shadow-2xs">
         <Link to="/" className="flex items-center gap-2.5 group">
           <div className="w-7 h-7 rounded-md bg-emerald-500/10 dark:bg-emerald-500/15 border border-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400 transition-transform group-hover:scale-105">
             <DossiaLogo className="w-4 h-4" />
@@ -136,7 +136,7 @@ export default function LoginPage() {
           <span className="text-sm font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
             Dossia
           </span>
-          <span className="text-[10px] font-mono px-1 py-0.2 bg-zinc-100 dark:bg-zinc-900 text-zinc-500 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-800 rounded">
+          <span className="text-[10px] font-mono px-1 py-0.2 bg-zinc-100 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-800 rounded font-medium">
             AUTH
           </span>
         </Link>
@@ -144,7 +144,7 @@ export default function LoginPage() {
         <button
           onClick={toggleTheme}
           title={theme === 'dark' ? 'Mode clair' : 'Mode sombre'}
-          className="p-1.5 rounded-md border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/60 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+          className="p-1.5 rounded-md border border-zinc-200 dark:border-zinc-800 bg-zinc-100/70 dark:bg-zinc-900/60 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-200/60 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
         >
           {theme === 'dark' ? (
             <Sun className="w-4 h-4 text-amber-400 stroke-[1.5]" />
@@ -158,12 +158,12 @@ export default function LoginPage() {
       <main className="flex-1 flex items-center justify-center px-4 py-8">
         <div className="w-full max-w-md space-y-6">
           {/* Card Surface */}
-          <div className="bg-white dark:bg-zinc-900/90 border border-zinc-200 dark:border-zinc-800 rounded-lg p-6 shadow-xs space-y-5">
+          <div className="bg-white dark:bg-zinc-900/90 border border-zinc-200/90 dark:border-zinc-800 rounded-lg p-6 shadow-clinical-card space-y-5">
             <div className="space-y-1 text-center">
               <h1 className="text-lg font-semibold tracking-tight text-zinc-950 dark:text-zinc-100">
                 Espace Cabinet Médical
               </h1>
-              <p className="text-xs text-zinc-500 dark:text-zinc-400">
+              <p className="text-xs text-zinc-600 dark:text-zinc-400">
                 Authentification sécurisée multi-tenante et conforme CNDP Loi 09-08
               </p>
             </div>
@@ -249,8 +249,8 @@ export default function LoginPage() {
 
             {/* Quick Demo Personas */}
             <div className="pt-3 border-t border-zinc-200 dark:border-zinc-800 space-y-2">
-              <div className="flex items-center justify-between text-[11px] text-zinc-500">
-                <span className="font-medium uppercase tracking-wider">Comptes de test (1-clic)</span>
+              <div className="flex items-center justify-between text-[11px] text-zinc-600 dark:text-zinc-400">
+                <span className="font-semibold uppercase tracking-wider">Comptes de test (1-clic)</span>
                 <span className="font-mono text-[10px]">Dossia2026!</span>
               </div>
 
@@ -269,13 +269,13 @@ export default function LoginPage() {
                         border transition-all cursor-pointer
                         ${
                           isSelected
-                            ? 'bg-zinc-100 dark:bg-zinc-800 border-zinc-300 dark:border-zinc-700 shadow-2xs'
-                            : 'bg-zinc-50/60 dark:bg-zinc-950/40 border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800/60'
+                            ? 'bg-emerald-50/90 dark:bg-zinc-800 border-emerald-300 dark:border-zinc-700 shadow-2xs font-semibold'
+                            : 'bg-slate-50/80 dark:bg-zinc-950/40 border-zinc-200/90 dark:border-zinc-800 hover:bg-slate-100 dark:hover:bg-zinc-800/60'
                         }
                       `}
                     >
                       <div className="flex items-center gap-2 min-w-0">
-                        <Icon className="w-3.5 h-3.5 text-zinc-500 dark:text-zinc-400 stroke-[1.5]" />
+                        <Icon className={`w-3.5 h-3.5 stroke-[1.5] ${isSelected ? 'text-emerald-700 dark:text-emerald-400' : 'text-zinc-500 dark:text-zinc-400'}`} />
                         <div className="truncate">
                           <span className="font-medium text-zinc-900 dark:text-zinc-100">
                             {demo.label}

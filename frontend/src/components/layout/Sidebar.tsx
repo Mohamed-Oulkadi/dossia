@@ -112,15 +112,15 @@ export function Sidebar() {
                 flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-xs transition-all group relative
                 ${
                   isActive
-                    ? 'bg-zinc-100 dark:bg-zinc-800/80 text-zinc-900 dark:text-zinc-100 font-medium border-l-2 border-emerald-600 dark:border-emerald-500 border-t border-b border-r border-zinc-200/80 dark:border-zinc-700/60 shadow-2xs'
-                    : 'border-l-2 border-transparent text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100/60 dark:hover:bg-zinc-900/60 hover:text-zinc-900 dark:hover:text-zinc-200'
+                    ? 'bg-emerald-50/90 dark:bg-zinc-800/80 text-emerald-950 dark:text-zinc-100 font-semibold border-l-2 border-emerald-600 dark:border-emerald-500 border-t border-b border-r border-emerald-200/70 dark:border-zinc-700/60 shadow-2xs'
+                    : 'border-l-2 border-transparent text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100/80 dark:hover:bg-zinc-900/60 hover:text-zinc-900 dark:hover:text-zinc-200'
                 }
               `}
             >
               <span className="flex-shrink-0 flex items-center justify-center">
                 <Icon
                   className={`w-4 h-4 stroke-[1.5] ${
-                    isActive ? 'text-emerald-600 dark:text-emerald-400' : 'text-zinc-500 group-hover:text-zinc-900 dark:group-hover:text-zinc-200'
+                    isActive ? 'text-emerald-700 dark:text-emerald-400' : 'text-zinc-500 group-hover:text-zinc-900 dark:group-hover:text-zinc-200'
                   }`}
                 />
               </span>
