@@ -34,7 +34,8 @@ public class DiagnosticRequest extends AuditableEntity {
     @Column(name = "request_type", length = 50, nullable = false)
     private DiagnosticRequestType requestType;
 
-    @Column(name = "items", columnDefinition = "TEXT", nullable = false)
+    @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.JSON)
+    @Column(name = "items", columnDefinition = "jsonb", nullable = false)
     private String itemsJson;
 
     @Column(name = "clinical_indication", columnDefinition = "TEXT")

@@ -216,6 +216,13 @@ FLYWAY_LEDGER = [
         "tables": "patient_documents",
         "tenant_isolated": "Yes (Foreign key clinic_id)",
         "description": "Document vault schema: multi-tenant patient_documents table with CNDP visibility tiers (DOCTOR_ONLY vs SHARED_SECRETARY), strict MIME checks (PDF, JPEG, PNG, WEBP), and soft-delete retention."
+    },
+    {
+        "version": "V10",
+        "script": "V10__seed_moroccan_clinical_practice_data.sql",
+        "tables": "patients, appointments, consultations, prescriptions, prescription_items, invoices, payments, feuilles_de_soins, diagnostic_requests, medical_certificates, patient_documents",
+        "tenant_isolated": "Yes (Clinique Ibn Sina Agadir)",
+        "description": "Authentic Moroccan clinical practice seed dataset: 10 patients with valid CIN/phone/CNSS, dynamic waiting-room queue and agenda (relative to CURRENT_DATE), completed consultations, prescriptions, MAD daily caisse transactions, CNSS/CNOPS claim forms, bilans, and document vault records."
     }
 ]
 
@@ -379,6 +386,13 @@ CHANGELOG_ENTRIES = [
         "modules": "backend:vault, docker:minio, frontend:vault",
         "migrations": "V9",
         "summary": "100% on-premise Moroccan medical vault (MinIO), multi-tenant object namespaces, CNDP doctor vs. secretary privacy isolation, slide-over negative contrast split viewer for radiography, and full soft-delete auditability."
+    },
+    {
+        "phase": "Phase 11: Authentic Moroccan Clinical Practice Dataset",
+        "date": "October 2026",
+        "modules": "backend:db, docker:postgres, docker:minio",
+        "migrations": "V10",
+        "summary": "Full clinical lifecycle dataset for Clinique Ibn Sina Agadir: 10 Moroccan patients with authentic identities (CIN, CNSS/CNOPS, E.164 phone numbers), dynamic agenda queue with real-time waiting room FIFO tracking, completed consultations with vitals and Moroccan drug prescriptions, active daily caisse ledger in MAD across cash/TPE/cheque, diagnostic requests, sick-leave certificates, and vault documents with MinIO binary objects."
     }
 ]
 

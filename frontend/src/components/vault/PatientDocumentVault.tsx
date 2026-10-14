@@ -18,7 +18,6 @@ import {
   Users,
   Eye,
   Trash2,
-  Download,
   AlertCircle,
   Loader2,
   FileCheck,
@@ -44,13 +43,13 @@ const CATEGORIES: { id: DocumentCategory; label: string; icon: any; color: strin
 export function PatientDocumentVault({
   patientId,
   consultationId,
-  compact = false,
+  compact: _compact = false,
   onPreviewDocument,
 }: PatientDocumentVaultProps) {
   const { user } = useAuthStore()
   const isDoctor = user?.role === 'DOCTOR'
 
-  const { data: documents = [], isLoading, isError, refetch } = usePatientDocuments(patientId)
+  const { data: documents = [], isLoading, isError } = usePatientDocuments(patientId)
   const uploadMutation = useUploadDocument()
   const deleteMutation = useDeleteDocument()
 

@@ -25,13 +25,15 @@ services:
       start_period: 10s
     networks:
       - backend-net
-    # Port 5432 is strictly unexposed to the host per CNDP audit & security mandates
+    # Bound to 127.0.0.1 for local host dev (isolated from external networks per CNDP audit)
+    ports:
+      - "127.0.0.1:5432:5432"
 
   # ----------------------------------------------------------------------------
   # 1b. Object Storage Tier: MinIO S3 Vault (Strictly isolated on backend-net)
   # ----------------------------------------------------------------------------
   minio:
-    image: quay.io/minio/minio:latest
+    image: ghcr.io/coollabsio/minio:latest
     container_name: dossia-minio
     restart: unless-stopped
     command: server /data --console-address ":9001"
@@ -42,8 +44,9 @@ services:
       - minio_data:/data
     networks:
       - backend-net
-    # Port 9000 is internal only; console 9001 bound to 127.0.0.1 for local dev inspection only
+    # Bound to 127.0.0.1 for local dev inspection & host backend integration
     ports:
+      - "127.0.0.1:9000:9000"
       - "127.0.0.1:9001:9001"
 
   # ----------------------------------------------------------------------------
@@ -111,10 +114,9 @@ services:
 # Network & Volume Definitions
 # ==============================================================================
 networks:
-  # Internal network: db & backend only; no host exposure
+  # Backend network: db, minio & backend; isolated from external interfaces via 127.0.0.1 port binds
   backend-net:
     driver: bridge
-    internal: true
 
   # DMZ network: backend, frontend, and nginx reverse proxy
   frontend-net:

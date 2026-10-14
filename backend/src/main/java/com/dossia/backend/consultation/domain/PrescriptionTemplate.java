@@ -30,6 +30,7 @@ public class PrescriptionTemplate extends AuditableEntity {
     @Column(name = "category", length = 100)
     private String category;
 
-    @Column(name = "items_json", columnDefinition = "TEXT", nullable = false)
+    @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.JSON)
+    @Column(name = "items_json", columnDefinition = "jsonb", nullable = false)
     private String itemsJson;
 }
