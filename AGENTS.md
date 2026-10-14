@@ -35,7 +35,8 @@ d:/My Projects/Dossia/
     ├── 02-moroccan-domain.md           # Moroccan healthcare business logic & regulations (All)
     ├── 03-testing-standards.md         # Testing standards & QA mandates (All)
     ├── 04-spring-modulith-craft.md     # Spring Modulith modular architecture & Java 21 idioms (Backend)
-    └── 05-backend-moroccan-domain.md   # Moroccan backend schemas, BigDecimal MAD, INPE, CNDP (Backend)
+    ├── 05-backend-moroccan-domain.md   # Moroccan backend schemas, BigDecimal MAD, INPE, CNDP (Backend)
+    └── 06-living-docx-documentation.md # Living Architecture Word Spec (.docx) & DoD Rules (All)
 ```
 
 ### Boundary & Ownership Matrix
@@ -45,6 +46,7 @@ d:/My Projects/Dossia/
 | **`frontend/`** | React 18, TypeScript, Tailwind CSS v4, Zustand, Radix UI, Three.js | Dashboard layout, Smart Agenda, Command Palette, Modals, dual-theme rendering | [`skills/01-premium-ui-craft.md`](file:///d:/My%20Projects/Dossia/skills/01-premium-ui-craft.md) |
 | **`backend/`** | Java 21+, Spring Boot, Spring Modulith, PostgreSQL, Flyway | Bounded domain modules (patient, agenda, billing, cnss), JWT security, CNDP audit | [`backend/AGENTS.md`](file:///d:/My%20Projects/Dossia/backend/AGENTS.md), [`skills/04-spring-modulith-craft.md`](file:///d:/My%20Projects/Dossia/skills/04-spring-modulith-craft.md), [`skills/05-backend-moroccan-domain.md`](file:///d:/My%20Projects/Dossia/skills/05-backend-moroccan-domain.md) |
 | **`ai/`** | Python, Whisper, LLM inference pipelines, LangChain | Voice-to-text clinical notes, Darija-to-French medical transcription, extraction | [`skills/02-moroccan-domain.md`](file:///d:/My%20Projects/Dossia/skills/02-moroccan-domain.md) |
+| **`docs/`** | Python, `python-docx` | Living master architectural specification (`Dossia_Architecture_Master_Spec.docx`) | [`skills/06-living-docx-documentation.md`](file:///d:/My%20Projects/Dossia/skills/06-living-docx-documentation.md) |
 
 ---
 
@@ -65,3 +67,15 @@ Before proposing plans, creating files, or modifying code in any folder, every A
    - Zero tolerance for placeholder logic, unhandled promises, or mock data that fails Moroccan domain validation rules.
    - All monetary amounts must be stored and computed using strict non-floating arithmetic in `MAD`.
    - Every code modification must satisfy the testing standards defined in [`skills/03-testing-standards.md`](file:///d:/My%20Projects/Dossia/skills/03-testing-standards.md).
+
+---
+
+## 4. Mandatory Living Documentation Rule (.docx)
+
+All agent personas (`Agent Modulith-Architect`, `Agent API-Security`, `Agent Frontend-Craft`, `Agent Moroccan-Domain`) are strictly governed by the **Living Architecture Document Protocol** defined in [`skills/06-living-docx-documentation.md`](file:///d:/My%20Projects/Dossia/skills/06-living-docx-documentation.md).
+
+At the conclusion of **every** task that adds, removes, or modifies a feature, database migration, API endpoint, security policy, or UI view, the acting agent **MUST**:
+1. **Update Generator Data Structures**: Edit the structured dictionaries and changelog lists inside [`scripts/generate_architecture_docx.py`](file:///d:/My%20Projects/Dossia/scripts/generate_architecture_docx.py) to reflect all new or altered components (including adding a new row to the Flyway Ledger and appending the Feature & Architecture Changelog).
+2. **Regenerate Master Document**: Run `python scripts/generate_architecture_docx.py` to compile and overwrite [`/docs/Dossia_Architecture_Master_Spec.docx`](file:///d:/My%20Projects/Dossia/docs/Dossia_Architecture_Master_Spec.docx).
+3. **Verify Integrity**: Confirm the resulting `.docx` file exists, is non-empty, and accurately describes the current system state.
+
