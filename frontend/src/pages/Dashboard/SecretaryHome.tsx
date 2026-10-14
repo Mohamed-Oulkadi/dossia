@@ -214,8 +214,17 @@ export function SecretaryHome() {
                 Synchronisation de l&apos;agenda…
               </div>
             ) : filteredAppointments.length === 0 ? (
-              <div className="p-8 text-center text-xs text-zinc-500">
-                Aucun rendez-vous planifié pour cette journée.
+              <div className="p-8 text-center text-xs text-zinc-500 flex flex-col items-center justify-center gap-2">
+                <p>Aucun rendez-vous planifié pour cette journée.</p>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => openModal('new-appointment')}
+                  className="h-7 text-xs gap-1.5 cursor-pointer"
+                >
+                  <CalendarPlus className="w-3.5 h-3.5 stroke-[1.5]" />
+                  Planifier un rendez-vous (Alt+N)
+                </Button>
               </div>
             ) : (
               <table className="w-full text-left border-collapse text-xs">

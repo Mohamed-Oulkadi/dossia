@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import {
   Dialog,
   DialogContent,
@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { useAppStore } from '@/store/useAppStore'
+import { useAuthStore } from '@/store/useAuthStore'
 import { useCreateAppointment, type AppointmentType } from '@/hooks/use-agenda'
 import { usePatients } from '@/hooks/use-patients'
 import { Search, Calendar, Loader2 } from 'lucide-react'
@@ -35,12 +36,22 @@ export function NewAppointmentModal({
   defaultTime?: string
 }) {
   const { activeModal, closeModal, openModal } = useAppStore()
-  const isOpen = activeModal === 'new-consultation'
+  const { user, role } = useAuthStore()
+
+  // Support both 'new-appointment' (used by SecretaryHome) and 'new-consultation' (used by SmartAgenda/Palette)
+  const isOpen = activeModal === 'new-appointment' || activeModal === 'new-consultation'
 
   const { data: patientsPage, isLoading: isLoadingPatients } = usePatients(0, 100)
   const createAppointment = useCreateAppointment()
 
   const todayStr = useMemo(() => new Date().toISOString().split('T')[0], [])
+
+  const defaultDoctor = useMemo(() => {
+    if (role === 'DOCTOR' && user) {
+      return `Dr. ${user.firstName} ${user.lastName}`
+    }
+    return 'Dr. Rachid Amrani'
+  }, [role, user])
 
   // Form states
   const [selectedPatientId, setSelectedPatientId] = useState<string>('')
@@ -50,9 +61,24 @@ export function NewAppointmentModal({
   const [date, setDate] = useState<string>(defaultDate || todayStr)
   const [startTime, setStartTime] = useState<string>(defaultTime || '09:00')
   const [durationMinutes, setDurationMinutes] = useState<number>(30)
-  const [doctorName, setDoctorName] = useState<string>('Dr. Amina Benjelloun')
+  const [doctorName, setDoctorName] = useState<string>(defaultDoctor)
   const [type, setType] = useState<AppointmentType>('CONSULTATION')
   const [notes, setNotes] = useState<string>('')
+
+  // Clean form state on modal open
+  useEffect(() => {
+    if (isOpen) {
+      setSelectedPatientId('')
+      setPatientSearch('')
+      setIsSearchOpen(false)
+      setDate(defaultDate || new Date().toISOString().split('T')[0])
+      setStartTime(defaultTime || '09:00')
+      setDurationMinutes(30)
+      setDoctorName(defaultDoctor)
+      setType('CONSULTATION')
+      setNotes('')
+    }
+  }, [isOpen, defaultDate, defaultTime, defaultDoctor])
 
   // Filter patients based on combobox search
   const filteredPatients = useMemo(() => {
@@ -181,50 +207,56 @@ export function NewAppointmentModal({
                 </div>
 
                 {isSearchOpen && (
-                  <div className="absolute left-0 right-0 top-full mt-1 z-50 rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 shadow-lg max-h-48 overflow-y-auto divide-y divide-zinc-100 dark:divide-zinc-900">
-                    {isLoadingPatients ? (
-                      <div className="p-3 text-center text-xs text-zinc-400">Chargement…</div>
-                    ) : filteredPatients.length === 0 ? (
-                      <div className="p-3 text-center text-xs text-zinc-400 space-y-2">
-                        <p>Aucun patient trouvé avec ce critère.</p>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            closeModal()
-                            openModal('new-patient')
-                          }}
-                          className="h-7 text-xs"
-                        >
-                          + Créer une nouvelle fiche patient
-                        </Button>
-                      </div>
-                    ) : (
-                      filteredPatients.map((p) => (
-                        <div
-                          key={p.id}
-                          onClick={() => {
-                            setSelectedPatientId(p.id)
-                            setIsSearchOpen(false)
-                          }}
-                          className="p-2 hover:bg-zinc-50 dark:hover:bg-zinc-900 cursor-pointer flex items-center justify-between text-xs"
-                        >
-                          <div>
-                            <p className="font-medium text-zinc-900 dark:text-zinc-100">
-                              {p.firstName} {p.lastName}
-                            </p>
-                            <p className="text-[10px] font-mono tabular-nums text-zinc-500">
-                              {p.phoneNumber} · CIN: {p.cin}
-                            </p>
-                          </div>
-                          <Badge variant="outline" className="font-mono text-[10px]">
-                            {p.mutuelleType || 'Sans mutuelle'}
-                          </Badge>
+                  <>
+                    <div
+                      className="fixed inset-0 z-40"
+                      onClick={() => setIsSearchOpen(false)}
+                    />
+                    <div className="absolute left-0 right-0 top-full mt-1 z-50 rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 shadow-lg max-h-48 overflow-y-auto divide-y divide-zinc-100 dark:divide-zinc-900">
+                      {isLoadingPatients ? (
+                        <div className="p-3 text-center text-xs text-zinc-400">Chargement…</div>
+                      ) : filteredPatients.length === 0 ? (
+                        <div className="p-3 text-center text-xs text-zinc-400 space-y-2">
+                          <p>Aucun patient trouvé avec ce critère.</p>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              closeModal()
+                              openModal('new-patient')
+                            }}
+                            className="h-7 text-xs"
+                          >
+                            + Créer une nouvelle fiche patient
+                          </Button>
                         </div>
-                      ))
-                    )}
-                  </div>
+                      ) : (
+                        filteredPatients.map((p) => (
+                          <div
+                            key={p.id}
+                            onClick={() => {
+                              setSelectedPatientId(p.id)
+                              setIsSearchOpen(false)
+                            }}
+                            className="p-2 hover:bg-zinc-50 dark:hover:bg-zinc-900 cursor-pointer flex items-center justify-between text-xs"
+                          >
+                            <div>
+                              <p className="font-medium text-zinc-900 dark:text-zinc-100">
+                                {p.firstName} {p.lastName}
+                              </p>
+                              <p className="text-[10px] font-mono tabular-nums text-zinc-500">
+                                {p.phoneNumber} · CIN: {p.cin}
+                              </p>
+                            </div>
+                            <Badge variant="outline" className="font-mono text-[10px]">
+                              {p.mutuelleType || 'Sans mutuelle'}
+                            </Badge>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </>
                 )}
               </div>
             )}
@@ -241,6 +273,7 @@ export function NewAppointmentModal({
                 onChange={(e) => setDoctorName(e.target.value)}
                 className="w-full h-8 rounded-md border border-zinc-300 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-2.5 text-xs text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-zinc-500 dark:focus:border-zinc-700"
               >
+                <option value="Dr. Rachid Amrani">Dr. Rachid Amrani</option>
                 <option value="Dr. Amina Benjelloun">Dr. Amina Benjelloun</option>
                 <option value="Dr. Mehdi Tazi">Dr. Mehdi Tazi</option>
                 <option value="Dr. Youssef Alami">Dr. Youssef Alami</option>
