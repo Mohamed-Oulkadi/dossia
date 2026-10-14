@@ -30,7 +30,7 @@ from docx.oxml.ns import nsdecls, qn
 METADATA = {
     "title": "Dossia — Architecture & Technical Master Specification",
     "subtitle": "The Digital Operating System for Moroccan Private Medical Cabinets & Clinics",
-    "version": "2.4.0-SNAPSHOT",
+    "version": "2.5.0-SNAPSHOT",
     "date": datetime.now().strftime("%B %d, %Y"),
     "classification": "CONFIDENTIAL / CLINICAL ARCHITECTURE SPECIFICATION",
     "legal_regulations": "CNDP Loi 09-08 • ANAM / CNSS AMO Standards • Code Général des Impôts (ICE/MAD)",
@@ -78,6 +78,11 @@ SYSTEM_CONTAINERS = [
         "component": "Nginx Reverse Proxy",
         "tech": "Nginx 1.25 Alpine, SSL Termination, SSE Tuning",
         "role": "Edge gateway enforcing OWASP security headers, CNDP X-Real-IP audit forwarding, 10MB medical document uploads, and unbuffered SSE event streaming."
+    },
+    {
+        "component": "MinIO S3 Object Storage",
+        "tech": "MinIO S3 API (quay.io/minio/minio:latest), Internal Bridge (backend-net), 10MB Multipart Uploads",
+        "role": "100% on-premise Moroccan medical document vault. Enforces multi-tenant namespace (clinics/{clinic_id}/patients/{patient_id}/*) with zero public port exposure; all binary streaming is mediated via Spring Boot with CNDP Loi 09-08 role access controls."
     }
 ]
 
@@ -137,6 +142,14 @@ BOUNDED_CONTEXTS = [
         "entities": ["feuilles_de_soins"],
         "events": ["FeuilleDeSoinsGeneratedEvent", "FeuilleDeSoinsPrintedEvent"],
         "services": ["FeuilleDeSoinsOrchestrator", "CnssPdfGenerator"]
+    },
+    {
+        "name": "com.dossia.backend.vault",
+        "title": "Coffre-Fort Documents & Imagerie Médicale (MinIO S3)",
+        "description": "Digitizes, indexes, and streams medical files (radiology X-rays, ultrasound scans, biology lab PDFs, CIN, and mutuelle insurance cards). Automatically enforces CNDP visibility tiers (DOCTOR_ONLY for clinical imagery vs. SHARED_SECRETARY for administrative files) and streams binaries through Spring Boot with JWT validation.",
+        "entities": ["patient_documents"],
+        "events": ["DocumentUploadedEvent", "DocumentArchivedEvent"],
+        "services": ["DocumentVaultService", "MinioStorageService", "PatientDocumentRepository"]
     }
 ]
 
@@ -196,6 +209,13 @@ FLYWAY_LEDGER = [
         "tables": "medications_catalog, prescription_templates, diagnostic_requests, medical_certificates",
         "tenant_isolated": "Yes (Templates support Global & Clinic scope)",
         "description": "Clinical Speed Engine schema: 28 pre-seeded Moroccan medications, default prescription templates, diagnostic requests, and medical certificates."
+    },
+    {
+        "version": "V9",
+        "script": "V9__init_document_vault_schema.sql",
+        "tables": "patient_documents",
+        "tenant_isolated": "Yes (Foreign key clinic_id)",
+        "description": "Document vault schema: multi-tenant patient_documents table with CNDP visibility tiers (DOCTOR_ONLY vs SHARED_SECRETARY), strict MIME checks (PDF, JPEG, PNG, WEBP), and soft-delete retention."
     }
 ]
 
@@ -248,7 +268,12 @@ REST_ENDPOINTS = [
     {"method": "POST",  "path": "/api/v1/cnss/generate", "roles": "SECRETARY, DOCTOR", "desc": "Generates official Feuille de Soins record with AMO act codes."},
     {"method": "GET",   "path": "/api/v1/cnss/{id}/pdf", "roles": "SECRETARY, DOCTOR", "desc": "Renders printable OpenPDF Feuille de Soins (FIP-1 compliant layout)."},
     {"method": "GET",   "path": "/api/v1/cnss/patient/{patientId}", "roles": "SECRETARY, DOCTOR", "desc": "Retrieves all insurance claim forms generated for a patient."},
-    {"method": "PATCH", "path": "/api/v1/cnss/{id}/printed", "roles": "SECRETARY, DOCTOR", "desc": "Marks a Feuille de Soins status as PRINTED for audit tracking."}
+    {"method": "PATCH", "path": "/api/v1/cnss/{id}/printed", "roles": "SECRETARY, DOCTOR", "desc": "Marks a Feuille de Soins status as PRINTED for audit tracking."},
+    # Document Vault & Medical Imaging (MinIO)
+    {"method": "POST",   "path": "/api/v1/documents/upload", "roles": "DOCTOR, SECRETARY", "desc": "Uploads medical imaging or administrative scan to MinIO vault with automatic CNDP visibility assignment."},
+    {"method": "GET",    "path": "/api/v1/documents/patient/{patientId}", "roles": "DOCTOR, SECRETARY", "desc": "Retrieves patient document directory filtered by role (Secretaries see only SHARED_SECRETARY)."},
+    {"method": "GET",    "path": "/api/v1/documents/{id}/stream", "roles": "DOCTOR, SECRETARY", "desc": "Streams binary file with Content-Disposition: inline (Secretaries blocked with 403 on DOCTOR_ONLY)."},
+    {"method": "DELETE", "path": "/api/v1/documents/{id}", "roles": "DOCTOR, SECRETARY", "desc": "Executes CNDP-compliant soft delete (marks deleted_at timestamp) on patient document."}
 ]
 
 FRONTEND_WORKSPACES = [
@@ -347,6 +372,13 @@ CHANGELOG_ENTRIES = [
         "modules": "docs, scripts, skills",
         "migrations": "N/A (Documentation Governance)",
         "summary": "Established automated python-docx specification engine, Living Architecture Document Protocol skill (06), and permanent AGENTS.md DoD rule."
+    },
+    {
+        "phase": "Phase 10: Coffre-Fort Documents & Imagerie (MinIO S3)",
+        "date": "October 2026",
+        "modules": "backend:vault, docker:minio, frontend:vault",
+        "migrations": "V9",
+        "summary": "100% on-premise Moroccan medical vault (MinIO), multi-tenant object namespaces, CNDP doctor vs. secretary privacy isolation, slide-over negative contrast split viewer for radiography, and full soft-delete auditability."
     }
 ]
 

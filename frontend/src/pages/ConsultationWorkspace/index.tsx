@@ -47,7 +47,11 @@ import {
   TestTube2,
   Award,
   Zap,
+  FolderLock,
 } from 'lucide-react'
+import { PatientDocumentVault } from '@/components/vault/PatientDocumentVault'
+import { SplitDocumentViewer } from '@/components/vault/SplitDocumentViewer'
+import type { PatientDocument } from '@/hooks/use-documents'
 
 interface PrescriptionItemForm {
   medicationName: string
@@ -82,7 +86,7 @@ const COMMON_MEDICATIONS = [
   'Spasfon 80mg cp',
 ]
 
-type SpeedTab = 'ORDONNANCE' | 'BILANS' | 'CERTIFICATS'
+type SpeedTab = 'ORDONNANCE' | 'BILANS' | 'CERTIFICATS' | 'DOCUMENTS'
 
 export default function ConsultationWorkspace() {
   const navigate = useNavigate()
@@ -94,6 +98,7 @@ export default function ConsultationWorkspace() {
   // Active right column tab
   const [activeTab, setActiveTab] = useState<SpeedTab>('ORDONNANCE')
   const [isSaveTemplateOpen, setIsSaveTemplateOpen] = useState(false)
+  const [splitPreviewDoc, setSplitPreviewDoc] = useState<PatientDocument | null>(null)
 
   // Live Patient & Appointment queries
   const { data: patientsPage, isLoading: isLoadingPatients } = usePatients(0, 100)
@@ -544,6 +549,19 @@ export default function ConsultationWorkspace() {
                 <Award className="w-3.5 h-3.5" />
                 <span>Certificats Médicaux</span>
               </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveTab('DOCUMENTS')}
+                className={`flex items-center gap-1.5 py-1.5 px-3 rounded-md text-xs font-semibold transition-all cursor-pointer ${
+                  activeTab === 'DOCUMENTS'
+                    ? 'bg-white dark:bg-zinc-950 text-emerald-600 dark:text-emerald-400 shadow-2xs'
+                    : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100'
+                }`}
+              >
+                <FolderLock className="w-3.5 h-3.5" />
+                <span>Imagerie &amp; Documents</span>
+              </button>
             </div>
 
             {activeTab === 'ORDONNANCE' && (
@@ -736,6 +754,17 @@ export default function ConsultationWorkspace() {
               patientName={patientFullName}
             />
           )}
+
+          {/* ════ TAB 4: IMAGERIE & DOCUMENTS MÉDICAUX (COFFRE-FORT) ════ */}
+          {activeTab === 'DOCUMENTS' && (
+            <div className="h-[calc(100vh-210px)] flex flex-col">
+              <PatientDocumentVault
+                patientId={selectedPatientId}
+                consultationId={lastSavedConsultationId || undefined}
+                onPreviewDocument={(doc) => setSplitPreviewDoc(doc)}
+              />
+            </div>
+          )}
         </div>
       </div>
 
@@ -744,6 +773,12 @@ export default function ConsultationWorkspace() {
         isOpen={isSaveTemplateOpen}
         onClose={() => setIsSaveTemplateOpen(false)}
         items={watchedItems || []}
+      />
+
+      {/* ── Non-Blocking Split-Screen Scan / Lab Viewer ── */}
+      <SplitDocumentViewer
+        document={splitPreviewDoc}
+        onClose={() => setSplitPreviewDoc(null)}
       />
     </div>
   )

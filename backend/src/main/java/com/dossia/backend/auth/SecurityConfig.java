@@ -83,13 +83,14 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/consultations/**").hasRole("DOCTOR")
                         .requestMatchers(HttpMethod.POST, "/api/v1/agenda/*/call").hasRole("DOCTOR")
 
-                        // CLINIC OPERATIONAL ROLES: Patients, appointments, billing, and CNSS sheets
+                        // CLINIC OPERATIONAL ROLES: Patients, appointments, billing, CNSS sheets, and Document Vault
                         // Super Admin strictly blocked per CNDP Law 09-08
                         .requestMatchers(
                                 "/api/v1/patients/**",
                                 "/api/v1/agenda/**",
                                 "/api/v1/billing/**",
-                                "/api/v1/cnss/**"
+                                "/api/v1/cnss/**",
+                                "/api/v1/documents/**"
                         ).hasAnyRole("DOCTOR", "SECRETARY")
 
                         // SUPER_ADMIN ONLY: Multi-tenancy, clinic provisioning, subscriptions, platform audit

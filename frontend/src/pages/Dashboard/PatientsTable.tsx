@@ -16,13 +16,16 @@ import {
   ChevronRight,
   ShieldAlert,
   FileCheck2,
+  FolderLock,
 } from 'lucide-react'
+import { PatientDocumentVaultModal } from '@/components/vault/PatientDocumentVaultModal'
 
 export function PatientsTable() {
   const { openModal } = useAppStore()
   const [page, setPage] = useState(0)
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedPatientForAmo, setSelectedPatientForAmo] = useState<Patient | null>(null)
+  const [selectedPatientForVault, setSelectedPatientForVault] = useState<Patient | null>(null)
 
   const { data, isLoading, isError, error, refetch, isFetching } = usePatients(page, 20)
 
@@ -261,6 +264,17 @@ export function PatientsTable() {
                       <Button
                         variant="outline"
                         size="sm"
+                        onClick={() => setSelectedPatientForVault(patient)}
+                        className="h-6 px-2 text-[11px] gap-1 text-emerald-700 dark:text-emerald-400 border-emerald-300 dark:border-emerald-800 bg-emerald-50/60 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 cursor-pointer"
+                        title="Coffre-Fort Documents & Imagerie"
+                      >
+                        <FolderLock className="w-3 h-3 stroke-[1.5]" />
+                        <span>Documents</span>
+                      </Button>
+
+                      <Button
+                        variant="outline"
+                        size="sm"
                         onClick={() => setSelectedPatientForAmo(patient)}
                         className="h-6 px-2 text-[11px] gap-1 text-teal-700 dark:text-teal-400 border-teal-300 dark:border-teal-800 bg-teal-50/60 dark:bg-teal-950/40 hover:bg-teal-100 dark:hover:bg-teal-900/50 cursor-pointer"
                         title="Dossier AMO & Feuilles de Soins"
@@ -320,6 +334,13 @@ export function PatientsTable() {
         patient={selectedPatientForAmo}
         isOpen={Boolean(selectedPatientForAmo)}
         onClose={() => setSelectedPatientForAmo(null)}
+      />
+
+      {/* ── Patient Documents Vault Modal ── */}
+      <PatientDocumentVaultModal
+        patient={selectedPatientForVault}
+        isOpen={Boolean(selectedPatientForVault)}
+        onClose={() => setSelectedPatientForVault(null)}
       />
     </div>
   )

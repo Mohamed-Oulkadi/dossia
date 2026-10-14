@@ -28,6 +28,25 @@ services:
     # Port 5432 is strictly unexposed to the host per CNDP audit & security mandates
 
   # ----------------------------------------------------------------------------
+  # 1b. Object Storage Tier: MinIO S3 Vault (Strictly isolated on backend-net)
+  # ----------------------------------------------------------------------------
+  minio:
+    image: quay.io/minio/minio:latest
+    container_name: dossia-minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: dossia_minio_admin
+      MINIO_ROOT_PASSWORD: dossia_minio_dev_secret_2026
+    volumes:
+      - minio_data:/data
+    networks:
+      - backend-net
+    # Port 9000 is internal only; console 9001 bound to 127.0.0.1 for local dev inspection only
+    ports:
+      - "127.0.0.1:9001:9001"
+
+  # ----------------------------------------------------------------------------
   # 2. Application Tier: Spring Boot 3 / Java 21 Modular Monolith
   # ----------------------------------------------------------------------------
   backend:
@@ -39,12 +58,18 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      minio:
+        condition: service_started
     environment:
       DB_HOST: db
       DB_PORT: 5432
       DB_NAME: dossia_db
       DB_USER: dossia_user
       DB_PASSWORD: dossia_dev_password_2026
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_ACCESS_KEY: dossia_minio_admin
+      MINIO_SECRET_KEY: dossia_minio_dev_secret_2026
+      MINIO_BUCKET: dossia-medical-vault
       SPRING_PROFILES_ACTIVE: prod
     networks:
       - backend-net
@@ -97,4 +122,6 @@ networks:
 
 volumes:
   dossia_pgdata:
+    driver: local
+  minio_data:
     driver: local
