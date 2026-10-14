@@ -1,10 +1,12 @@
 /**
  * ConsultationWorkspace — The Doctor's Clinical Workspace (Cabinet Médical)
- * Two-Column High-Density Layout:
+ * Two-Column High-Density Layout with Clinical Speed Engine:
  * - Left Column: Patient Vitals (Tension Artérielle, Poids, FC) & Observations Cliniques / Diagnostic
- * - Right Column: Dynamic Prescription Builder (react-hook-form useFieldArray)
- * - Actions: 'Terminer la consultation' (Primary save & sync) + 'Imprimer l'Ordonnance' (A4 PDF download)
- * - Moroccan Terminology & Physiological Validation
+ * - Right Column: 3-Tab Speed Engine
+ *   • Tab 1: Ordonnance Médicale (Moroccan drug catalog combobox, 1-click protocol injector, posology auto-fill)
+ *   • Tab 2: Demandes de Bilans (Biologie & Radiologie 1-click bundles, A4 PDF generator)
+ *   • Tab 3: Certificats Médicaux (Moroccan anti-fraud spelled-out days, duration chips, A4 PDF generator)
+ * - Moroccan Terminology, Strict MAD non-floating currency, CNDP 09-08 Compliance
  */
 import { useState, useMemo } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
@@ -16,6 +18,14 @@ import {
   downloadOrdonnancePdf,
   type ConsultationCreatePayload,
 } from '@/hooks/use-consultations'
+import {
+  usePrescriptionTemplates,
+  type PrescriptionTemplate,
+} from '@/hooks/use-clinical-library'
+import { MedicationCombobox } from './MedicationCombobox'
+import { SaveTemplateModal } from './SaveTemplateModal'
+import { BilansTab } from './BilansTab'
+import { CertificatsTab } from './CertificatsTab'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
@@ -32,6 +42,11 @@ import {
   Activity,
   Loader2,
   Pill,
+  Sparkles,
+  BookmarkPlus,
+  TestTube2,
+  Award,
+  Zap,
 } from 'lucide-react'
 
 interface PrescriptionItemForm {
@@ -67,6 +82,8 @@ const COMMON_MEDICATIONS = [
   'Spasfon 80mg cp',
 ]
 
+type SpeedTab = 'ORDONNANCE' | 'BILANS' | 'CERTIFICATS'
+
 export default function ConsultationWorkspace() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
@@ -74,9 +91,14 @@ export default function ConsultationWorkspace() {
   const appointmentId = searchParams.get('appointmentId') || undefined
   const initialPatientId = searchParams.get('patientId') || ''
 
+  // Active right column tab
+  const [activeTab, setActiveTab] = useState<SpeedTab>('ORDONNANCE')
+  const [isSaveTemplateOpen, setIsSaveTemplateOpen] = useState(false)
+
   // Live Patient & Appointment queries
   const { data: patientsPage, isLoading: isLoadingPatients } = usePatients(0, 100)
   const { data: agendaAppointments = [] } = useDailyAgenda()
+  const { data: templates = [] } = usePrescriptionTemplates()
 
   const createConsultation = useCreateConsultation()
   const updateAppointmentStatus = useUpdateAppointmentStatus()
@@ -106,6 +128,7 @@ export default function ConsultationWorkspace() {
     control,
     handleSubmit,
     setValue,
+    watch,
     formState: { errors },
   } = useForm<ConsultationFormData>({
     defaultValues: {
@@ -129,10 +152,31 @@ export default function ConsultationWorkspace() {
     },
   })
 
-  const { fields, append, remove } = useFieldArray({
+  const { fields, append, remove, replace } = useFieldArray({
     control,
     name: 'items',
   })
+
+  // Watch items for template modal and display
+  const watchedItems = watch('items')
+
+  // Apply prescription template in 1 click
+  const handleApplyTemplate = (template: PrescriptionTemplate) => {
+    if (!template.items || template.items.length === 0) return
+
+    replace(
+      template.items.map((item) => ({
+        medicationName: item.medicationName,
+        dosage: item.dosage,
+        duration: item.duration,
+        instructions: item.instructions || '',
+      }))
+    )
+
+    toast.success(`Protocole "${template.title}" appliqué`, {
+      description: `${template.items.length} médicament(s) injecté(s) avec posologie officielle`,
+    })
+  }
 
   // Submit consultation
   const onSubmit = async (data: ConsultationFormData) => {
@@ -179,9 +223,6 @@ export default function ConsultationWorkspace() {
       toast.success('Consultation terminée et enregistrée', {
         description: 'Dossier archivé · Ordonnance prête pour impression',
       })
-
-      // Route back to Agenda
-      navigate('/app')
     } catch {
       // Error handled by Sonner via API client interceptor
     }
@@ -198,6 +239,10 @@ export default function ConsultationWorkspace() {
       toast.info("Enregistrez d'abord la consultation pour générer l'ordonnance officielle signée.")
     }
   }
+
+  const patientFullName = selectedPatient
+    ? `${selectedPatient.firstName} ${selectedPatient.lastName}`
+    : 'Patient'
 
   return (
     <div className="flex-1 overflow-hidden flex flex-col bg-slate-50 dark:bg-zinc-950">
@@ -219,11 +264,16 @@ export default function ConsultationWorkspace() {
           <div className="flex items-center gap-2">
             <Stethoscope className="w-4 h-4 text-emerald-600 dark:text-emerald-400 stroke-[1.5]" />
             <h1 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 tracking-tight">
-              Espace Consultation &amp; Ordonnances
+              Espace Consultation &amp; Speed Engine
             </h1>
             <Badge variant="outline" className="font-mono text-[10px] text-zinc-600 dark:text-zinc-400">
               Dr. Amina Benjelloun
             </Badge>
+            {lastSavedConsultationId && (
+              <Badge className="bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800 text-[10px] py-0">
+                Séance Enregistrée <CheckCircle2 className="w-3 h-3 inline ml-1" />
+              </Badge>
+            )}
           </div>
         </div>
 
@@ -315,282 +365,386 @@ export default function ConsultationWorkspace() {
       </div>
 
       {/* ── Main Two-Column Workspace ── */}
-      <form
-        id="consultation-form"
-        onSubmit={handleSubmit(onSubmit)}
-        className="flex-1 overflow-hidden grid grid-cols-1 lg:grid-cols-12 divide-y lg:divide-y-0 lg:divide-x divide-zinc-200 dark:divide-zinc-800"
-      >
+      <div className="flex-1 overflow-hidden grid grid-cols-1 lg:grid-cols-12 divide-y lg:divide-y-0 lg:divide-x divide-zinc-200 dark:divide-zinc-800">
         {/* ── Left Column: Constantes Vitales & Examen Clinique (5 cols) ── */}
         <div className="lg:col-span-5 overflow-y-auto p-4 space-y-4 bg-white dark:bg-zinc-950">
-          <div className="flex items-center justify-between pb-1 border-b border-zinc-200 dark:border-zinc-800">
-            <h2 className="text-xs font-semibold text-zinc-900 dark:text-zinc-100 uppercase tracking-wider">
-              Examen Clinique &amp; Constantes
-            </h2>
-            <span className="text-[10px] text-zinc-400 font-mono">Loi CNDP 09-08</span>
-          </div>
+          <form id="consultation-form" onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            <div className="flex items-center justify-between pb-1 border-b border-zinc-200 dark:border-zinc-800">
+              <h2 className="text-xs font-semibold text-zinc-900 dark:text-zinc-100 uppercase tracking-wider">
+                Examen Clinique &amp; Constantes
+              </h2>
+              <span className="text-[10px] text-zinc-400 font-mono">Loi CNDP 09-08</span>
+            </div>
 
-          {/* Vitals Grid */}
-          <div className="grid grid-cols-3 gap-2">
-            {/* Tension */}
-            <div className="p-2.5 rounded-md border border-zinc-200 dark:border-zinc-800 bg-slate-50/80 dark:bg-zinc-900/40 shadow-2xs">
-              <div className="flex items-center justify-between text-zinc-500 mb-1">
-                <span className="text-[10px] font-medium uppercase">Tension</span>
-                <Activity className="w-3 h-3 text-rose-500 stroke-[1.5]" />
+            {/* Vitals Grid */}
+            <div className="grid grid-cols-3 gap-2">
+              {/* Tension */}
+              <div className="p-2.5 rounded-md border border-zinc-200 dark:border-zinc-800 bg-slate-50/80 dark:bg-zinc-900/40 shadow-2xs">
+                <div className="flex items-center justify-between text-zinc-500 mb-1">
+                  <span className="text-[10px] font-medium uppercase">Tension</span>
+                  <Activity className="w-3 h-3 text-rose-500 stroke-[1.5]" />
+                </div>
+                <div className="relative">
+                  <Input
+                    {...register('bloodPressure', {
+                      pattern: {
+                        value: /^$|^\d{1,3}\/\d{1,3}$/,
+                        message: 'Ex: 12/8 ou 120/80',
+                      },
+                    })}
+                    placeholder="12/8"
+                    className="h-7 text-xs font-mono font-semibold tabular-nums pr-11"
+                  />
+                  <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] font-mono text-zinc-400 pointer-events-none">
+                    mmHg
+                  </span>
+                </div>
+                {errors.bloodPressure && (
+                  <p className="text-[9px] text-rose-500 mt-1">{errors.bloodPressure.message}</p>
+                )}
               </div>
-              <div className="relative">
-                <Input
-                  {...register('bloodPressure', {
-                    pattern: {
-                      value: /^$|^\d{1,3}\/\d{1,3}$/,
-                      message: 'Ex: 12/8 ou 120/80',
-                    },
-                  })}
-                  placeholder="12/8"
-                  className="h-7 text-xs font-mono font-semibold tabular-nums pr-11"
-                />
-                <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] font-mono text-zinc-400 pointer-events-none">
-                  mmHg
-                </span>
+
+              {/* Poids */}
+              <div className="p-2.5 rounded-md border border-zinc-200 dark:border-zinc-800 bg-slate-50/80 dark:bg-zinc-900/40 shadow-2xs">
+                <div className="flex items-center justify-between text-zinc-500 mb-1">
+                  <span className="text-[10px] font-medium uppercase">Poids</span>
+                  <Scale className="w-3 h-3 text-emerald-500 stroke-[1.5]" />
+                </div>
+                <div className="relative">
+                  <Input
+                    type="number"
+                    step="0.1"
+                    {...register('weightKg', {
+                      min: { value: 0.5, message: '> 0.5 kg' },
+                      max: { value: 400, message: '< 400 kg' },
+                    })}
+                    placeholder="70.5"
+                    className="h-7 text-xs font-mono font-semibold tabular-nums pr-8"
+                  />
+                  <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] font-mono text-zinc-400 pointer-events-none">
+                    kg
+                  </span>
+                </div>
+                {errors.weightKg && (
+                  <p className="text-[9px] text-rose-500 mt-1">{errors.weightKg.message}</p>
+                )}
               </div>
-              {errors.bloodPressure && (
-                <p className="text-[9px] text-rose-500 mt-1">{errors.bloodPressure.message}</p>
+
+              {/* Fréquence Cardiaque */}
+              <div className="p-2.5 rounded-md border border-zinc-200 dark:border-zinc-800 bg-slate-50/80 dark:bg-zinc-900/40 shadow-2xs">
+                <div className="flex items-center justify-between text-zinc-500 mb-1">
+                  <span className="text-[10px] font-medium uppercase">Pouls / FC</span>
+                  <Heart className="w-3 h-3 text-rose-500 stroke-[1.5]" />
+                </div>
+                <div className="relative">
+                  <Input
+                    type="number"
+                    {...register('heartRateBpm', {
+                      min: { value: 30, message: 'Min 30' },
+                      max: { value: 250, message: 'Max 250' },
+                    })}
+                    placeholder="72"
+                    className="h-7 text-xs font-mono font-semibold tabular-nums pr-8"
+                  />
+                  <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] font-mono text-zinc-400 pointer-events-none">
+                    bpm
+                  </span>
+                </div>
+                {errors.heartRateBpm && (
+                  <p className="text-[9px] text-rose-500 mt-1">{errors.heartRateBpm.message}</p>
+                )}
+              </div>
+            </div>
+
+            {/* Motif de Consultation */}
+            <div>
+              <label className="block text-[11px] font-medium text-zinc-600 dark:text-zinc-400 mb-1">
+                Motif de consultation *
+              </label>
+              <Input
+                {...register('motif', { required: 'Le motif est obligatoire' })}
+                placeholder="Ex: Douleurs abdominales aiguës, rhinopharyngite, contrôle TA…"
+                className="h-8 text-xs font-medium"
+              />
+              {errors.motif && (
+                <p className="text-[10px] text-rose-500 mt-1">{errors.motif.message}</p>
               )}
             </div>
 
-            {/* Poids */}
-            <div className="p-2.5 rounded-md border border-zinc-200 dark:border-zinc-800 bg-slate-50/80 dark:bg-zinc-900/40 shadow-2xs">
-              <div className="flex items-center justify-between text-zinc-500 mb-1">
-                <span className="text-[10px] font-medium uppercase">Poids</span>
-                <Scale className="w-3 h-3 text-emerald-500 stroke-[1.5]" />
-              </div>
-              <div className="relative">
-                <Input
-                  type="number"
-                  step="0.1"
-                  {...register('weightKg', {
-                    min: { value: 0.5, message: '> 0.5 kg' },
-                    max: { value: 400, message: '< 400 kg' },
-                  })}
-                  placeholder="70.5"
-                  className="h-7 text-xs font-mono font-semibold tabular-nums pr-8"
-                />
-                <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] font-mono text-zinc-400 pointer-events-none">
-                  kg
-                </span>
-              </div>
-              {errors.weightKg && (
-                <p className="text-[9px] text-rose-500 mt-1">{errors.weightKg.message}</p>
-              )}
+            {/* Observations Cliniques / Examen */}
+            <div>
+              <label className="block text-[11px] font-medium text-zinc-600 dark:text-zinc-400 mb-1">
+                Observations Cliniques &amp; Anamnèse
+              </label>
+              <textarea
+                {...register('clinicalNotes')}
+                rows={6}
+                placeholder="Examen physique: abdomen souple, absence de fièvre. Auscultation pulmonaire libre. Antécédents chirurgicaux non contributifs…"
+                className="w-full rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-2.5 text-xs text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-none focus:border-zinc-500 dark:focus:border-zinc-700 font-sans leading-relaxed resize-none"
+              />
             </div>
 
-            {/* Fréquence Cardiaque */}
-            <div className="p-2.5 rounded-md border border-zinc-200 dark:border-zinc-800 bg-slate-50/80 dark:bg-zinc-900/40 shadow-2xs">
-              <div className="flex items-center justify-between text-zinc-500 mb-1">
-                <span className="text-[10px] font-medium uppercase">Pouls / FC</span>
-                <Heart className="w-3 h-3 text-rose-500 stroke-[1.5]" />
-              </div>
-              <div className="relative">
-                <Input
-                  type="number"
-                  {...register('heartRateBpm', {
-                    min: { value: 30, message: 'Min 30' },
-                    max: { value: 250, message: 'Max 250' },
-                  })}
-                  placeholder="72"
-                  className="h-7 text-xs font-mono font-semibold tabular-nums pr-8"
-                />
-                <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] font-mono text-zinc-400 pointer-events-none">
-                  bpm
-                </span>
-              </div>
-              {errors.heartRateBpm && (
-                <p className="text-[9px] text-rose-500 mt-1">{errors.heartRateBpm.message}</p>
-              )}
+            {/* Diagnostic Retenu */}
+            <div>
+              <label className="block text-[11px] font-medium text-zinc-600 dark:text-zinc-400 mb-1">
+                Diagnostic Médical Retenu
+              </label>
+              <Input
+                {...register('diagnosis')}
+                placeholder="Ex: Syndrome dyspeptique fonctionnel / Rhinopharyngite virale"
+                className="h-8 text-xs font-medium"
+              />
             </div>
-          </div>
+          </form>
+        </div>
 
-          {/* Motif de Consultation */}
-          <div>
-            <label className="block text-[11px] font-medium text-zinc-600 dark:text-zinc-400 mb-1">
-              Motif de consultation *
-            </label>
-            <Input
-              {...register('motif', { required: 'Le motif est obligatoire' })}
-              placeholder="Ex: Douleurs abdominales aiguës, rhinopharyngite, contrôle TA…"
-              className="h-8 text-xs font-medium"
-            />
-            {errors.motif && (
-              <p className="text-[10px] text-rose-500 mt-1">{errors.motif.message}</p>
+        {/* ── Right Column: 3-Tab Speed Engine (7 cols) ── */}
+        <div className="lg:col-span-7 overflow-y-auto p-4 space-y-3.5 bg-slate-50/50 dark:bg-zinc-900/20">
+          {/* ── Speed Engine Main Tab Navigation ── */}
+          <div className="flex items-center justify-between pb-2 border-b border-zinc-200 dark:border-zinc-800">
+            <div className="flex items-center gap-1.5 p-1 bg-zinc-200/70 dark:bg-zinc-800/60 rounded-lg">
+              <button
+                type="button"
+                onClick={() => setActiveTab('ORDONNANCE')}
+                className={`flex items-center gap-1.5 py-1.5 px-3 rounded-md text-xs font-semibold transition-all cursor-pointer ${
+                  activeTab === 'ORDONNANCE'
+                    ? 'bg-white dark:bg-zinc-950 text-emerald-600 dark:text-emerald-400 shadow-2xs'
+                    : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100'
+                }`}
+              >
+                <Pill className="w-3.5 h-3.5" />
+                <span>Ordonnance (Rx)</span>
+                <Badge variant="secondary" className="text-[10px] py-0 px-1 font-mono">
+                  {fields.length}
+                </Badge>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveTab('BILANS')}
+                className={`flex items-center gap-1.5 py-1.5 px-3 rounded-md text-xs font-semibold transition-all cursor-pointer ${
+                  activeTab === 'BILANS'
+                    ? 'bg-white dark:bg-zinc-950 text-sky-600 dark:text-sky-400 shadow-2xs'
+                    : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100'
+                }`}
+              >
+                <TestTube2 className="w-3.5 h-3.5" />
+                <span>Demandes de Bilans</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveTab('CERTIFICATS')}
+                className={`flex items-center gap-1.5 py-1.5 px-3 rounded-md text-xs font-semibold transition-all cursor-pointer ${
+                  activeTab === 'CERTIFICATS'
+                    ? 'bg-white dark:bg-zinc-950 text-purple-600 dark:text-purple-400 shadow-2xs'
+                    : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100'
+                }`}
+              >
+                <Award className="w-3.5 h-3.5" />
+                <span>Certificats Médicaux</span>
+              </button>
+            </div>
+
+            {activeTab === 'ORDONNANCE' && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setIsSaveTemplateOpen(true)}
+                className="h-7 text-[11px] gap-1 text-zinc-700 dark:text-zinc-300 border-zinc-300 dark:border-zinc-700 cursor-pointer"
+                title="Enregistrer l'ordonnance actuelle comme modèle type"
+              >
+                <BookmarkPlus className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+                <span>Sauvegarder Modèle</span>
+              </Button>
             )}
           </div>
 
-          {/* Observations Cliniques / Examen */}
-          <div>
-            <label className="block text-[11px] font-medium text-zinc-600 dark:text-zinc-400 mb-1">
-              Observations Cliniques &amp; Anamnèse
-            </label>
-            <textarea
-              {...register('clinicalNotes')}
-              rows={6}
-              placeholder="Examen physique: abdomen souple, absence de fièvre. Auscultation pulmonaire libre. Antécédents chirurgicaux non contributifs…"
-              className="w-full rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-2.5 text-xs text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-none focus:border-zinc-500 dark:focus:border-zinc-700 font-sans leading-relaxed resize-none"
-            />
-          </div>
-
-          {/* Diagnostic Retenu */}
-          <div>
-            <label className="block text-[11px] font-medium text-zinc-600 dark:text-zinc-400 mb-1">
-              Diagnostic Médical Retenu
-            </label>
-            <Input
-              {...register('diagnosis')}
-              placeholder="Ex: Syndrome dyspeptique fonctionnel / Rhinopharyngite virale"
-              className="h-8 text-xs font-medium"
-            />
-          </div>
-        </div>
-
-        {/* ── Right Column: Prescription Builder / Rédacteur d'Ordonnance (7 cols) ── */}
-        <div className="lg:col-span-7 overflow-y-auto p-4 space-y-4 bg-slate-50/50 dark:bg-zinc-900/20">
-          <div className="flex items-center justify-between pb-1 border-b border-zinc-200 dark:border-zinc-800">
-            <div className="flex items-center gap-2">
-              <Pill className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400 stroke-[1.5]" />
-              <h2 className="text-xs font-semibold text-zinc-900 dark:text-zinc-100 uppercase tracking-wider">
-                Prescription Médicale (Ordonnance A4)
-              </h2>
-            </div>
-            <span className="text-[10px] text-zinc-400 font-mono">
-              {fields.length} médicament(s)
-            </span>
-          </div>
-
-          {/* Medication List */}
-          <div className="space-y-2.5">
-            {fields.map((field, index) => (
-              <div
-                key={field.id}
-                className="p-3 rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 shadow-clinical-card space-y-2 group"
-              >
+          {/* ════ TAB 1: ORDONNANCE (Rx) ════ */}
+          {activeTab === 'ORDONNANCE' && (
+            <div className="space-y-3.5">
+              {/* ── 1-Click Protocol Templates Injector Bar ── */}
+              <div className="p-2.5 rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 shadow-2xs space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <span className="font-mono text-[10px] font-semibold text-zinc-500">
-                    Ligne #{index + 1}
+                  <span className="text-[10px] font-mono text-zinc-500 uppercase flex items-center gap-1">
+                    <Zap className="w-3 h-3 text-amber-500 fill-amber-500" />
+                    Protocoles &amp; Ordonnances Types (1-Click) :
                   </span>
-                  {fields.length > 1 && (
+                  <span className="text-[9px] font-mono text-zinc-400">
+                    {templates.length} modèle(s) disponible(s)
+                  </span>
+                </div>
+
+                <div className="flex flex-wrap gap-1.5">
+                  {templates.map((tpl) => (
                     <button
+                      key={tpl.id}
                       type="button"
-                      onClick={() => remove(index)}
-                      className="p-1 rounded text-zinc-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
-                      title="Supprimer la ligne"
+                      onClick={() => handleApplyTemplate(tpl)}
+                      className="text-[11px] font-medium px-2.5 py-1 rounded-md border border-zinc-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-900 text-zinc-800 dark:text-zinc-200 hover:border-emerald-500 hover:bg-emerald-50/50 dark:hover:bg-emerald-950/30 hover:text-emerald-700 dark:hover:text-emerald-300 transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs group"
                     >
-                      <Trash2 className="w-3.5 h-3.5 stroke-[1.5]" />
+                      <Sparkles className="w-3 h-3 text-amber-500 group-hover:text-emerald-600 transition-colors" />
+                      <span>{tpl.title}</span>
+                      <span className="text-[9px] font-mono text-zinc-400">({tpl.items.length})</span>
                     </button>
-                  )}
-                </div>
-
-                {/* Medication name input */}
-                <div>
-                  <div className="relative">
-                    <Input
-                      {...register(`items.${index}.medicationName` as const, {
-                        required: true,
-                      })}
-                      placeholder="Nom du médicament (ex: Amoxicilline 1g)"
-                      className="h-8 text-xs font-semibold"
-                    />
-                  </div>
-                </div>
-
-                {/* Dosage & Duration Grid */}
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <Input
-                      {...register(`items.${index}.dosage` as const, { required: true })}
-                      placeholder="Posologie (ex: 1 cp 3x/jour)"
-                      className="h-7 text-xs font-mono"
-                    />
-                  </div>
-                  <div>
-                    <Input
-                      {...register(`items.${index}.duration` as const, { required: true })}
-                      placeholder="Durée (ex: 7 jours)"
-                      className="h-7 text-xs font-mono"
-                    />
-                  </div>
-                </div>
-
-                {/* Specific Instructions */}
-                <div>
-                  <Input
-                    {...register(`items.${index}.instructions` as const)}
-                    placeholder="Conseils de prise (ex: Pendant les repas, espacer de 6h)"
-                    className="h-7 text-[11px] text-zinc-600 dark:text-zinc-400"
-                  />
+                  ))}
                 </div>
               </div>
-            ))}
-          </div>
 
-          {/* Quick Add Button & Presets */}
-          <div className="space-y-2">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() =>
-                append({
-                  medicationName: '',
-                  dosage: '1 cp 2 fois par jour',
-                  duration: '5 jours',
-                  instructions: '',
-                })
-              }
-              className="w-full h-8 text-xs border-dashed border-zinc-300 dark:border-zinc-700 hover:border-zinc-500 text-zinc-700 dark:text-zinc-300 gap-1.5"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              <span>Ajouter un médicament</span>
-            </Button>
-
-            {/* Common Presets Badges */}
-            <div className="pt-1">
-              <span className="text-[10px] text-zinc-400 uppercase font-mono block mb-1.5">
-                Médicaments Fréquents (1-Click):
-              </span>
-              <div className="flex flex-wrap gap-1.5">
-                {COMMON_MEDICATIONS.slice(0, 6).map((med) => (
-                  <button
-                    key={med}
-                    type="button"
-                    onClick={() =>
-                      append({
-                        medicationName: med,
-                        dosage: '1 cp matin et soir',
-                        duration: '7 jours',
-                        instructions: 'Au cours des repas',
-                      })
-                    }
-                    className="text-[10px] font-mono px-2 py-0.5 rounded border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 hover:border-zinc-400 dark:hover:border-zinc-600 transition-colors cursor-pointer"
+              {/* ── Dynamic Medication Rows ── */}
+              <div className="space-y-2.5">
+                {fields.map((field, index) => (
+                  <div
+                    key={field.id}
+                    className="p-3 rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 shadow-clinical-card space-y-2 group"
                   >
-                    + {med}
-                  </button>
+                    <div className="flex items-center justify-between">
+                      <span className="font-mono text-[10px] font-semibold text-zinc-500">
+                        Ligne #{index + 1}
+                      </span>
+                      {fields.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => remove(index)}
+                          className="p-1 rounded text-zinc-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
+                          title="Supprimer la ligne"
+                        >
+                          <Trash2 className="w-3.5 h-3.5 stroke-[1.5]" />
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Medication Combobox (Moroccan Catalog Autocomplete) */}
+                    <div>
+                      <MedicationCombobox
+                        value={watch(`items.${index}.medicationName`) || ''}
+                        onChange={(val) => setValue(`items.${index}.medicationName`, val)}
+                        onSelectMedication={(item) => {
+                          setValue(`items.${index}.medicationName`, item.brandName)
+                          if (item.defaultPosology) {
+                            setValue(`items.${index}.dosage`, item.defaultPosology)
+                          }
+                        }}
+                      />
+                    </div>
+
+                    {/* Dosage & Duration Grid */}
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <Input
+                          {...register(`items.${index}.dosage` as const, { required: true })}
+                          placeholder="Posologie (ex: 1 cp 3x/jour)"
+                          className="h-7 text-xs font-mono"
+                        />
+                      </div>
+                      <div>
+                        <Input
+                          {...register(`items.${index}.duration` as const, { required: true })}
+                          placeholder="Durée (ex: 7 jours)"
+                          className="h-7 text-xs font-mono"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Specific Instructions */}
+                    <div>
+                      <Input
+                        {...register(`items.${index}.instructions` as const)}
+                        placeholder="Conseils de prise (ex: Pendant les repas, espacer de 6h)"
+                        className="h-7 text-[11px] text-zinc-600 dark:text-zinc-400"
+                      />
+                    </div>
+                  </div>
                 ))}
               </div>
-            </div>
-          </div>
 
-          {/* Prescription General Notes / Recommandations */}
-          <div className="pt-2 border-t border-zinc-200 dark:border-zinc-800">
-            <label className="block text-[11px] font-medium text-zinc-600 dark:text-zinc-400 mb-1">
-              Recommandations hygiéno-diététiques / Mentions ordonnance
-            </label>
-            <textarea
-              {...register('prescriptionNotes')}
-              rows={3}
-              placeholder="Conseils de repos, hydratation, contrôle de la tension dans 15 jours…"
-              className="w-full rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-2 text-xs text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-none focus:border-zinc-500 resize-none font-sans"
+              {/* Quick Add Button & Presets */}
+              <div className="space-y-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    append({
+                      medicationName: '',
+                      dosage: '1 cp 2 fois par jour',
+                      duration: '5 jours',
+                      instructions: '',
+                    })
+                  }
+                  className="w-full h-8 text-xs border-dashed border-zinc-300 dark:border-zinc-700 hover:border-zinc-500 text-zinc-700 dark:text-zinc-300 gap-1.5"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Ajouter un médicament</span>
+                </Button>
+
+                {/* Common Presets Badges */}
+                <div className="pt-1">
+                  <span className="text-[10px] text-zinc-400 uppercase font-mono block mb-1.5">
+                    Médicaments Fréquents (1-Click):
+                  </span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {COMMON_MEDICATIONS.slice(0, 8).map((med) => (
+                      <button
+                        key={med}
+                        type="button"
+                        onClick={() =>
+                          append({
+                            medicationName: med,
+                            dosage: '1 cp matin et soir',
+                            duration: '7 jours',
+                            instructions: 'Au cours des repas',
+                          })
+                        }
+                        className="text-[10px] font-mono px-2 py-0.5 rounded border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 hover:border-zinc-400 dark:hover:border-zinc-600 transition-colors cursor-pointer"
+                      >
+                        + {med}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Prescription General Notes / Recommandations */}
+              <div className="pt-2 border-t border-zinc-200 dark:border-zinc-800">
+                <label className="block text-[11px] font-medium text-zinc-600 dark:text-zinc-400 mb-1">
+                  Recommandations hygiéno-diététiques / Mentions ordonnance
+                </label>
+                <textarea
+                  {...register('prescriptionNotes')}
+                  rows={3}
+                  placeholder="Conseils de repos, hydratation, contrôle de la tension dans 15 jours…"
+                  className="w-full rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-2 text-xs text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-none focus:border-zinc-500 resize-none font-sans"
+                />
+              </div>
+            </div>
+          )}
+
+          {/* ════ TAB 2: DEMANDES DE BILANS ════ */}
+          {activeTab === 'BILANS' && (
+            <BilansTab
+              consultationId={lastSavedConsultationId || undefined}
+              patientName={patientFullName}
             />
-          </div>
+          )}
+
+          {/* ════ TAB 3: CERTIFICATS MÉDICAUX ════ */}
+          {activeTab === 'CERTIFICATS' && (
+            <CertificatsTab
+              consultationId={lastSavedConsultationId || undefined}
+              patientName={patientFullName}
+            />
+          )}
         </div>
-      </form>
+      </div>
+
+      {/* ── Modal to Save Custom Prescription Template ── */}
+      <SaveTemplateModal
+        isOpen={isSaveTemplateOpen}
+        onClose={() => setIsSaveTemplateOpen(false)}
+        items={watchedItems || []}
+      />
     </div>
   )
 }

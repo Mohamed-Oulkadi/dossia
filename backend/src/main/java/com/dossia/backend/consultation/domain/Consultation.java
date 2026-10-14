@@ -53,6 +53,7 @@ public class Consultation extends AuditableEntity {
     @Column(name = "version", nullable = false)
     private Long version;
 
+    @Setter(AccessLevel.NONE)
     @OneToOne(mappedBy = "consultation", cascade = CascadeType.ALL, orphanRemoval = true)
     private Prescription prescription;
 
