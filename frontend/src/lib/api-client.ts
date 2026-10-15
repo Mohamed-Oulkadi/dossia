@@ -18,7 +18,7 @@ export const apiClient = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 10000,
+  timeout: 30000,
 })
 
 // Global Request Interceptor: Attach Bearer JWT token if available
@@ -80,6 +80,10 @@ apiClient.interceptors.response.use(
           toast.error('Une erreur est survenue au niveau du serveur.')
         }
       }
+    } else if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
+      toast.error('Délai d’attente dépassé', {
+        description: 'Le traitement par l’intelligence artificielle a dépassé le délai imparti. Veuillez réessayer.',
+      })
     } else if (error.request) {
       toast.error('Serveur inaccessible', {
         description: 'Impossible de joindre le serveur. Vérifiez votre connexion réseau.',

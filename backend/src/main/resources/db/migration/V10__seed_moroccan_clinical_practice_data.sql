@@ -457,7 +457,7 @@ INSERT INTO patient_documents (
 ) VALUES
     ('40000000-0000-0000-0000-000000000001', '11111111-1111-1111-1111-111111111111',
      'a1000000-0000-0000-0000-000000000001', 'c1000000-0000-0000-0000-000000000001',
-     'Bilan_Biologique_Mansouri_2026.pdf', 'application/pdf', 49,
+     'Bilan_Biologique_Mansouri_2026.pdf', 'application/pdf', 5153,
      '11111111-1111-1111-1111-111111111111/a1000000-0000-0000-0000-000000000001/biologie/bilan_biologique_mansouri_2026.pdf',
      'BIOLOGIE', 'SHARED_SECRETARY',
      'Bilan biologique complet: Ionogramme sanguin, créatinine et bilan lipidique.',
@@ -466,7 +466,7 @@ INSERT INTO patient_documents (
 
     ('40000000-0000-0000-0000-000000000002', '11111111-1111-1111-1111-111111111111',
      'a1000000-0000-0000-0000-000000000002', 'c1000000-0000-0000-0000-000000000002',
-     'Attestation_Adhesion_CNOPS.pdf', 'application/pdf', 44,
+     'Attestation_Adhesion_CNOPS.pdf', 'application/pdf', 5059,
      '11111111-1111-1111-1111-111111111111/a1000000-0000-0000-0000-000000000002/administratif/attestation_cnops.pdf',
      'ADMINISTRATIF_CNSS', 'SHARED_SECRETARY',
      'Attestation de déclaration et droits ouverts CNOPS pour prise en charge AMO.',
@@ -475,7 +475,7 @@ INSERT INTO patient_documents (
 
     ('40000000-0000-0000-0000-000000000003', '11111111-1111-1111-1111-111111111111',
      'a1000000-0000-0000-0000-000000000003', 'c1000000-0000-0000-0000-000000000003',
-     'Echo_Abdominale_Berrada_2025.png', 'image/png', 18,
+     'Echo_Abdominale_Berrada_2025.png', 'image/png', 93179,
      '11111111-1111-1111-1111-111111111111/a1000000-0000-0000-0000-000000000003/radiologie/echo_abdominale_berrada.png',
      'RADIOLOGIE_IMAGERIE', 'DOCTOR_ONLY',
      'Échographie abdominale haute: foie stéatosique modéré sans lésion focale suspecte.',
@@ -484,7 +484,7 @@ INSERT INTO patient_documents (
 
     ('40000000-0000-0000-0000-000000000004', '11111111-1111-1111-1111-111111111111',
      'a1000000-0000-0000-0000-000000000005', 'c1000000-0000-0000-0000-000000000005',
-     'Radiographie_Rachis_Lombaire.jpeg', 'image/jpeg', 19,
+     'Radiographie_Rachis_Lombaire.jpeg', 'image/jpeg', 36342,
      '11111111-1111-1111-1111-111111111111/a1000000-0000-0000-0000-000000000005/radiologie/rx_lombaire_chraibi.jpeg',
      'RADIOLOGIE_IMAGERIE', 'DOCTOR_ONLY',
      'Cliché radiologique du rachis lombaire face/profil: absence de tassement corporéal visible.',

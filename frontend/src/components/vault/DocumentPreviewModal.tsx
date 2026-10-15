@@ -63,7 +63,11 @@ export function DocumentPreviewModal({ document, isOpen, onClose }: DocumentPrev
               <div className="flex items-center gap-2 text-[10px] text-zinc-400">
                 <span className="font-mono">{document.category}</span>
                 <span>•</span>
-                <span className="font-mono">{(document.fileSizeBytes / (1024 * 1024)).toFixed(2)} Mo</span>
+                <span className="font-mono">
+                  {document.fileSizeBytes < 1024 * 1024
+                    ? `${(document.fileSizeBytes / 1024).toFixed(1)} Ko`
+                    : `${(document.fileSizeBytes / (1024 * 1024)).toFixed(2)} Mo`}
+                </span>
               </div>
             </div>
           </div>

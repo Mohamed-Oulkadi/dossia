@@ -17,8 +17,10 @@ import {
   ShieldAlert,
   FileCheck2,
   FolderLock,
+  History,
 } from 'lucide-react'
 import { PatientDocumentVaultModal } from '@/components/vault/PatientDocumentVaultModal'
+import { PatientMedicalHistoryModal } from '@/components/consultation/PatientMedicalHistoryModal'
 
 export function PatientsTable() {
   const { openModal } = useAppStore()
@@ -26,6 +28,7 @@ export function PatientsTable() {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedPatientForAmo, setSelectedPatientForAmo] = useState<Patient | null>(null)
   const [selectedPatientForVault, setSelectedPatientForVault] = useState<Patient | null>(null)
+  const [selectedPatientForHistory, setSelectedPatientForHistory] = useState<Patient | null>(null)
 
   const { data, isLoading, isError, error, refetch, isFetching } = usePatients(page, 20)
 
@@ -264,6 +267,17 @@ export function PatientsTable() {
                       <Button
                         variant="outline"
                         size="sm"
+                        onClick={() => setSelectedPatientForHistory(patient)}
+                        className="h-6 px-2 text-[11px] gap-1 text-emerald-700 dark:text-emerald-400 border-emerald-300 dark:border-emerald-800 bg-emerald-50/60 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 cursor-pointer"
+                        title="Dossier Historique & Consultations Passées"
+                      >
+                        <History className="w-3 h-3 stroke-[1.5]" />
+                        <span>Historique</span>
+                      </Button>
+
+                      <Button
+                        variant="outline"
+                        size="sm"
                         onClick={() => setSelectedPatientForVault(patient)}
                         className="h-6 px-2 text-[11px] gap-1 text-emerald-700 dark:text-emerald-400 border-emerald-300 dark:border-emerald-800 bg-emerald-50/60 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 cursor-pointer"
                         title="Coffre-Fort Documents & Imagerie"
@@ -341,6 +355,13 @@ export function PatientsTable() {
         patient={selectedPatientForVault}
         isOpen={Boolean(selectedPatientForVault)}
         onClose={() => setSelectedPatientForVault(null)}
+      />
+
+      {/* ── Patient Medical History Modal ── */}
+      <PatientMedicalHistoryModal
+        patient={selectedPatientForHistory}
+        isOpen={Boolean(selectedPatientForHistory)}
+        onClose={() => setSelectedPatientForHistory(null)}
       />
     </div>
   )

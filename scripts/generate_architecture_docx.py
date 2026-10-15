@@ -121,11 +121,11 @@ BOUNDED_CONTEXTS = [
     },
     {
         "name": "com.dossia.backend.consultation",
-        "title": "Clinical Speed Engine, Drug Catalog & Document Generators",
-        "description": "Empowers physicians with sub-minute consultations: Moroccan drug catalog (28 pre-seeded medications), custom ordonnance templates, biological/radiological diagnostic requests, certified sick-leave certificates, and vector OpenPDF generators.",
-        "entities": ["consultations", "prescriptions", "prescription_items", "medications_catalog", "prescription_templates", "diagnostic_requests", "medical_certificates"],
+        "title": "Clinical Speed Engine, Drug Catalog, Voice Scribe & Document Generators",
+        "description": "Empowers physicians with sub-minute consultations: French Medical Voice-to-Form Scribe (Dictée Vocale Clinique) with CNDP Zero-PII audio streaming, Moroccan drug catalog (28 pre-seeded medications with fuzzy matching), custom ordonnance templates, biological/radiological diagnostic requests, certified sick-leave certificates, and vector OpenPDF generators.",
+        "entities": ["consultations", "prescriptions", "prescription_items", "medications_catalog", "prescription_templates", "diagnostic_requests", "medical_certificates", "ai_scribe_logs"],
         "events": ["ConsultationCompletedEvent", "PrescriptionIssuedEvent", "DiagnosticRequestCreatedEvent"],
-        "services": ["ConsultationService", "ClinicalSpeedEngineService", "OrdonnancePdfGenerator", "BilanPdfGenerator", "CertificatPdfGenerator", "FrenchNumberSpellout"]
+        "services": ["ConsultationService", "ClinicalSpeedEngineService", "FrenchMedicalVoiceScribeService", "OrdonnancePdfGenerator", "BilanPdfGenerator", "CertificatPdfGenerator", "FrenchNumberSpellout"]
     },
     {
         "name": "com.dossia.backend.billing",
@@ -223,6 +223,13 @@ FLYWAY_LEDGER = [
         "tables": "patients, appointments, consultations, prescriptions, prescription_items, invoices, payments, feuilles_de_soins, diagnostic_requests, medical_certificates, patient_documents",
         "tenant_isolated": "Yes (Clinique Ibn Sina Agadir)",
         "description": "Authentic Moroccan clinical practice seed dataset: 10 patients with valid CIN/phone/CNSS, dynamic waiting-room queue and agenda (relative to CURRENT_DATE), completed consultations, prescriptions, MAD daily caisse transactions, CNSS/CNOPS claim forms, bilans, and document vault records."
+    },
+    {
+        "version": "V11",
+        "script": "V11__init_voice_scribe_audit_schema.sql",
+        "tables": "ai_scribe_logs",
+        "tenant_isolated": "Yes (Foreign key clinic_id)",
+        "description": "Medical voice scribe audit & latency log schema: CNDP Loi 09-08 compliance, zero raw audio storage, execution duration, and JSONB extraction schema."
     }
 ]
 
@@ -263,6 +270,7 @@ REST_ENDPOINTS = [
     {"method": "GET",  "path": "/api/v1/consultations/bilans/{id}/pdf", "roles": "DOCTOR, SECRETARY", "desc": "Renders official OpenPDF Demande de Bilan Diagnostic document."},
     {"method": "POST", "path": "/api/v1/consultations/{consultationId}/certificates", "roles": "DOCTOR", "desc": "Generates a certified medical leave (arret de travail) or fitness certificate."},
     {"method": "GET",  "path": "/api/v1/consultations/certificates/{id}/pdf", "roles": "DOCTOR, SECRETARY", "desc": "Renders official OpenPDF Certificat Médical with spellout days."},
+    {"method": "POST", "path": "/api/v1/consultations/voice-scribe/fr", "roles": "DOCTOR", "desc": "Streams French medical voice dictation (multipart audio/webm <= 5MB); transcribes and auto-populates consultation vitals and Moroccan drug catalog."},
     # Billing & Caisse
     {"method": "POST", "path": "/api/v1/billing/invoices", "roles": "SECRETARY, DOCTOR", "desc": "Creates a consultation invoice with strict MAD BigDecimal totals."},
     {"method": "POST", "path": "/api/v1/billing/payments", "roles": "SECRETARY, DOCTOR", "desc": "Registers a payment installment with specified payment method."},
@@ -299,8 +307,8 @@ FRONTEND_WORKSPACES = [
     {
         "workspace": "Doctor Clinical Speed Workspace",
         "route": "/app (Doctor Role)",
-        "technologies": "Clinical Speed Engine, OpenPDF Viewer, Tabbed Clinical Panels",
-        "description": "Physician cockpit with Doctor Pager CTA, sub-minute ordonnance generation with Moroccan drug search, one-click template insertion, diagnostic requests, and sick-leave certificates."
+        "technologies": "Clinical Speed Engine, VoiceScribeBar, Web Audio API, OpenPDF Viewer, Tabbed Clinical Panels",
+        "description": "Physician cockpit with Doctor Pager CTA, French Medical Voice Scribe (Alt+R, live audio waveform, CNDP zero-PII audio streaming, 3-second emerald ring validation), sub-minute ordonnance generation with Moroccan drug search, one-click template insertion, diagnostic requests, and sick-leave certificates."
     },
     {
         "workspace": "Caisse Journalière Workspace",
@@ -393,6 +401,27 @@ CHANGELOG_ENTRIES = [
         "modules": "backend:db, docker:postgres, docker:minio",
         "migrations": "V10",
         "summary": "Full clinical lifecycle dataset for Clinique Ibn Sina Agadir: 10 Moroccan patients with authentic identities (CIN, CNSS/CNOPS, E.164 phone numbers), dynamic agenda queue with real-time waiting room FIFO tracking, completed consultations with vitals and Moroccan drug prescriptions, active daily caisse ledger in MAD across cash/TPE/cheque, diagnostic requests, sick-leave certificates, and vault documents with MinIO binary objects."
+    },
+    {
+        "phase": "Phase 12: French Medical Voice-to-Form Scribe (Dictée Vocale Clinique)",
+        "date": "October 2026",
+        "modules": "backend:consultation, frontend:consultation, db:flyway",
+        "migrations": "V11",
+        "summary": "Implemented French Medical Voice-to-Form Scribe: CNDP Loi 09-08 Zero-PII audio processing, native browser Web Speech API (fr-FR) with real-time speech preview badge, 60s dedicated client timeout with 30s global default, backend RestClient with 15s connect / 50s read timeouts, multi-model AI resilience fallback pipeline (gpt-5.6-luna -> gemini-3.7-flash -> deepseek-v4-flash-0731) on Radox AI gateway (https://radoxai.com/v1), OpenAI JSON-mode structured extraction, Moroccan drug catalog matching (Inexium, Spasfon, Augmentin, etc.), VoiceScribeBar equalizer, and reactive auto-fill with emerald ring highlights."
+    },
+    {
+        "phase": "Phase 13: Patient Medical History Timeline & 1-Click Prescription Renewal",
+        "date": "October 2026",
+        "modules": "frontend:consultation, frontend:patients",
+        "migrations": "N/A (Full Schema & API Re-use)",
+        "summary": "Implemented interactive Patient Medical History Timeline (PatientMedicalHistoryModal) wired to GET /api/v1/consultations/patient/{id}. Accessible via 1-click on the Patients table (/app/patients) and directly in the ConsultationWorkspace (/app/consultations). Features vital signs summary (TA, Poids, Pouls), chronological expandable cards with diagnoses and full Moroccan prescriptions, instant OpenPDF prescription reprint, and 1-click renewal injecting historical treatments into the active consultation form with 3-second emerald ring feedback."
+    },
+    {
+        "phase": "Phase 14: Vault Realistic Binary Generation & High-Fidelity Medical Assets",
+        "date": "October 2026",
+        "modules": "backend:vault, docker:minio, frontend:vault, scripts",
+        "migrations": "V10 (Updated byte lengths)",
+        "summary": "Replaced placeholder 44-byte mock seed files in MinIO with genuine, renderable binary assets: authentic Moroccan CNOPS/AMO Attestation d'Adhésion PDF with kingdom header and coverage table, laboratory biology panel PDF, grayscale abdominal ultrasound scan PNG with acoustic speckle and hepatic calipers, and lumbar spine X-ray radiograph JPEG. Synchronized PostgreSQL patient_documents file_size_bytes ledger and polished frontend vault size formatters with dynamic Ko/Mo/bytes unit precision."
     }
 ]
 

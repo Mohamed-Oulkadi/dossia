@@ -73,11 +73,16 @@ services:
       MINIO_ACCESS_KEY: dossia_minio_admin
       MINIO_SECRET_KEY: dossia_minio_dev_secret_2026
       MINIO_BUCKET: dossia-medical-vault
+      DOSSIA_AI_API_KEY: ${DOSSIA_AI_API_KEY:-}
+      DOSSIA_AI_BASE_URL: ${DOSSIA_AI_BASE_URL:-https://radoxai.com/v1}
+      DOSSIA_AI_MODEL: ${DOSSIA_AI_MODEL:-gpt-4o-mini}
       SPRING_PROFILES_ACTIVE: prod
     networks:
       - backend-net
       - frontend-net
-    # Port 8080 is internal only; traffic is strictly routed via Nginx reverse proxy
+    # Bound to 127.0.0.1 for local Vite dev server proxying (npm run dev on :5173 -> :8080)
+    ports:
+      - "127.0.0.1:8080:8080"
 
   # ----------------------------------------------------------------------------
   # 3. Web Client Tier: React 18 / Vite SPA (Internal Nginx server)

@@ -26,6 +26,8 @@ import { MedicationCombobox } from './MedicationCombobox'
 import { SaveTemplateModal } from './SaveTemplateModal'
 import { BilansTab } from './BilansTab'
 import { CertificatsTab } from './CertificatsTab'
+import { VoiceScribeBar } from '@/components/consultation/VoiceScribeBar'
+import { useVoiceScribe } from '@/hooks/use-voice-scribe'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
@@ -48,9 +50,11 @@ import {
   Award,
   Zap,
   FolderLock,
+  History,
 } from 'lucide-react'
 import { PatientDocumentVault } from '@/components/vault/PatientDocumentVault'
 import { SplitDocumentViewer } from '@/components/vault/SplitDocumentViewer'
+import { PatientMedicalHistoryModal } from '@/components/consultation/PatientMedicalHistoryModal'
 import type { PatientDocument } from '@/hooks/use-documents'
 
 interface PrescriptionItemForm {
@@ -98,6 +102,7 @@ export default function ConsultationWorkspace() {
   // Active right column tab
   const [activeTab, setActiveTab] = useState<SpeedTab>('ORDONNANCE')
   const [isSaveTemplateOpen, setIsSaveTemplateOpen] = useState(false)
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false)
   const [splitPreviewDoc, setSplitPreviewDoc] = useState<PatientDocument | null>(null)
 
   // Live Patient & Appointment queries
@@ -182,6 +187,58 @@ export default function ConsultationWorkspace() {
       description: `${template.items.length} médicament(s) injecté(s) avec posologie officielle`,
     })
   }
+
+  // Visual validation highlight state for voice auto-fill
+  const [highlightFields, setHighlightFields] = useState(false)
+  const [matchedCatalogMap, setMatchedCatalogMap] = useState<Record<number, boolean>>({})
+
+  // French Medical Voice-to-Form Scribe hook
+  const voiceScribe = useVoiceScribe({
+    onSuccess: (data) => {
+      if (data.motif) {
+        setValue('motif', data.motif, { shouldDirty: true, shouldValidate: true })
+      }
+      if (data.clinicalNotes) {
+        const existingNotes = watch('clinicalNotes')
+        const combinedNotes = existingNotes && existingNotes.trim().length > 0
+          ? `${existingNotes.trim()}\n\n[Dictée Vocale]:\n${data.clinicalNotes}`
+          : data.clinicalNotes
+        setValue('clinicalNotes', combinedNotes, { shouldDirty: true, shouldValidate: true })
+      }
+      if (data.diagnosis) {
+        setValue('diagnosis', data.diagnosis, { shouldDirty: true, shouldValidate: true })
+      }
+      if (data.bloodPressure) {
+        setValue('bloodPressure', data.bloodPressure, { shouldDirty: true, shouldValidate: true })
+      }
+      if (data.weightKg !== null && data.weightKg !== undefined) {
+        setValue('weightKg', String(data.weightKg), { shouldDirty: true, shouldValidate: true })
+      }
+      if (data.heartRateBpm !== null && data.heartRateBpm !== undefined) {
+        setValue('heartRateBpm', String(data.heartRateBpm), { shouldDirty: true, shouldValidate: true })
+      }
+
+      if (data.medications && data.medications.length > 0) {
+        const newItems = data.medications.map((m) => ({
+          medicationName: m.medicationName,
+          dosage: m.dosage,
+          duration: m.duration,
+          instructions: m.instructions || '',
+        }))
+        replace(newItems)
+
+        const catMap: Record<number, boolean> = {}
+        data.medications.forEach((m, idx) => {
+          catMap[idx] = m.matchedInMoroccanCatalog
+        })
+        setMatchedCatalogMap(catMap)
+      }
+
+      // Temporary 3-second subtle emerald ring highlight for human-in-the-loop validation
+      setHighlightFields(true)
+      setTimeout(() => setHighlightFields(false), 3000)
+    },
+  })
 
   // Submit consultation
   const onSubmit = async (data: ConsultationFormData) => {
@@ -351,6 +408,18 @@ export default function ConsultationWorkspace() {
               <Badge variant="outline" className="font-mono text-[10px]">
                 {selectedPatient.mutuelleType || 'Sans mutuelle'}
               </Badge>
+
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setIsHistoryOpen(true)}
+                className="h-6 px-2 text-[11px] gap-1 text-emerald-700 dark:text-emerald-400 border-emerald-300 dark:border-emerald-800 bg-emerald-50/60 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 cursor-pointer ml-1"
+                title="Consulter l'historique complet des consultations passées et renouveler une ordonnance"
+              >
+                <History className="w-3 h-3 stroke-[1.5]" />
+                <span>Historique Médical</span>
+              </Button>
             </div>
           )}
         </div>
@@ -369,6 +438,21 @@ export default function ConsultationWorkspace() {
         )}
       </div>
 
+      {/* ── Voice Scribe Clinical Dictation Bar (Alt + R) ── */}
+      <VoiceScribeBar
+        state={voiceScribe.state}
+        isRecording={voiceScribe.isRecording}
+        isProcessing={voiceScribe.isProcessing}
+        recordingSeconds={voiceScribe.recordingSeconds}
+        audioLevel={voiceScribe.audioLevel}
+        extractedData={voiceScribe.extractedData}
+        liveTranscript={voiceScribe.liveTranscript}
+        onStartRecording={voiceScribe.startRecording}
+        onStopAndTranscribe={voiceScribe.stopAndTranscribe}
+        onCancelRecording={voiceScribe.cancelRecording}
+        onReset={voiceScribe.reset}
+      />
+
       {/* ── Main Two-Column Workspace ── */}
       <div className="flex-1 overflow-hidden grid grid-cols-1 lg:grid-cols-12 divide-y lg:divide-y-0 lg:divide-x divide-zinc-200 dark:divide-zinc-800">
         {/* ── Left Column: Constantes Vitales & Examen Clinique (5 cols) ── */}
@@ -384,7 +468,11 @@ export default function ConsultationWorkspace() {
             {/* Vitals Grid */}
             <div className="grid grid-cols-3 gap-2">
               {/* Tension */}
-              <div className="p-2.5 rounded-md border border-zinc-200 dark:border-zinc-800 bg-slate-50/80 dark:bg-zinc-900/40 shadow-2xs">
+              <div
+                className={`p-2.5 rounded-md border border-zinc-200 dark:border-zinc-800 bg-slate-50/80 dark:bg-zinc-900/40 shadow-2xs transition-all duration-300 ${
+                  highlightFields ? 'ring-2 ring-emerald-500/70 bg-emerald-500/5' : ''
+                }`}
+              >
                 <div className="flex items-center justify-between text-zinc-500 mb-1">
                   <span className="text-[10px] font-medium uppercase">Tension</span>
                   <Activity className="w-3 h-3 text-rose-500 stroke-[1.5]" />
@@ -410,7 +498,11 @@ export default function ConsultationWorkspace() {
               </div>
 
               {/* Poids */}
-              <div className="p-2.5 rounded-md border border-zinc-200 dark:border-zinc-800 bg-slate-50/80 dark:bg-zinc-900/40 shadow-2xs">
+              <div
+                className={`p-2.5 rounded-md border border-zinc-200 dark:border-zinc-800 bg-slate-50/80 dark:bg-zinc-900/40 shadow-2xs transition-all duration-300 ${
+                  highlightFields ? 'ring-2 ring-emerald-500/70 bg-emerald-500/5' : ''
+                }`}
+              >
                 <div className="flex items-center justify-between text-zinc-500 mb-1">
                   <span className="text-[10px] font-medium uppercase">Poids</span>
                   <Scale className="w-3 h-3 text-emerald-500 stroke-[1.5]" />
@@ -436,7 +528,11 @@ export default function ConsultationWorkspace() {
               </div>
 
               {/* Fréquence Cardiaque */}
-              <div className="p-2.5 rounded-md border border-zinc-200 dark:border-zinc-800 bg-slate-50/80 dark:bg-zinc-900/40 shadow-2xs">
+              <div
+                className={`p-2.5 rounded-md border border-zinc-200 dark:border-zinc-800 bg-slate-50/80 dark:bg-zinc-900/40 shadow-2xs transition-all duration-300 ${
+                  highlightFields ? 'ring-2 ring-emerald-500/70 bg-emerald-500/5' : ''
+                }`}
+              >
                 <div className="flex items-center justify-between text-zinc-500 mb-1">
                   <span className="text-[10px] font-medium uppercase">Pouls / FC</span>
                   <Heart className="w-3 h-3 text-rose-500 stroke-[1.5]" />
@@ -469,7 +565,9 @@ export default function ConsultationWorkspace() {
               <Input
                 {...register('motif', { required: 'Le motif est obligatoire' })}
                 placeholder="Ex: Douleurs abdominales aiguës, rhinopharyngite, contrôle TA…"
-                className="h-8 text-xs font-medium"
+                className={`h-8 text-xs font-medium transition-all duration-300 ${
+                  highlightFields ? 'ring-2 ring-emerald-500/70 bg-emerald-500/5' : ''
+                }`}
               />
               {errors.motif && (
                 <p className="text-[10px] text-rose-500 mt-1">{errors.motif.message}</p>
@@ -485,7 +583,9 @@ export default function ConsultationWorkspace() {
                 {...register('clinicalNotes')}
                 rows={6}
                 placeholder="Examen physique: abdomen souple, absence de fièvre. Auscultation pulmonaire libre. Antécédents chirurgicaux non contributifs…"
-                className="w-full rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-2.5 text-xs text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-none focus:border-zinc-500 dark:focus:border-zinc-700 font-sans leading-relaxed resize-none"
+                className={`w-full rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-2.5 text-xs text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-none focus:border-zinc-500 dark:focus:border-zinc-700 font-sans leading-relaxed resize-none transition-all duration-300 ${
+                  highlightFields ? 'ring-2 ring-emerald-500/70 bg-emerald-500/5' : ''
+                }`}
               />
             </div>
 
@@ -497,7 +597,9 @@ export default function ConsultationWorkspace() {
               <Input
                 {...register('diagnosis')}
                 placeholder="Ex: Syndrome dyspeptique fonctionnel / Rhinopharyngite virale"
-                className="h-8 text-xs font-medium"
+                className={`h-8 text-xs font-medium transition-all duration-300 ${
+                  highlightFields ? 'ring-2 ring-emerald-500/70 bg-emerald-500/5' : ''
+                }`}
               />
             </div>
           </form>
@@ -565,17 +667,37 @@ export default function ConsultationWorkspace() {
             </div>
 
             {activeTab === 'ORDONNANCE' && (
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setIsSaveTemplateOpen(true)}
-                className="h-7 text-[11px] gap-1 text-zinc-700 dark:text-zinc-300 border-zinc-300 dark:border-zinc-700 cursor-pointer"
-                title="Enregistrer l'ordonnance actuelle comme modèle type"
-              >
-                <BookmarkPlus className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
-                <span>Sauvegarder Modèle</span>
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    if (!selectedPatient) {
+                      toast.info("Sélectionnez d'abord un patient pour consulter son historique.")
+                      return
+                    }
+                    setIsHistoryOpen(true)
+                  }}
+                  className="h-7 text-[11px] gap-1 text-emerald-700 dark:text-emerald-400 border-emerald-300 dark:border-emerald-800 bg-emerald-50/50 dark:bg-emerald-950/30 hover:bg-emerald-100 cursor-pointer"
+                  title="Renouveler une ordonnance passée de ce patient"
+                >
+                  <History className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+                  <span>Renouveler depuis Historique</span>
+                </Button>
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsSaveTemplateOpen(true)}
+                  className="h-7 text-[11px] gap-1 text-zinc-700 dark:text-zinc-300 border-zinc-300 dark:border-zinc-700 cursor-pointer"
+                  title="Enregistrer l'ordonnance actuelle comme modèle type"
+                >
+                  <BookmarkPlus className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+                  <span>Sauvegarder Modèle</span>
+                </Button>
+              </div>
             )}
           </div>
 
@@ -615,12 +737,21 @@ export default function ConsultationWorkspace() {
                 {fields.map((field, index) => (
                   <div
                     key={field.id}
-                    className="p-3 rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 shadow-clinical-card space-y-2 group"
+                    className={`p-3 rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 shadow-clinical-card space-y-2 group transition-all duration-300 ${
+                      highlightFields ? 'ring-2 ring-emerald-500/70 bg-emerald-500/5' : ''
+                    }`}
                   >
                     <div className="flex items-center justify-between">
-                      <span className="font-mono text-[10px] font-semibold text-zinc-500">
-                        Ligne #{index + 1}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-[10px] font-semibold text-zinc-500">
+                          Ligne #{index + 1}
+                        </span>
+                        {matchedCatalogMap[index] && (
+                          <Badge className="bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800 text-[9px] py-0 px-1 font-mono">
+                            Catalogue Maroc
+                          </Badge>
+                        )}
+                      </div>
                       {fields.length > 1 && (
                         <button
                           type="button"
@@ -779,6 +910,28 @@ export default function ConsultationWorkspace() {
       <SplitDocumentViewer
         document={splitPreviewDoc}
         onClose={() => setSplitPreviewDoc(null)}
+      />
+
+      {/* ── Patient Medical History Modal with 1-Click Renewal ── */}
+      <PatientMedicalHistoryModal
+        patient={selectedPatient || null}
+        isOpen={isHistoryOpen}
+        onClose={() => setIsHistoryOpen(false)}
+        onRenewPrescription={(items) => {
+          replace(
+            items.map((item) => ({
+              medicationName: item.medicationName,
+              dosage: item.dosage,
+              duration: item.duration,
+              instructions: item.instructions || '',
+            }))
+          )
+          setHighlightFields(true)
+          setTimeout(() => setHighlightFields(false), 3000)
+          toast.success('Ordonnance renouvelée', {
+            description: `${items.length} médicament(s) copié(s) dans la consultation actuelle.`,
+          })
+        }}
       />
     </div>
   )

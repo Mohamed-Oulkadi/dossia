@@ -41,6 +41,10 @@ dossia:
     access-key: ${MINIO_ACCESS_KEY:dossia_minio_admin}
     secret-key: ${MINIO_SECRET_KEY:dossia_minio_dev_secret_2026}
     bucket-name: ${MINIO_BUCKET:dossia-medical-vault}
+  ai:
+    api-key: ${DOSSIA_AI_API_KEY:}
+    base-url: ${DOSSIA_AI_BASE_URL:https://radoxai.com/v1}
+    model: ${DOSSIA_AI_MODEL:gpt-4o-mini}
 
 server:
   port: 8080

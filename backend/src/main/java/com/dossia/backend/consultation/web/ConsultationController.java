@@ -1,14 +1,18 @@
 package com.dossia.backend.consultation.web;
 
+import com.dossia.backend.auth.SecurityUtils;
 import com.dossia.backend.consultation.dto.*;
 import com.dossia.backend.consultation.service.ClinicalSpeedEngineService;
 import com.dossia.backend.consultation.service.ConsultationService;
+import com.dossia.backend.consultation.service.FrenchMedicalVoiceScribeService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.net.URI;
 import java.util.List;
@@ -21,6 +25,7 @@ public class ConsultationController {
 
     private final ConsultationService consultationService;
     private final ClinicalSpeedEngineService clinicalSpeedEngineService;
+    private final FrenchMedicalVoiceScribeService frenchMedicalVoiceScribeService;
 
     @PostMapping
     public ResponseEntity<ConsultationResponse> createConsultation(
@@ -121,6 +126,41 @@ public class ConsultationController {
                 .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"certificat-medical-" + id + ".pdf\"")
                 .header(HttpHeaders.CACHE_CONTROL, "no-cache, no-store, must-revalidate")
                 .body(pdfBytes);
+    }
+
+    // ── French Medical Voice-to-Form Scribe (Dictée Vocale Clinique) ──
+
+    @PostMapping(value = "/voice-scribe/fr", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasRole('DOCTOR')")
+    public ResponseEntity<VoiceConsultationExtractDto> processFrenchVoiceScribe(
+            @RequestParam(value = "audio", required = false) MultipartFile audio,
+            @RequestParam(value = "transcript", required = false) String transcript,
+            @RequestParam(value = "consultationId", required = false) String consultationId
+    ) {
+        if ((audio == null || audio.isEmpty()) && (transcript == null || transcript.isBlank())) {
+            throw new IllegalArgumentException("Le fichier audio ou la transcription de la dictée médicale est requis.");
+        }
+        if (audio != null && !audio.isEmpty() && audio.getSize() > 5 * 1024 * 1024) {
+            throw new IllegalArgumentException("La taille du fichier audio ne doit pas dépasser 5 Mo (Reçu: " + (audio.getSize() / 1024) + " Ko).");
+        }
+
+        UUID parsedConsultationId = null;
+        if (consultationId != null && !consultationId.isBlank()
+                && !consultationId.equalsIgnoreCase("null")
+                && !consultationId.equalsIgnoreCase("undefined")
+                && !consultationId.equals("[object Object]")) {
+            try {
+                parsedConsultationId = UUID.fromString(consultationId.trim());
+            } catch (IllegalArgumentException ignored) {
+                // Ignore malformed UUID and proceed without linking
+            }
+        }
+
+        UUID clinicId = SecurityUtils.getCurrentClinicId();
+        VoiceConsultationExtractDto extract = frenchMedicalVoiceScribeService.processFrenchMedicalVoice(
+                audio, transcript, clinicId, parsedConsultationId
+        );
+        return ResponseEntity.ok(extract);
     }
 }
 
