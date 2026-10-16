@@ -1,13 +1,14 @@
 # Skill: Premium UI Craft & Clinical Design System
 
 > **Scope**: Governs all user interface design, styling, and ergonomics in `frontend/`.  
+> **Art Direction Partner**: Strictly integrated with `Leonxlnx/taste-skill` ([`.agents/skills/design-taste-frontend/SKILL.md`](file:///d:/My%20Projects/Dossia/.agents/skills/design-taste-frontend/SKILL.md)).  
 > **Target Aesthetic**: Executive, surgical, high-density clinical SaaS.
 
 ---
 
 ## 1. Visual Anti-Patterns (Banned AI Tropes)
 
-AI-generated interfaces frequently rely on decorative gimmicks that compromise professional credibility and usability. The following patterns are strictly forbidden:
+AI-generated interfaces frequently rely on decorative gimmicks that compromise professional credibility and usability. The following patterns are strictly forbidden (aligned with both Dossia rules and `design-taste-frontend` house rules):
 
 | Anti-Pattern | Rule | Enforced Alternative |
 | :--- | :--- | :--- |
@@ -86,3 +87,37 @@ All interactive elements must be built on top of accessible primitives (Radix UI
 - **Dialogs & Drawers**: Backdrop overlay with `bg-black/50 dark:bg-black/75 backdrop-blur-xs`, centered dialog or side-sheet drawer with 1px border.
 - **Command Palette (`Ctrl+K`)**: Global modal searchable action launcher with keyboard navigation (`Up`, `Down`, `Enter`, `Escape`).
 - **Keyboard Shortcuts**: Every critical action must have a bound key combination visible via `<kbd className="font-mono text-[10px] bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 px-1.5 py-0.5 rounded">` tags.
+
+---
+
+## 6. Taste-Skill Integration & Dual-Mode Dials
+
+`Agent Frontend-Craft` enforces `Leonxlnx/taste-skill` ([`.agents/skills/design-taste-frontend/SKILL.md`](file:///d:/My%20Projects/Dossia/.agents/skills/design-taste-frontend/SKILL.md)) alongside Dossia's clinical guidelines. All UI work must respect two mandatory project constraints:
+
+### 1. Stack Constraint (Pure React 18 + Vite SPA)
+- Dossia is a **React 18 + Vite + TypeScript SPA** (not Next.js).
+- **Ignore all Next.js Server Component rules**: Never add `'use client'` pragmas, never reference `next/navigation`, `next/font`, or App Router server actions.
+- Use standard client-side imports (e.g., `react-router-dom`, `zustand`, standard CSS / Tailwind v4).
+
+### 2. Dual-Mode Dials Matrix
+
+| Dimension | Public Marketing Pages (`/frontend/src/pages/Landing.tsx`) | Clinical & Financial Workspaces (`/app/*`, `/admin/*`) |
+| :--- | :--- | :--- |
+| **Target Route** | Public Landing & Moroccan Clinic ROI Calculator | Secretary Agenda, Waiting Room, Doctor Cockpit, Caisse, Admin |
+| **Design Variance** | `DESIGN_VARIANCE = 7` (High expressiveness) | `DESIGN_VARIANCE = 3` (Low variance, ultra-predictable layout) |
+| **Motion Intensity** | `MOTION_INTENSITY = 6` (Fluid spring physics, 3D canvas) | `MOTION_INTENSITY = 3` (Functional transitions, duration <= 150ms) |
+| **Visual Density** | `VISUAL_DENSITY = 4` (Generous editorial whitespace) | `VISUAL_DENSITY = 9` (Maximum data density, 36–40px table rows) |
+| **Typography** | `Geist Sans`, `Satoshi`, or `Outfit` display headings | Standard `Inter` / `Geist` body; strict `tabular-nums font-mono` numbers |
+| **Layout Device** | Asymmetric hero compositions, editorial typography, anti-slop blueprints | **Dashboard Hardening**: Ban bloated cards; use `divide-y` and hairline borders |
+| **Monospace Rule** | Monospace only in designated code/data widgets | Mandatory `tabular-nums font-mono` for MAD, vitals, CIN, INPE, time slots |
+| **Color Accents** | Dealt brand palette with emerald highlights and subtle contrast | Deep Zinc (`#09090B`) canvas, Zinc 950 cards, Emerald (`#059669`) action accent |
+| **Card / Container** | Custom editorial blocks; ban cookie-cutter 3-column equal cards | Flat panels with hairline `border-zinc-200 dark:border-zinc-800` |
+| **Interaction SLA** | Engaging storytelling, interactive ROI sliders | Strict **3-Second SLA**, zero layout shifts, `Ctrl+K` palette, keyboard first |
+
+### 3. Dashboard Hardening Directives for Clinical & Financial Views
+When operating in `/app/*` and `/admin/*`:
+1. **Ban Bloated Card Containers**: Do not wrap every small metric or form block in heavy padded cards with drop shadows or thick borders.
+2. **Structural Divide-Y**: Separate line items, ledger entries, and patient queues using clean `divide-y divide-zinc-200 dark:divide-zinc-800`.
+3. **Hairline Precision**: Demarcate boundaries exclusively with hairline `border-zinc-200 dark:border-zinc-800`.
+4. **Mandatory Monospace**: All Moroccan Dirham amounts (e.g., `350.00 MAD`), appointment hours (`09:30`), phone numbers (`+212...`), CINs, and vitals (`120/80 mmHg`, `72 bpm`) must be wrapped in `tabular-nums font-mono`.
+5. **Color Discipline**: Strict adherence to Deep Zinc canvas (`#09090B`), Zinc 950 surfaces (`#111118`), and Emerald (`#059669`) for primary clinical calls to action.

@@ -66,8 +66,8 @@ SYSTEM_CONTAINERS = [
     },
     {
         "component": "React 18 SPA Frontend",
-        "tech": "React 18, TypeScript, Vite, Tailwind CSS v4, Zustand, Lucide, Three.js",
-        "role": "High-density clinical web application featuring role-based workspaces, real-time SSE listener, command palette, and interactive 3D landing network."
+        "tech": "React 18, TypeScript, Vite, Tailwind CSS v4, Zustand, Lucide, Three.js, Taste-Skill (design-taste-frontend)",
+        "role": "High-density clinical web application featuring role-based workspaces, real-time SSE listener, command palette, interactive 3D landing network, and Leonxlnx/taste-skill Dual-Mode Dials (Landing vs Dashboard Hardening)."
     },
     {
         "component": "PostgreSQL 16 Database",
@@ -302,31 +302,31 @@ FRONTEND_WORKSPACES = [
     {
         "workspace": "Public Landing & ROI Engine",
         "route": "/",
-        "technologies": "Three.js Canvas, Lucide React, Tailwind CSS v4",
-        "description": "Interactive showcase featuring a dynamic 3D medical network visualization and a live Moroccan clinic financial ROI calculator in MAD."
+        "technologies": "Three.js Canvas, Lucide React, Tailwind CSS v4, Taste-Skill (Public Mode: DESIGN_VARIANCE=7, MOTION_INTENSITY=6, VISUAL_DENSITY=4)",
+        "description": "Interactive showcase featuring dynamic 3D medical network visualization, live Moroccan clinic financial ROI calculator in MAD, asymmetric hero compositions, Geist/Satoshi typography, and spring physics adhering to anti-slop art direction."
     },
     {
         "workspace": "Secretary Front-Desk Workspace",
         "route": "/app (Secretary Role)",
-        "technologies": "Zustand, TanStack Query, Radix UI Dialog, Global Command Palette",
-        "description": "High-density reception dashboard engineered for the 3-second SLA. Features real-time waiting room FIFO display, instant walk-in check-in, fast slot booking, and quick direct encaissement."
+        "technologies": "Zustand, TanStack Query, Radix UI Dialog, Global Command Palette, Taste-Skill (Dashboard Hardening: DENSITY=9)",
+        "description": "High-density reception dashboard engineered for the 3-second SLA. Enforces Dashboard Hardening mode: ban bloated card containers in favor of structural divide-y, hairline zinc borders, real-time waiting room FIFO display, instant walk-in check-in, fast slot booking, and quick direct encaissement."
     },
     {
         "workspace": "Doctor Clinical Speed Workspace",
         "route": "/app (Doctor Role)",
-        "technologies": "Clinical Speed Engine, VoiceScribeBar, Web Audio API, OpenPDF Viewer, Tabbed Clinical Panels",
+        "technologies": "Clinical Speed Engine, VoiceScribeBar, Web Audio API, OpenPDF Viewer, Tabbed Clinical Panels, Taste-Skill (Dashboard Hardening: DENSITY=9)",
         "description": "Physician cockpit with Doctor Pager CTA, French Medical Voice Scribe (Alt+R, live audio waveform, CNDP zero-PII audio streaming, 3-second emerald ring validation), sub-minute ordonnance generation with Moroccan drug search, one-click template insertion, diagnostic requests, and sick-leave certificates."
     },
     {
         "workspace": "Caisse Journalière Workspace",
         "route": "/app/caisse",
-        "technologies": "Lucide React, Tabular Mono Font, OpenPDF Receipt Generator",
-        "description": "Financial register view displaying real-time daily cash, TPE card, cheque, and transfer totals in MAD with one-click receipt printing."
+        "technologies": "Lucide React, Tabular Mono Font, OpenPDF Receipt Generator, Taste-Skill (Dashboard Hardening: DENSITY=9)",
+        "description": "Financial register view displaying real-time daily cash, TPE card, cheque, and transfer totals in MAD with strict tabular-nums font-mono typography and one-click receipt printing."
     },
     {
         "workspace": "Super Admin Governance Portal",
         "route": "/admin/*",
-        "technologies": "AdminLayout, ProtectedRoute, RoleGuard, CNDP Audit Table",
+        "technologies": "AdminLayout, ProtectedRoute, RoleGuard, CNDP Audit Table, Taste-Skill (Dashboard Hardening: DENSITY=9)",
         "description": "Multi-tenant cabinet directory, 15-digit ICE validation, subscription state toggles (ACTIVE/SUSPENDED), user credential reset modal, and CNDP audit log inspector."
     }
 ]
@@ -443,6 +443,13 @@ CHANGELOG_ENTRIES = [
         "modules": "backend:consultation, docker:backend, frontend:consultation, flyway:V12",
         "migrations": "V12__seed_urticaria_allergy_prescription_template.sql",
         "summary": "Resolved Voice Scribe timeout issue where cloud LLMs with reasoning took 20-35s while socket readTimeout was prematurely set to 12s, causing forced fallback to empty mock data. Extended backend readTimeout to 55s (connectTimeout 10s) and frontend Axios timeout to 75s. Configured ultra-fast minimax-m3 (11.8s latency) with fallback chain (qwen3.8-27b, deepseek-v4-flash-0731). Hardened system prompt and regexes to handle speech-to-text acoustic artifacts ('en sur 7' -> 11/7, 'pulses 80' -> 80 bpm, 'erius 5000 g' -> Aerius 5mg, 'prix malin' -> Primalan). Seeded Flyway V12 with Primalan into Moroccan Drug Catalog and preloaded 'Urticaire Aiguë Adulte' 1-click prescription template."
+    },
+    {
+        "phase": "Phase 17: Frontend Design System Hardening & Taste-Skill Integration",
+        "date": "October 2026",
+        "modules": "frontend, skills:01-premium-ui-craft, agents",
+        "migrations": "N/A (Frontend Governance & Taste-Skill)",
+        "summary": "Integrated Leonxlnx/taste-skill (design-taste-frontend) into Dossia frontend architecture and agent governance. Established Dual-Mode Dials: Public Landing (DESIGN_VARIANCE=7, MOTION_INTENSITY=6, VISUAL_DENSITY=4 with asymmetric compositions, Geist/Satoshi typography, and spring physics) vs. Clinical/Financial Workspaces (DESIGN_VARIANCE=3, MOTION_INTENSITY=3, VISUAL_DENSITY=9 Dashboard Hardening mode with structural divide-y, hairline zinc borders, strict tabular-nums font-mono MAD arithmetic, and emerald #059669 accents). Enforced React 18 + Vite SPA stack constraint (ignoring Next.js 'use client' rules)."
     }
 ]
 
@@ -957,8 +964,13 @@ def generate_specification_document(output_path):
     format_heading_1(doc.add_paragraph(), "7. Frontend Workspaces & UX Ergonomics")
     format_body_p(
         doc.add_paragraph(),
-        "The Dossia frontend is structured into dedicated, role-gated workspaces. Each workspace adheres "
-        "to the 'Secretary-First' high-density design system defined in skill 01-premium-ui-craft.md."
+        "The Dossia frontend is structured into dedicated, role-gated workspaces built on React 18, Vite, "
+        "and Tailwind CSS v4. The frontend enforces Leonxlnx/taste-skill (design-taste-frontend) alongside the "
+        "'Secretary-First' high-density design system (skill 01-premium-ui-craft.md). The architecture operates "
+        "under Dual-Mode Dials: public marketing pages leverage high visual variance and motion (DESIGN_VARIANCE=7, "
+        "MOTION_INTENSITY=6, VISUAL_DENSITY=4), while clinical and financial workspaces operate in Dashboard Hardening "
+        "mode (DESIGN_VARIANCE=3, MOTION_INTENSITY=3, VISUAL_DENSITY=9) banning bloated containers in favor of structural "
+        "divide-y layouts, hairline zinc borders, tabular-nums font-mono arithmetic in MAD, and emerald accents."
     )
 
     tbl_fe = doc.add_table(rows=len(FRONTEND_WORKSPACES) + 1, cols=3)
