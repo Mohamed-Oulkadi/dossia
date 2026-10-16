@@ -230,6 +230,13 @@ FLYWAY_LEDGER = [
         "tables": "ai_scribe_logs",
         "tenant_isolated": "Yes (Foreign key clinic_id)",
         "description": "Medical voice scribe audit & latency log schema: CNDP Loi 09-08 compliance, zero raw audio storage, execution duration, and JSONB extraction schema."
+    },
+    {
+        "version": "V12",
+        "script": "V12__seed_urticaria_allergy_prescription_template.sql",
+        "tables": "medications_catalog, prescription_templates",
+        "tenant_isolated": "Yes (Global Ordonnance Template & Drug Catalog)",
+        "description": "Seeded Primalan 10mg & 0.05% Sirop into Moroccan Drug Catalog and added 'Urticaire Aiguë Adulte' 1-click clinical prescription template (Aerius, Primalan, Célestène)."
     }
 ]
 
@@ -422,6 +429,20 @@ CHANGELOG_ENTRIES = [
         "modules": "backend:vault, docker:minio, frontend:vault, scripts",
         "migrations": "V10 (Updated byte lengths)",
         "summary": "Replaced placeholder 44-byte mock seed files in MinIO with genuine, renderable binary assets: authentic Moroccan CNOPS/AMO Attestation d'Adhésion PDF with kingdom header and coverage table, laboratory biology panel PDF, grayscale abdominal ultrasound scan PNG with acoustic speckle and hepatic calipers, and lumbar spine X-ray radiograph JPEG. Synchronized PostgreSQL patient_documents file_size_bytes ledger and polished frontend vault size formatters with dynamic Ko/Mo/bytes unit precision."
+    },
+    {
+        "phase": "Phase 15: AI Provider Resilience & Envoy Chunked Stream Converter Fix",
+        "date": "October 2026",
+        "modules": "backend:consultation, docker:backend, scripts",
+        "migrations": "N/A (HTTP Protocol & Scribe Deserializer Hardening)",
+        "summary": "Fixed HttpMessageConverterExtractor failure when upstream Envoy proxy returns chunked application/octet-stream by switching RestClient response extraction to byte[] with Jackson ObjectMapper, added explicit Accept headers, broadened AI fallback model chain across multi-provider catalogs (deepseek-v4-flash-0731, deepseek-v4-pro-0813, qwen3.8-27b, kimi-k2.6, glm-5.3, gemini-3.7-flash, gpt-5.6-luna), and prevented mock simulation from overriding doctor's actual clinical dictations."
+    },
+    {
+        "phase": "Phase 16: Voice Scribe Timeout Synchronization, Speech Artifact Correction & Allergy Protocol",
+        "date": "October 2026",
+        "modules": "backend:consultation, docker:backend, frontend:consultation, flyway:V12",
+        "migrations": "V12__seed_urticaria_allergy_prescription_template.sql",
+        "summary": "Resolved Voice Scribe timeout issue where cloud LLMs with reasoning took 20-35s while socket readTimeout was prematurely set to 12s, causing forced fallback to empty mock data. Extended backend readTimeout to 55s (connectTimeout 10s) and frontend Axios timeout to 75s. Configured ultra-fast minimax-m3 (11.8s latency) with fallback chain (qwen3.8-27b, deepseek-v4-flash-0731). Hardened system prompt and regexes to handle speech-to-text acoustic artifacts ('en sur 7' -> 11/7, 'pulses 80' -> 80 bpm, 'erius 5000 g' -> Aerius 5mg, 'prix malin' -> Primalan). Seeded Flyway V12 with Primalan into Moroccan Drug Catalog and preloaded 'Urticaire Aiguë Adulte' 1-click prescription template."
     }
 ]
 

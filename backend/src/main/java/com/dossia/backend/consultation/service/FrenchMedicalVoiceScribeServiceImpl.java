@@ -81,11 +81,11 @@ public class FrenchMedicalVoiceScribeServiceImpl implements FrenchMedicalVoiceSc
                 rawExtract = callRemoteAiScribe(audio, clientTranscript);
             } catch (Exception ex) {
                 log.warn("Remote AI Scribe invocation failed: {}, falling back to simulated French medical extractor", ex.getMessage());
-                rawExtract = generateSimulatedExtract(audio);
+                rawExtract = generateSimulatedExtract(audio, clientTranscript);
             }
         } else {
             log.info("No AI API key configured; using deterministic French medical clinical mock (clinic: {})", effectiveClinicId);
-            rawExtract = generateSimulatedExtract(audio);
+            rawExtract = generateSimulatedExtract(audio, clientTranscript);
         }
 
         // Moroccan Drug Catalog Normalization
@@ -124,8 +124,8 @@ public class FrenchMedicalVoiceScribeServiceImpl implements FrenchMedicalVoiceSc
      */
     private VoiceConsultationExtractDto callRemoteAiScribe(MultipartFile audio, String clientTranscript) throws Exception {
         org.springframework.http.client.SimpleClientHttpRequestFactory requestFactory = new org.springframework.http.client.SimpleClientHttpRequestFactory();
-        requestFactory.setConnectTimeout(java.time.Duration.ofSeconds(15));
-        requestFactory.setReadTimeout(java.time.Duration.ofSeconds(50));
+        requestFactory.setConnectTimeout(java.time.Duration.ofSeconds(10));
+        requestFactory.setReadTimeout(java.time.Duration.ofSeconds(55));
         RestClient restClient = RestClient.builder().requestFactory(requestFactory).build();
         String cleanBaseUrl = (baseUrl != null && !baseUrl.isBlank())
                 ? (baseUrl.endsWith("/") ? baseUrl.substring(0, baseUrl.length() - 1) : baseUrl)
@@ -151,37 +151,41 @@ public class FrenchMedicalVoiceScribeServiceImpl implements FrenchMedicalVoiceSc
         // 2. Extract structured medical JSON with model
         String systemPrompt = """
                 Tu es un assistant scribe médical expert pour des médecins praticiens au Maroc.
-                Tu reçois la transcription d'une dictée médicale prononcée en français par le médecin.
-                Extrais et structure strictement les informations médicales au format JSON suivant :
+                Tu reçois la transcription brute d'une dictée médicale en français (captée par reconnaissance vocale pouvant contenir des coquilles phonétiques ou liaisons).
+                Extrais et structure rigoureusement les informations médicales au format JSON strict :
                 {
-                  "motif": "string (motif de la consultation)",
-                  "clinicalNotes": "string (examen clinique et anamnèse rédigés en français médical académique)",
-                  "diagnosis": "string (diagnostic médical retenu)",
-                  "bloodPressure": "string (tension artérielle ex: 12/8 ou 120/80)",
+                  "motif": "string (motif concis de consultation, sans virgule orpheline en début de phrase)",
+                  "clinicalNotes": "string (examen clinique et anamnèse rédigés en français médical académique et professionnel)",
+                  "diagnosis": "string (diagnostic médical retenu UNIQUEMENT, sans y inclure le traitement ou l'ordonnance)",
+                  "bloodPressure": "string (tension artérielle normalisée, ex: 11/7, 12/8 ou 120/80)",
                   "weightKg": number ou null,
-                  "heartRateBpm": number ou null,
+                  "heartRateBpm": integer ou null,
                   "medications": [
                     {
-                      "medicationName": "string (nom du médicament)",
-                      "dosage": "string (posologie)",
-                      "duration": "string (durée)",
-                      "instructions": "string (conseils de prise)"
+                      "medicationName": "string (nom commercial du médicament, ex: Aerius 5mg, Doliprane 1000mg, Primalan, Augmentin 1g)",
+                      "dosage": "string (posologie, ex: 1 comprimé)",
+                      "duration": "string (durée, ex: 10 jours)",
+                      "instructions": "string (moment de prise, ex: Le soir au coucher, En cas de prurit)"
                     }
                   ],
-                  "suggestedBilans": ["string (analyses biologiques ou radiologiques)"]
+                  "suggestedBilans": ["string (analyses biologiques ou examens d'imagerie)"]
                 }
-                Règles strictes :
-                - Ne retourne RIEN d'autre que du JSON valide sans fioritures.
-                - Normalise la tension (ex: 13 sur 8 devient 13/8).
-                - Ne conserve AUCUNE information nominative ou identifiante du patient.
+                Règles de transcription vocale & robustesse clinique :
+                - Corrige intelligemment les coquilles phonétiques fréquentes :
+                  * Constantes : 'tension en sur 7' ou 'onze sur sept' -> '11/7' ; 'pulses 80' ou 'pouls 80' -> heartRateBpm: 80.
+                  * Médicaments : 'erius 5000 g' ou 'erius 5 mg' -> 'Aerius 5mg' (antihistaminique 5 mg) ; 'prix malin' ou 'prix malin lanciant' -> 'Primalan'.
+                  * Termes médicaux : 'popul. Des Matheuses Érythrémateuses' -> 'papules érythémateuses' ; 'prérégineuses' -> 'prurigineuses'.
+                - Sépare STRICTEMENT le diagnostic de la prescription : le champ 'diagnosis' ne doit JAMAIS contenir la posologie ou les noms de médicaments.
+                - Ne retourne RIEN d'autre que du code JSON valide sans préambule markdown.
+                - Ne conserve AUCUNE information nominative ou identifiante du patient (CNDP Loi 09-08).
                 """;
 
         List<String> modelsToTry = new ArrayList<>();
         if (aiModel != null && !aiModel.isBlank()) {
             modelsToTry.add(aiModel.trim());
         }
-        for (String fallback : List.of("gemini-3.7-flash", "deepseek-v4-flash-0731", "gpt-5.6-luna")) {
-            if (!modelsToTry.contains(fallback)) {
+        for (String fallback : List.of("minimax-m3", "qwen3.8-27b", "deepseek-v4-flash-0731", "deepseek-v4-pro-0813")) {
+            if (!modelsToTry.contains(fallback) && modelsToTry.size() < 3) {
                 modelsToTry.add(fallback);
             }
         }
@@ -202,21 +206,30 @@ public class FrenchMedicalVoiceScribeServiceImpl implements FrenchMedicalVoiceSc
                         "response_format", Map.of("type", "json_object")
                 );
 
-                chatResponse = restClient.post()
+                byte[] responseBytes = restClient.post()
                         .uri(cleanBaseUrl + "/chat/completions")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey)
+                        .header(HttpHeaders.ACCEPT, "application/json, text/plain, */*")
                         .contentType(MediaType.APPLICATION_JSON)
                         .body(chatRequest)
                         .retrieve()
-                        .body(Map.class);
+                        .body(byte[].class);
 
-                if (chatResponse != null && chatResponse.containsKey("choices")) {
-                    log.info("Successfully extracted clinical notes using AI model: {}", currentModel);
-                    break;
+                if (responseBytes != null && responseBytes.length > 0) {
+                    String jsonResponse = new String(responseBytes, java.nio.charset.StandardCharsets.UTF_8);
+                    chatResponse = objectMapper.readValue(jsonResponse, Map.class);
+                    if (chatResponse != null && chatResponse.containsKey("choices")) {
+                        log.info("Successfully extracted clinical notes using AI model: {}", currentModel);
+                        break;
+                    }
                 }
             } catch (Exception ex) {
                 log.warn("AI model {} invocation failed: {}. Attempting fallback...", currentModel, ex.getMessage());
                 lastError = ex;
+                if (isHostUnreachable(ex)) {
+                    log.warn("Remote AI host is unreachable or connection timed out; skipping remaining model attempts on this host");
+                    break;
+                }
             }
         }
 
@@ -278,10 +291,16 @@ public class FrenchMedicalVoiceScribeServiceImpl implements FrenchMedicalVoiceSc
             }
             cleanJson = cleanJson.trim();
 
+            int startIdx = cleanJson.indexOf('{');
+            int endIdx = cleanJson.lastIndexOf('}');
+            if (startIdx >= 0 && endIdx > startIdx) {
+                cleanJson = cleanJson.substring(startIdx, endIdx + 1);
+            }
+
             JsonNode root = objectMapper.readTree(cleanJson);
-            String motif = root.path("motif").asText("");
+            String motif = root.path("motif").asText("").replaceAll("^[\\s,;:]+", "");
             String clinicalNotes = root.path("clinicalNotes").asText("");
-            String diagnosis = root.path("diagnosis").asText("");
+            String diagnosis = root.path("diagnosis").asText("").replaceAll("^[\\s,;:]+", "");
             String bloodPressure = root.path("bloodPressure").asText("12/8");
 
             BigDecimal weight = root.hasNonNull("weightKg")
@@ -325,14 +344,123 @@ public class FrenchMedicalVoiceScribeServiceImpl implements FrenchMedicalVoiceSc
             );
         } catch (Exception ex) {
             log.error("Failed to parse extracted JSON from AI response: {}", ex.getMessage());
-            return generateSimulatedExtract(null);
+            return generateSimulatedExtract(null, rawTranscript);
         }
     }
 
     /**
      * Deterministic, authentic French medical consultation mock for offline dev & CI environments.
+     * Uses doctor's actual dictation if provided to avoid fabricating symptoms.
      */
-    private VoiceConsultationExtractDto generateSimulatedExtract(MultipartFile audio) {
+    private VoiceConsultationExtractDto generateSimulatedExtract(MultipartFile audio, String clientTranscript) {
+        if (clientTranscript != null && !clientTranscript.isBlank()) {
+            String cleanText = clientTranscript.trim();
+            String bp = "12/8";
+            Matcher bpMatcher = BLOOD_PRESSURE_PATTERN.matcher(cleanText);
+            if (bpMatcher.find()) {
+                bp = bpMatcher.group(1) + "/" + bpMatcher.group(2);
+            } else {
+                String lower = cleanText.toLowerCase();
+                if (lower.contains("en sur 7") || lower.contains("11 sur 7") || lower.contains("onze sur 7")) {
+                    bp = "11/7";
+                }
+            }
+
+            BigDecimal weight = null;
+            Matcher weightMatcher = Pattern.compile("(\\d{2,3}(?:[.,]\\d)?)\\s*(?:kilos?|kg)", Pattern.CASE_INSENSITIVE).matcher(cleanText);
+            if (weightMatcher.find()) {
+                try {
+                    weight = new BigDecimal(weightMatcher.group(1).replace(',', '.'));
+                } catch (Exception ignored) {}
+            }
+
+            Integer heartRate = null;
+            Matcher hrMatcher = Pattern.compile("(\\d{2,3})\\s*(?:par minute|bpm|pouls)", Pattern.CASE_INSENSITIVE).matcher(cleanText);
+            if (hrMatcher.find()) {
+                try {
+                    heartRate = Integer.parseInt(hrMatcher.group(1));
+                } catch (Exception ignored) {}
+            } else {
+                Matcher hrPrefixMatcher = Pattern.compile("(?:pulses?|pouls|fc|fréquence cardiaque)\\s*[:;,]?\\s*(\\d{2,3})", Pattern.CASE_INSENSITIVE).matcher(cleanText);
+                if (hrPrefixMatcher.find()) {
+                    try {
+                        heartRate = Integer.parseInt(hrPrefixMatcher.group(1));
+                    } catch (Exception ignored) {}
+                }
+            }
+
+            String diag = "Consultation clinique";
+            Matcher diagMatcher = Pattern.compile("(?:diagnostic(?:\\s*retenu)?|c'est une|c'est un|conclusion|il s'agit d'une|il s'agit d'un)\\s*[:;,]?\\s*([^.\\n]+)", Pattern.CASE_INSENSITIVE).matcher(cleanText);
+            if (diagMatcher.find()) {
+                diag = diagMatcher.group(1).trim();
+                int treatIdx = diag.toLowerCase().indexOf(", traitement");
+                if (treatIdx == -1) treatIdx = diag.toLowerCase().indexOf("traitement");
+                if (treatIdx == -1) treatIdx = diag.toLowerCase().indexOf(", prescription");
+                if (treatIdx > 0) {
+                    diag = diag.substring(0, treatIdx).trim();
+                }
+                diag = diag.replaceAll("^[\\s,;:]+", "");
+            }
+
+            String motif = cleanText;
+            Matcher motifMatcher = Pattern.compile("(?:motif(?:\\s*de\\s*(?:la)?\\s*consultation)?|consulte\\s*pour)\\s*[:;,]?\\s*([^.\\n]+)", Pattern.CASE_INSENSITIVE).matcher(cleanText);
+            if (motifMatcher.find()) {
+                motif = motifMatcher.group(1).trim().replaceAll("^[\\s,;:]+", "");
+            } else {
+                int firstDot = cleanText.indexOf('.');
+                if (firstDot > 5 && firstDot < 140) {
+                    motif = cleanText.substring(0, firstDot).trim().replaceAll("^[\\s,;:]+", "");
+                } else if (cleanText.length() > 90) {
+                    motif = cleanText.substring(0, 90).replaceAll("^[\\s,;:]+", "") + "...";
+                }
+            }
+
+            List<ExtractedMedicationDto> meds = new ArrayList<>();
+            String lower = cleanText.toLowerCase();
+            if (lower.contains("augmentin")) {
+                meds.add(new ExtractedMedicationDto(null, "Augmentin 1g", "1g", "7 jours", "Matin et soir", false));
+            }
+            if (lower.contains("doliprane")) {
+                meds.add(new ExtractedMedicationDto(null, "Doliprane 1000mg", "1000mg", "5 jours", "En cas de douleur ou fièvre", false));
+            }
+            if (lower.contains("erius") || lower.contains("aerius")) {
+                meds.add(new ExtractedMedicationDto(null, "Aerius 5mg", "1 comprimé", "10 jours", "Le soir au coucher", false));
+            }
+            if (lower.contains("prix malin") || lower.contains("primalan")) {
+                meds.add(new ExtractedMedicationDto(null, "Primalan 10mg", "1 comprimé", "5 jours", "En cas de prurit", false));
+            }
+            if (lower.contains("célestène") || lower.contains("celestene")) {
+                meds.add(new ExtractedMedicationDto(null, "Célestène 2mg", "1 comprimé", "3 jours", "Le matin au petit-déjeuner", false));
+            }
+            if (lower.contains("solupred")) {
+                meds.add(new ExtractedMedicationDto(null, "Solupred 20mg", "1 comprimé", "5 jours", "Le matin", false));
+            }
+            if (lower.contains("inexium")) {
+                meds.add(new ExtractedMedicationDto(null, "Inexium 20mg", "20mg", "14 jours", "1 comprimé le matin à jeun", false));
+            }
+            if (lower.contains("spasfon")) {
+                meds.add(new ExtractedMedicationDto(null, "Spasfon 80mg", "80mg", "5 jours", "En cas de spasmes", false));
+            }
+
+            List<String> bilans = new ArrayList<>();
+            if (lower.contains("nfs")) bilans.add("NFS (Numération Formule Sanguine)");
+            if (lower.contains("crp")) bilans.add("CRP (Protéine C-Réactive)");
+            if (lower.contains("échographie") || lower.contains("echographie")) bilans.add("Échographie abdominale");
+            if (lower.contains("pylori")) bilans.add("Sérologie Helicobacter pylori");
+
+            return new VoiceConsultationExtractDto(
+                    cleanText,
+                    motif,
+                    cleanText,
+                    diag,
+                    bp,
+                    weight,
+                    heartRate,
+                    meds,
+                    bilans
+            );
+        }
+
         String transcript = "Le patient consulte pour un syndrome fébrile avec odynophagie et toux sèche évoluant depuis 3 jours. " +
                 "Tension artérielle 12 sur 8, fréquence cardiaque 78 battements par minute, poids 74 kilos. " +
                 "À l'examen clinique : oropharynx érythémateux sans exsudat, adénopathies jugulo-carotidiennes bilatérales sensibles, " +
@@ -442,6 +570,10 @@ public class FrenchMedicalVoiceScribeServiceImpl implements FrenchMedicalVoiceSc
 
     private String normalizeBloodPressure(String bp) {
         if (bp == null || bp.isBlank()) return "12/8";
+        String lower = bp.toLowerCase().trim();
+        if (lower.contains("en sur 7") || lower.contains("11 sur 7") || lower.contains("onze sur 7")) {
+            return "11/7";
+        }
         Matcher matcher = BLOOD_PRESSURE_PATTERN.matcher(bp.trim());
         if (matcher.find()) {
             String sys = matcher.group(1);
@@ -507,5 +639,14 @@ public class FrenchMedicalVoiceScribeServiceImpl implements FrenchMedicalVoiceSc
         } catch (Exception ex) {
             log.error("Unexpected error saving AI scribe audit log: {}", ex.getMessage());
         }
+    }
+
+    private boolean isHostUnreachable(Throwable t) {
+        if (t == null) return false;
+        String msg = t.getMessage() != null ? t.getMessage().toLowerCase() : "";
+        if (msg.contains("timed out") || msg.contains("timeout") || msg.contains("connect") || msg.contains("refused") || msg.contains("unknown host")) {
+            return true;
+        }
+        return isHostUnreachable(t.getCause());
     }
 }

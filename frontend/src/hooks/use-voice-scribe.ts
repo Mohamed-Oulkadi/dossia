@@ -79,7 +79,7 @@ export function useVoiceScribe(options?: UseVoiceScribeOptions) {
           headers: {
             'Content-Type': 'multipart/form-data',
           },
-          timeout: 60000, // 60 seconds dedicated timeout for cloud LLM clinical inference
+          timeout: 75000, // 75 seconds dedicated timeout for cloud LLM clinical inference
         }
       )
       return response.data
