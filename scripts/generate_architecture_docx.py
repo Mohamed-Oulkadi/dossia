@@ -66,8 +66,8 @@ SYSTEM_CONTAINERS = [
     },
     {
         "component": "React 18 SPA Frontend",
-        "tech": "React 18, TypeScript, Vite, Tailwind CSS v4, Zustand, Lucide, Three.js, Taste-Skill (design-taste-frontend)",
-        "role": "High-density clinical web application featuring role-based workspaces, real-time SSE listener, command palette, interactive 3D landing network, and Leonxlnx/taste-skill Dual-Mode Dials (Landing vs Dashboard Hardening)."
+        "tech": "React 18, TypeScript, Vite, Tailwind CSS v4, Zustand, Lucide, Framer Motion, Three.js, Taste-Skill & Stageshow",
+        "role": "High-density clinical web application featuring role-based workspaces, real-time SSE listener, command palette, interactive 3D landing network, Leonxlnx/taste-skill Dual-Mode Dials, and Benji Taylor's stageshow micro-stagecraft (The Inset Stage, tactile vitals cluster, floating command dock)."
     },
     {
         "component": "PostgreSQL 16 Database",
@@ -302,8 +302,8 @@ FRONTEND_WORKSPACES = [
     {
         "workspace": "Public Landing & ROI Engine",
         "route": "/",
-        "technologies": "Three.js Canvas, Lucide React, Tailwind CSS v4, Taste-Skill (Public Mode: DESIGN_VARIANCE=7, MOTION_INTENSITY=6, VISUAL_DENSITY=4)",
-        "description": "Interactive showcase featuring dynamic 3D medical network visualization, live Moroccan clinic financial ROI calculator in MAD, asymmetric hero compositions, Geist/Satoshi typography, and spring physics adhering to anti-slop art direction."
+        "technologies": "Three.js Canvas, Stageshow Hero Demo (DoctorWorkspaceStageDemo), Lucide React, Tailwind CSS v4, Taste-Skill (Public Mode: DESIGN_VARIANCE=7, MOTION_INTENSITY=6, VISUAL_DENSITY=4)",
+        "description": "Interactive showcase featuring dynamic 3D medical network visualization, live Moroccan clinic financial ROI calculator in MAD, Stageshow Doctor Workspace hero demo (~760x410 with animated SVG cursor choreography, voice scribe waveform, vitals auto-fill, and satellite Moroccan A4 ordonnance preview with INPE), asymmetric compositions, and Geist/Satoshi typography."
     },
     {
         "workspace": "Secretary Front-Desk Workspace",
@@ -314,8 +314,8 @@ FRONTEND_WORKSPACES = [
     {
         "workspace": "Doctor Clinical Speed Workspace",
         "route": "/app (Doctor Role)",
-        "technologies": "Clinical Speed Engine, VoiceScribeBar, Web Audio API, OpenPDF Viewer, Tabbed Clinical Panels, Taste-Skill (Dashboard Hardening: DENSITY=9)",
-        "description": "Physician cockpit with Doctor Pager CTA, French Medical Voice Scribe (Alt+R, live audio waveform, CNDP zero-PII audio streaming, 3-second emerald ring validation), sub-minute ordonnance generation with Moroccan drug search, one-click template insertion, diagnostic requests, and sick-leave certificates."
+        "technologies": "Clinical Speed Engine, Stageshow Inset Stage, Framer Motion, VoiceScribeBar, Web Audio API, OpenPDF Viewer, Tabbed Clinical Panels, Taste-Skill (Dashboard Hardening: DENSITY=9)",
+        "description": "Physician cockpit featuring Stageshow The Inset Stage framing, top Patient Context Ribbon (identity, calculated age, mutuelle badge, 1-click history drawer), hardware-like 5-chip vitals instrument cluster (TA, Poids, FC, Temp, Glycémie in tabular-nums font-mono), choreographed dynamic medication rows with spring physics, 1-click protocol injection, French Voice Scribe (Alt+R), and anchored floating high-contrast command dock."
     },
     {
         "workspace": "Caisse Journalière Workspace",
@@ -450,6 +450,20 @@ CHANGELOG_ENTRIES = [
         "modules": "frontend, skills:01-premium-ui-craft, agents",
         "migrations": "N/A (Frontend Governance & Taste-Skill)",
         "summary": "Integrated Leonxlnx/taste-skill (design-taste-frontend) into Dossia frontend architecture and agent governance. Established Dual-Mode Dials: Public Landing (DESIGN_VARIANCE=7, MOTION_INTENSITY=6, VISUAL_DENSITY=4 with asymmetric compositions, Geist/Satoshi typography, and spring physics) vs. Clinical/Financial Workspaces (DESIGN_VARIANCE=3, MOTION_INTENSITY=3, VISUAL_DENSITY=9 Dashboard Hardening mode with structural divide-y, hairline zinc borders, strict tabular-nums font-mono MAD arithmetic, and emerald #059669 accents). Enforced React 18 + Vite SPA stack constraint (ignoring Next.js 'use client' rules)."
+    },
+    {
+        "phase": "Phase 18: Stageshow Craft Integration & Doctor Workspace Staging",
+        "date": "October 2026",
+        "modules": "frontend:consultation, skills:01-premium-ui-craft, agents",
+        "migrations": "N/A (Frontend Governance & Stagecraft)",
+        "summary": "Integrated Benji Taylor's stageshow skill (.agents/skills/stageshow) into Dossia frontend governance alongside design-taste-frontend. Refactored the Doctor's Consultation Workspace (/app/consultations) with Stageshow Phase 1 craft: implemented The Elevated Inset Stage with ultra-focused top Patient Context Ribbon, 5-chip tactile vitals instrument cluster (TA, Poids, FC, Temp, Glycémie) with hardware feel and tabular monospace formatting, choreographed dynamic medication row insertions using Framer Motion spring physics, and an anchored floating high-contrast command dock for instant OpenPDF printing and consultation completion."
+    },
+    {
+        "phase": "Phase 19: Stageshow Hero Demo (DoctorWorkspaceStageDemo) Implementation",
+        "date": "October 2026",
+        "modules": "frontend:marketing, frontend:landing, skills:01-premium-ui-craft",
+        "migrations": "N/A (Marketing Faux UI Stage Demo)",
+        "summary": "Built DoctorWorkspaceStageDemo (~760x410) adhering strictly to stageshow framing, single signature action focus, and caused motion rules. Implemented a looping 4-beat choreography (6.5s cycle) with an authentic dark SVG cursor: Beat 1 moves to Voice Scribe mic button and activates live French audio waveform with transcript badge for Youssef Benali (34 ans • CNOPS); Beat 2 snaps vitals (120/80 mmHg, 74 kg, 78 bpm) and injects Augmentin 1g and Doliprane 1000mg with staggered spring arrivals; Beat 3 clicks the floating command dock's 'Imprimer l'Ordonnance (PDF)' button and slides up a miniature Moroccan A4 Ordonnance satellite card complete with INPE: 987654321 and circular Cachet stamp; Beat 4 holds the completed payoff for 1.3s before seamless reset. Embedded cleanly into Landing.tsx hero section."
     }
 ]
 

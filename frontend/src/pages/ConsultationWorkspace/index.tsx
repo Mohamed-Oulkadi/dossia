@@ -1,16 +1,16 @@
 /**
  * ConsultationWorkspace — The Doctor's Clinical Workspace (Cabinet Médical)
- * Two-Column High-Density Layout with Clinical Speed Engine:
- * - Left Column: Patient Vitals (Tension Artérielle, Poids, FC) & Observations Cliniques / Diagnostic
- * - Right Column: 3-Tab Speed Engine
- *   • Tab 1: Ordonnance Médicale (Moroccan drug catalog combobox, 1-click protocol injector, posology auto-fill)
- *   • Tab 2: Demandes de Bilans (Biologie & Radiologie 1-click bundles, A4 PDF generator)
- *   • Tab 3: Certificats Médicaux (Moroccan anti-fraud spelled-out days, duration chips, A4 PDF generator)
- * - Moroccan Terminology, Strict MAD non-floating currency, CNDP 09-08 Compliance
+ * Staged Inset Architecture (Stageshow Craft & Taste-Skill Governance):
+ * - Elevated Inset Stage with high-density top Patient Context Ribbon
+ * - Horizontal Instrument Cluster (Staged Vitals: TA, Poids, FC, Temp, Glycémie in tabular font-mono)
+ * - Choreographed Dynamic Medication Rows with framer-motion spring transitions
+ * - Anchored Floating High-Contrast Command Dock for immediate print & consultation completion
+ * - Strict Moroccan Terminology, BigDecimal MAD non-floating currency, CNDP 09-08 Compliance
  */
 import { useState, useMemo } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useForm, useFieldArray } from 'react-hook-form'
+import { motion, AnimatePresence } from 'framer-motion'
 import { usePatients } from '@/hooks/use-patients'
 import { useDailyAgenda, useUpdateAppointmentStatus } from '@/hooks/use-agenda'
 import {
@@ -73,6 +73,8 @@ interface ConsultationFormData {
   bloodPressure: string
   weightKg: string
   heartRateBpm: string
+  temperature?: string
+  glycemia?: string
   prescriptionNotes: string
   items: PrescriptionItemForm[]
 }
@@ -129,6 +131,25 @@ export default function ConsultationWorkspace() {
     return patientsPage.content.find((p) => p.id === selectedPatientId)
   }, [patientsPage?.content, selectedPatientId])
 
+  // Computed patient age from birthDate
+  const patientAge = useMemo(() => {
+    if (!selectedPatient?.birthDate) return null
+    const birth = new Date(selectedPatient.birthDate)
+    if (isNaN(birth.getTime())) return null
+    const today = new Date()
+    let age = today.getFullYear() - birth.getFullYear()
+    const m = today.getMonth() - birth.getMonth()
+    if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
+      age--
+    }
+    return age
+  }, [selectedPatient?.birthDate])
+
+  const patientInitials = useMemo(() => {
+    if (!selectedPatient) return 'PT'
+    return `${selectedPatient.firstName?.[0] || ''}${selectedPatient.lastName?.[0] || ''}`.toUpperCase()
+  }, [selectedPatient])
+
   // Last saved consultation for instant PDF printing
   const [lastSavedConsultationId, setLastSavedConsultationId] = useState<string | null>(null)
 
@@ -150,6 +171,8 @@ export default function ConsultationWorkspace() {
       bloodPressure: '12/8',
       weightKg: '72',
       heartRateBpm: '74',
+      temperature: '37.0',
+      glycemia: '0.95',
       prescriptionNotes: 'Boire abondamment. Repos conseillé.',
       items: [
         {
@@ -200,9 +223,10 @@ export default function ConsultationWorkspace() {
       }
       if (data.clinicalNotes) {
         const existingNotes = watch('clinicalNotes')
-        const combinedNotes = existingNotes && existingNotes.trim().length > 0
-          ? `${existingNotes.trim()}\n\n[Dictée Vocale]:\n${data.clinicalNotes}`
-          : data.clinicalNotes
+        const combinedNotes =
+          existingNotes && existingNotes.trim().length > 0
+            ? `${existingNotes.trim()}\n\n[Dictée Vocale]:\n${data.clinicalNotes}`
+            : data.clinicalNotes
         setValue('clinicalNotes', combinedNotes, { shouldDirty: true, shouldValidate: true })
       }
       if (data.diagnosis) {
@@ -248,11 +272,28 @@ export default function ConsultationWorkspace() {
       return
     }
 
+    let clinicalNotesFinal = data.clinicalNotes.trim()
+    const extraVitals: string[] = []
+    if (data.temperature?.trim()) {
+      extraVitals.push(`T°: ${data.temperature.trim()}°C`)
+    }
+    if (data.glycemia?.trim()) {
+      extraVitals.push(`Glycémie: ${data.glycemia.trim()} g/L`)
+    }
+    if (extraVitals.length > 0) {
+      const extraVitalsLine = `[Constantes: ${extraVitals.join(' · ')}]`
+      if (!clinicalNotesFinal.includes('Constantes:')) {
+        clinicalNotesFinal = clinicalNotesFinal
+          ? `${clinicalNotesFinal}\n\n${extraVitalsLine}`
+          : extraVitalsLine
+      }
+    }
+
     const payload: ConsultationCreatePayload = {
       patientId: activePatId,
       appointmentId: appointmentId || undefined,
       motif: data.motif.trim(),
-      clinicalNotes: data.clinicalNotes.trim() || undefined,
+      clinicalNotes: clinicalNotesFinal || undefined,
       diagnosis: data.diagnosis.trim() || undefined,
       bloodPressure: data.bloodPressure.trim() || undefined,
       weightKg: data.weightKg ? parseFloat(data.weightKg) : null,
@@ -307,595 +348,685 @@ export default function ConsultationWorkspace() {
     : 'Patient'
 
   return (
-    <div className="flex-1 overflow-hidden flex flex-col bg-slate-50 dark:bg-zinc-950">
-      {/* ── Top Bar / Clinical Header ── */}
-      <div className="px-4 py-2.5 border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 flex items-center justify-between flex-shrink-0 shadow-2xs">
-        <div className="flex items-center gap-3">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => navigate('/app')}
-            className="h-8 px-2 gap-1 text-xs text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100"
-          >
-            <ArrowLeft className="w-3.5 h-3.5" />
-            <span>Retour Agenda</span>
-          </Button>
+    <div className="flex-1 overflow-y-auto p-2 sm:p-3.5 bg-zinc-100/70 dark:bg-zinc-950 flex flex-col">
+      {/* ── The Elevated Inset Stage Container ── */}
+      <div className="w-full max-w-7xl mx-auto flex-1 flex flex-col bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200/80 dark:border-zinc-800 shadow-xs overflow-hidden relative">
+        {/* ── Top Bar / Clinical Header (Stage Crown) ── */}
+        <div className="px-4 py-2 border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 flex items-center justify-between flex-shrink-0">
+          <div className="flex items-center gap-3">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate('/app')}
+              className="h-7 px-2 gap-1 text-xs text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 cursor-pointer"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              <span>Retour Agenda</span>
+            </Button>
 
-          <div className="h-4 w-px bg-zinc-200 dark:bg-zinc-800" />
+            <div className="h-4 w-px bg-zinc-200 dark:bg-zinc-800" />
+
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 rounded-md bg-emerald-50 dark:bg-emerald-950/60 flex items-center justify-center text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/80">
+                <Stethoscope className="w-3.5 h-3.5 stroke-[1.5]" />
+              </div>
+              <h1 className="text-xs sm:text-sm font-semibold text-zinc-900 dark:text-zinc-100 tracking-tight">
+                Espace Consultation &amp; Speed Engine
+              </h1>
+              <Badge variant="outline" className="hidden sm:inline-flex font-mono text-[10px] text-zinc-600 dark:text-zinc-400">
+                Dr. Amina Benjelloun
+              </Badge>
+              {lastSavedConsultationId && (
+                <Badge className="bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800 text-[10px] py-0 font-mono">
+                  Séance Enregistrée <CheckCircle2 className="w-3 h-3 inline ml-1" />
+                </Badge>
+              )}
+            </div>
+          </div>
 
           <div className="flex items-center gap-2">
-            <Stethoscope className="w-4 h-4 text-emerald-600 dark:text-emerald-400 stroke-[1.5]" />
-            <h1 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 tracking-tight">
-              Espace Consultation &amp; Speed Engine
-            </h1>
-            <Badge variant="outline" className="font-mono text-[10px] text-zinc-600 dark:text-zinc-400">
-              Dr. Amina Benjelloun
-            </Badge>
-            {lastSavedConsultationId && (
-              <Badge className="bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800 text-[10px] py-0">
-                Séance Enregistrée <CheckCircle2 className="w-3 h-3 inline ml-1" />
-              </Badge>
-            )}
+            <span className="text-[10px] font-mono text-zinc-400 hidden sm:inline">
+              CNDP 09-08 · Strict MAD
+            </span>
           </div>
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex items-center gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={handlePrintOrdonnance}
-            className="h-8 gap-1.5 text-xs border-zinc-300 dark:border-zinc-800"
-          >
-            <Printer className="w-3.5 h-3.5 text-zinc-600 dark:text-zinc-400 stroke-[1.5]" />
-            <span>Imprimer l&apos;Ordonnance (PDF)</span>
-          </Button>
+        {/* ── Patient Context Ribbon (Ultra-Focused Identity Bar) ── */}
+        <div className="px-4 py-2 border-b border-zinc-200/80 dark:border-zinc-800/80 bg-zinc-50/80 dark:bg-zinc-900/60 flex flex-wrap items-center justify-between gap-3 text-xs">
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 flex items-center justify-center font-bold text-[11px] font-mono select-none">
+                {patientInitials}
+              </div>
+              {isLoadingPatients ? (
+                <span className="text-zinc-400 text-xs">Chargement…</span>
+              ) : (
+                <select
+                  value={selectedPatientId}
+                  onChange={(e) => {
+                    setSelectedPatientId(e.target.value)
+                    setValue('patientId', e.target.value)
+                  }}
+                  className="h-7 px-2 text-xs font-semibold rounded-md border border-zinc-300 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer max-w-[220px] sm:max-w-none truncate"
+                >
+                  <option value="">Sélectionner un patient…</option>
+                  {patientsPage?.content.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.firstName} {p.lastName} (CIN: {p.cin})
+                    </option>
+                  ))}
+                </select>
+              )}
+            </div>
 
-          <Button
-            form="consultation-form"
-            type="submit"
-            size="sm"
-            disabled={createConsultation.isPending}
-            className="h-8 gap-1.5 text-xs bg-emerald-600 hover:bg-emerald-500 text-white border-0 font-medium cursor-pointer shadow-2xs"
-          >
-            {createConsultation.isPending ? (
-              <>
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                <span>Enregistrement…</span>
-              </>
-            ) : (
-              <>
-                <CheckCircle2 className="w-3.5 h-3.5" />
-                <span>Terminer la consultation</span>
-              </>
-            )}
-          </Button>
-        </div>
-      </div>
+            {selectedPatient && (
+              <div className="flex flex-wrap items-center gap-2 font-mono text-[11px] tabular-nums text-zinc-600 dark:text-zinc-400">
+                {patientAge !== null && (
+                  <span className="px-1.5 py-0.5 rounded bg-zinc-200/60 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 font-medium text-[10px]">
+                    {patientAge} ans
+                  </span>
+                )}
+                <span>CIN: <strong className="text-zinc-800 dark:text-zinc-200">{selectedPatient.cin}</strong></span>
+                <span className="hidden md:inline">Tél: <strong className="text-zinc-800 dark:text-zinc-200">{selectedPatient.phoneNumber}</strong></span>
+                <Badge variant="outline" className="font-mono text-[10px] bg-white dark:bg-zinc-900">
+                  {selectedPatient.mutuelleType || 'Sans mutuelle'}
+                </Badge>
 
-      {/* ── Patient Identity Banner ── */}
-      <div className="px-4 py-2 border-b border-zinc-200 dark:border-zinc-800/80 bg-slate-100/70 dark:bg-zinc-900/30 flex items-center justify-between text-xs">
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <span className="text-[11px] font-medium text-zinc-500">Patient:</span>
-            {isLoadingPatients ? (
-              <span className="text-zinc-400">Chargement…</span>
-            ) : (
-              <select
-                value={selectedPatientId}
-                onChange={(e) => {
-                  setSelectedPatientId(e.target.value)
-                  setValue('patientId', e.target.value)
-                }}
-                className="h-7 px-2 text-xs font-semibold rounded border border-zinc-300 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 focus:outline-none"
-              >
-                <option value="">Sélectionner un patient…</option>
-                {patientsPage?.content.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.firstName} {p.lastName} (CIN: {p.cin})
-                  </option>
-                ))}
-              </select>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsHistoryOpen(true)}
+                  className="h-6 px-2 text-[11px] gap-1 text-emerald-700 dark:text-emerald-400 border-emerald-300 dark:border-emerald-800 bg-emerald-50/60 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 cursor-pointer ml-1 shadow-2xs"
+                  title="Consulter l'historique complet des consultations passées et renouveler une ordonnance"
+                >
+                  <History className="w-3 h-3 stroke-[1.5]" />
+                  <span>Historique Médical</span>
+                </Button>
+              </div>
             )}
           </div>
 
-          {selectedPatient && (
-            <div className="flex items-center gap-3 font-mono text-[11px] tabular-nums text-zinc-600 dark:text-zinc-400">
-              <span>CIN: <strong className="text-zinc-800 dark:text-zinc-200">{selectedPatient.cin}</strong></span>
-              <span>Tél: <strong className="text-zinc-800 dark:text-zinc-200">{selectedPatient.phoneNumber}</strong></span>
-              <span>Né(e) le: <strong className="text-zinc-800 dark:text-zinc-200">{selectedPatient.birthDate}</strong></span>
-              <Badge variant="outline" className="font-mono text-[10px]">
-                {selectedPatient.mutuelleType || 'Sans mutuelle'}
+          {linkedAppointment && (
+            <div className="flex items-center gap-1.5 font-mono text-[11px]">
+              <span className="text-zinc-400">RDV associé:</span>
+              <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+                {new Date(linkedAppointment.startTime).toLocaleTimeString('fr-MA', {
+                  hour: '2-digit',
+                  minute: '2-digit',
+                })}
+              </span>
+              <Badge variant="secondary" className="font-mono text-[9px] py-0">
+                {linkedAppointment.type}
               </Badge>
-
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setIsHistoryOpen(true)}
-                className="h-6 px-2 text-[11px] gap-1 text-emerald-700 dark:text-emerald-400 border-emerald-300 dark:border-emerald-800 bg-emerald-50/60 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 cursor-pointer ml-1"
-                title="Consulter l'historique complet des consultations passées et renouveler une ordonnance"
-              >
-                <History className="w-3 h-3 stroke-[1.5]" />
-                <span>Historique Médical</span>
-              </Button>
             </div>
           )}
         </div>
 
-        {linkedAppointment && (
-          <div className="flex items-center gap-1.5 font-mono text-[11px]">
-            <span className="text-zinc-400">Rendez-vous associé:</span>
-            <span className="font-semibold text-emerald-600 dark:text-emerald-400">
-              {new Date(linkedAppointment.startTime).toLocaleTimeString('fr-MA', {
-                hour: '2-digit',
-                minute: '2-digit',
-              })}
-            </span>
-            <span className="text-zinc-500">({linkedAppointment.type})</span>
-          </div>
-        )}
-      </div>
+        {/* ── Voice Scribe Clinical Dictation Bar (Alt + R) ── */}
+        <VoiceScribeBar
+          state={voiceScribe.state}
+          isRecording={voiceScribe.isRecording}
+          isProcessing={voiceScribe.isProcessing}
+          recordingSeconds={voiceScribe.recordingSeconds}
+          audioLevel={voiceScribe.audioLevel}
+          extractedData={voiceScribe.extractedData}
+          liveTranscript={voiceScribe.liveTranscript}
+          onStartRecording={voiceScribe.startRecording}
+          onStopAndTranscribe={voiceScribe.stopAndTranscribe}
+          onCancelRecording={voiceScribe.cancelRecording}
+          onReset={voiceScribe.reset}
+        />
 
-      {/* ── Voice Scribe Clinical Dictation Bar (Alt + R) ── */}
-      <VoiceScribeBar
-        state={voiceScribe.state}
-        isRecording={voiceScribe.isRecording}
-        isProcessing={voiceScribe.isProcessing}
-        recordingSeconds={voiceScribe.recordingSeconds}
-        audioLevel={voiceScribe.audioLevel}
-        extractedData={voiceScribe.extractedData}
-        liveTranscript={voiceScribe.liveTranscript}
-        onStartRecording={voiceScribe.startRecording}
-        onStopAndTranscribe={voiceScribe.stopAndTranscribe}
-        onCancelRecording={voiceScribe.cancelRecording}
-        onReset={voiceScribe.reset}
-      />
-
-      {/* ── Main Two-Column Workspace ── */}
-      <div className="flex-1 overflow-hidden grid grid-cols-1 lg:grid-cols-12 divide-y lg:divide-y-0 lg:divide-x divide-zinc-200 dark:divide-zinc-800">
-        {/* ── Left Column: Constantes Vitales & Examen Clinique (5 cols) ── */}
-        <div className="lg:col-span-5 overflow-y-auto p-4 space-y-4 bg-white dark:bg-zinc-950">
-          <form id="consultation-form" onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            <div className="flex items-center justify-between pb-1 border-b border-zinc-200 dark:border-zinc-800">
-              <h2 className="text-xs font-semibold text-zinc-900 dark:text-zinc-100 uppercase tracking-wider">
-                Examen Clinique &amp; Constantes
-              </h2>
-              <span className="text-[10px] text-zinc-400 font-mono">Loi CNDP 09-08</span>
-            </div>
-
-            {/* Vitals Grid */}
-            <div className="grid grid-cols-3 gap-2">
-              {/* Tension */}
-              <div
-                className={`p-2.5 rounded-md border border-zinc-200 dark:border-zinc-800 bg-slate-50/80 dark:bg-zinc-900/40 shadow-2xs transition-all duration-300 ${
-                  highlightFields ? 'ring-2 ring-emerald-500/70 bg-emerald-500/5' : ''
-                }`}
-              >
-                <div className="flex items-center justify-between text-zinc-500 mb-1">
-                  <span className="text-[10px] font-medium uppercase">Tension</span>
-                  <Activity className="w-3 h-3 text-rose-500 stroke-[1.5]" />
-                </div>
-                <div className="relative">
-                  <Input
-                    {...register('bloodPressure', {
-                      pattern: {
-                        value: /^$|^\d{1,3}\/\d{1,3}$/,
-                        message: 'Ex: 12/8 ou 120/80',
-                      },
-                    })}
-                    placeholder="12/8"
-                    className="h-7 text-xs font-mono font-semibold tabular-nums pr-11"
-                  />
-                  <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] font-mono text-zinc-400 pointer-events-none">
-                    mmHg
-                  </span>
-                </div>
-                {errors.bloodPressure && (
-                  <p className="text-[9px] text-rose-500 mt-1">{errors.bloodPressure.message}</p>
-                )}
+        {/* ── Main Two-Column Workspace ── */}
+        <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 divide-y lg:divide-y-0 lg:divide-x divide-zinc-200 dark:divide-zinc-800 min-h-0">
+          {/* ── Left Column: Constantes Vitales & Examen Clinique (5 cols) ── */}
+          <div className="lg:col-span-5 overflow-y-auto p-4 space-y-4 bg-white dark:bg-zinc-950 pb-24">
+            <form id="consultation-form" onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+              <div className="flex items-center justify-between pb-1 border-b border-zinc-200 dark:border-zinc-800">
+                <h2 className="text-xs font-semibold text-zinc-900 dark:text-zinc-100 uppercase tracking-wider">
+                  Examen Clinique &amp; Constantes
+                </h2>
+                <span className="text-[10px] text-zinc-400 font-mono">CNDP 09-08</span>
               </div>
 
-              {/* Poids */}
-              <div
-                className={`p-2.5 rounded-md border border-zinc-200 dark:border-zinc-800 bg-slate-50/80 dark:bg-zinc-900/40 shadow-2xs transition-all duration-300 ${
-                  highlightFields ? 'ring-2 ring-emerald-500/70 bg-emerald-500/5' : ''
-                }`}
-              >
-                <div className="flex items-center justify-between text-zinc-500 mb-1">
-                  <span className="text-[10px] font-medium uppercase">Poids</span>
-                  <Scale className="w-3 h-3 text-emerald-500 stroke-[1.5]" />
-                </div>
-                <div className="relative">
-                  <Input
-                    type="number"
-                    step="0.1"
-                    {...register('weightKg', {
-                      min: { value: 0.5, message: '> 0.5 kg' },
-                      max: { value: 400, message: '< 400 kg' },
-                    })}
-                    placeholder="70.5"
-                    className="h-7 text-xs font-mono font-semibold tabular-nums pr-8"
-                  />
-                  <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] font-mono text-zinc-400 pointer-events-none">
-                    kg
-                  </span>
-                </div>
-                {errors.weightKg && (
-                  <p className="text-[9px] text-rose-500 mt-1">{errors.weightKg.message}</p>
-                )}
-              </div>
-
-              {/* Fréquence Cardiaque */}
-              <div
-                className={`p-2.5 rounded-md border border-zinc-200 dark:border-zinc-800 bg-slate-50/80 dark:bg-zinc-900/40 shadow-2xs transition-all duration-300 ${
-                  highlightFields ? 'ring-2 ring-emerald-500/70 bg-emerald-500/5' : ''
-                }`}
-              >
-                <div className="flex items-center justify-between text-zinc-500 mb-1">
-                  <span className="text-[10px] font-medium uppercase">Pouls / FC</span>
-                  <Heart className="w-3 h-3 text-rose-500 stroke-[1.5]" />
-                </div>
-                <div className="relative">
-                  <Input
-                    type="number"
-                    {...register('heartRateBpm', {
-                      min: { value: 30, message: 'Min 30' },
-                      max: { value: 250, message: 'Max 250' },
-                    })}
-                    placeholder="72"
-                    className="h-7 text-xs font-mono font-semibold tabular-nums pr-8"
-                  />
-                  <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] font-mono text-zinc-400 pointer-events-none">
-                    bpm
-                  </span>
-                </div>
-                {errors.heartRateBpm && (
-                  <p className="text-[9px] text-rose-500 mt-1">{errors.heartRateBpm.message}</p>
-                )}
-              </div>
-            </div>
-
-            {/* Motif de Consultation */}
-            <div>
-              <label className="block text-[11px] font-medium text-zinc-600 dark:text-zinc-400 mb-1">
-                Motif de consultation *
-              </label>
-              <Input
-                {...register('motif', { required: 'Le motif est obligatoire' })}
-                placeholder="Ex: Douleurs abdominales aiguës, rhinopharyngite, contrôle TA…"
-                className={`h-8 text-xs font-medium transition-all duration-300 ${
-                  highlightFields ? 'ring-2 ring-emerald-500/70 bg-emerald-500/5' : ''
-                }`}
-              />
-              {errors.motif && (
-                <p className="text-[10px] text-rose-500 mt-1">{errors.motif.message}</p>
-              )}
-            </div>
-
-            {/* Observations Cliniques / Examen */}
-            <div>
-              <label className="block text-[11px] font-medium text-zinc-600 dark:text-zinc-400 mb-1">
-                Observations Cliniques &amp; Anamnèse
-              </label>
-              <textarea
-                {...register('clinicalNotes')}
-                rows={6}
-                placeholder="Examen physique: abdomen souple, absence de fièvre. Auscultation pulmonaire libre. Antécédents chirurgicaux non contributifs…"
-                className={`w-full rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-2.5 text-xs text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-none focus:border-zinc-500 dark:focus:border-zinc-700 font-sans leading-relaxed resize-none transition-all duration-300 ${
-                  highlightFields ? 'ring-2 ring-emerald-500/70 bg-emerald-500/5' : ''
-                }`}
-              />
-            </div>
-
-            {/* Diagnostic Retenu */}
-            <div>
-              <label className="block text-[11px] font-medium text-zinc-600 dark:text-zinc-400 mb-1">
-                Diagnostic Médical Retenu
-              </label>
-              <Input
-                {...register('diagnosis')}
-                placeholder="Ex: Syndrome dyspeptique fonctionnel / Rhinopharyngite virale"
-                className={`h-8 text-xs font-medium transition-all duration-300 ${
-                  highlightFields ? 'ring-2 ring-emerald-500/70 bg-emerald-500/5' : ''
-                }`}
-              />
-            </div>
-          </form>
-        </div>
-
-        {/* ── Right Column: 3-Tab Speed Engine (7 cols) ── */}
-        <div className="lg:col-span-7 overflow-y-auto p-4 space-y-3.5 bg-slate-50/50 dark:bg-zinc-900/20">
-          {/* ── Speed Engine Main Tab Navigation ── */}
-          <div className="flex items-center justify-between pb-2 border-b border-zinc-200 dark:border-zinc-800">
-            <div className="flex items-center gap-1.5 p-1 bg-zinc-200/70 dark:bg-zinc-800/60 rounded-lg">
-              <button
-                type="button"
-                onClick={() => setActiveTab('ORDONNANCE')}
-                className={`flex items-center gap-1.5 py-1.5 px-3 rounded-md text-xs font-semibold transition-all cursor-pointer ${
-                  activeTab === 'ORDONNANCE'
-                    ? 'bg-white dark:bg-zinc-950 text-emerald-600 dark:text-emerald-400 shadow-2xs'
-                    : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100'
-                }`}
-              >
-                <Pill className="w-3.5 h-3.5" />
-                <span>Ordonnance (Rx)</span>
-                <Badge variant="secondary" className="text-[10px] py-0 px-1 font-mono">
-                  {fields.length}
-                </Badge>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setActiveTab('BILANS')}
-                className={`flex items-center gap-1.5 py-1.5 px-3 rounded-md text-xs font-semibold transition-all cursor-pointer ${
-                  activeTab === 'BILANS'
-                    ? 'bg-white dark:bg-zinc-950 text-sky-600 dark:text-sky-400 shadow-2xs'
-                    : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100'
-                }`}
-              >
-                <TestTube2 className="w-3.5 h-3.5" />
-                <span>Demandes de Bilans</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setActiveTab('CERTIFICATS')}
-                className={`flex items-center gap-1.5 py-1.5 px-3 rounded-md text-xs font-semibold transition-all cursor-pointer ${
-                  activeTab === 'CERTIFICATS'
-                    ? 'bg-white dark:bg-zinc-950 text-purple-600 dark:text-purple-400 shadow-2xs'
-                    : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100'
-                }`}
-              >
-                <Award className="w-3.5 h-3.5" />
-                <span>Certificats Médicaux</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setActiveTab('DOCUMENTS')}
-                className={`flex items-center gap-1.5 py-1.5 px-3 rounded-md text-xs font-semibold transition-all cursor-pointer ${
-                  activeTab === 'DOCUMENTS'
-                    ? 'bg-white dark:bg-zinc-950 text-emerald-600 dark:text-emerald-400 shadow-2xs'
-                    : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100'
-                }`}
-              >
-                <FolderLock className="w-3.5 h-3.5" />
-                <span>Imagerie &amp; Documents</span>
-              </button>
-            </div>
-
-            {activeTab === 'ORDONNANCE' && (
-              <div className="flex items-center gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    if (!selectedPatient) {
-                      toast.info("Sélectionnez d'abord un patient pour consulter son historique.")
-                      return
-                    }
-                    setIsHistoryOpen(true)
-                  }}
-                  className="h-7 text-[11px] gap-1 text-emerald-700 dark:text-emerald-400 border-emerald-300 dark:border-emerald-800 bg-emerald-50/50 dark:bg-emerald-950/30 hover:bg-emerald-100 cursor-pointer"
-                  title="Renouveler une ordonnance passée de ce patient"
-                >
-                  <History className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
-                  <span>Renouveler depuis Historique</span>
-                </Button>
-
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setIsSaveTemplateOpen(true)}
-                  className="h-7 text-[11px] gap-1 text-zinc-700 dark:text-zinc-300 border-zinc-300 dark:border-zinc-700 cursor-pointer"
-                  title="Enregistrer l'ordonnance actuelle comme modèle type"
-                >
-                  <BookmarkPlus className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
-                  <span>Sauvegarder Modèle</span>
-                </Button>
-              </div>
-            )}
-          </div>
-
-          {/* ════ TAB 1: ORDONNANCE (Rx) ════ */}
-          {activeTab === 'ORDONNANCE' && (
-            <div className="space-y-3.5">
-              {/* ── 1-Click Protocol Templates Injector Bar ── */}
-              <div className="p-2.5 rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 shadow-2xs space-y-1.5">
+              {/* ── Staged Vitals Pill Bar (Hardware Instrument Cluster) ── */}
+              <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-mono text-zinc-500 uppercase flex items-center gap-1">
-                    <Zap className="w-3 h-3 text-amber-500 fill-amber-500" />
-                    Protocoles &amp; Ordonnances Types (1-Click) :
+                  <span className="text-[10px] font-mono font-medium text-zinc-500 uppercase tracking-wider flex items-center gap-1">
+                    <Activity className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+                    Constantes Physiologiques (Instrument Cluster)
                   </span>
-                  <span className="text-[9px] font-mono text-zinc-400">
-                    {templates.length} modèle(s) disponible(s)
-                  </span>
+                  <span className="text-[9px] font-mono text-zinc-400">Hardware Feel</span>
                 </div>
 
-                <div className="flex flex-wrap gap-1.5">
-                  {templates.map((tpl) => (
-                    <button
-                      key={tpl.id}
-                      type="button"
-                      onClick={() => handleApplyTemplate(tpl)}
-                      className="text-[11px] font-medium px-2.5 py-1 rounded-md border border-zinc-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-900 text-zinc-800 dark:text-zinc-200 hover:border-emerald-500 hover:bg-emerald-50/50 dark:hover:bg-emerald-950/30 hover:text-emerald-700 dark:hover:text-emerald-300 transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs group"
-                    >
-                      <Sparkles className="w-3 h-3 text-amber-500 group-hover:text-emerald-600 transition-colors" />
-                      <span>{tpl.title}</span>
-                      <span className="text-[9px] font-mono text-zinc-400">({tpl.items.length})</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* ── Dynamic Medication Rows ── */}
-              <div className="space-y-2.5">
-                {fields.map((field, index) => (
+                <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                  {/* Tension */}
                   <div
-                    key={field.id}
-                    className={`p-3 rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 shadow-clinical-card space-y-2 group transition-all duration-300 ${
+                    className={`flex items-center justify-between rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50/70 dark:bg-zinc-950/50 px-2.5 py-1 transition-all duration-200 focus-within:border-emerald-600 focus-within:ring-2 focus-within:ring-emerald-600/15 ${
                       highlightFields ? 'ring-2 ring-emerald-500/70 bg-emerald-500/5' : ''
                     }`}
                   >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono text-[10px] font-semibold text-zinc-500">
-                          Ligne #{index + 1}
-                        </span>
-                        {matchedCatalogMap[index] && (
-                          <Badge className="bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800 text-[9px] py-0 px-1 font-mono">
-                            Catalogue Maroc
-                          </Badge>
-                        )}
-                      </div>
-                      {fields.length > 1 && (
-                        <button
-                          type="button"
-                          onClick={() => remove(index)}
-                          className="p-1 rounded text-zinc-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
-                          title="Supprimer la ligne"
-                        >
-                          <Trash2 className="w-3.5 h-3.5 stroke-[1.5]" />
-                        </button>
-                      )}
+                    <div className="flex items-center gap-1 min-w-0">
+                      <span className="text-[10px] font-mono font-bold text-zinc-500 uppercase">TA</span>
                     </div>
-
-                    {/* Medication Combobox (Moroccan Catalog Autocomplete) */}
-                    <div>
-                      <MedicationCombobox
-                        value={watch(`items.${index}.medicationName`) || ''}
-                        onChange={(val) => setValue(`items.${index}.medicationName`, val)}
-                        onSelectMedication={(item) => {
-                          setValue(`items.${index}.medicationName`, item.brandName)
-                          if (item.defaultPosology) {
-                            setValue(`items.${index}.dosage`, item.defaultPosology)
-                          }
-                        }}
+                    <div className="flex items-center gap-0.5">
+                      <input
+                        {...register('bloodPressure', {
+                          pattern: {
+                            value: /^$|^\d{1,3}\/\d{1,3}$/,
+                            message: 'Ex: 12/8',
+                          },
+                        })}
+                        placeholder="12/8"
+                        className="w-12 h-6 text-xs font-mono font-semibold tabular-nums text-right bg-transparent text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-none"
                       />
-                    </div>
-
-                    {/* Dosage & Duration Grid */}
-                    <div className="grid grid-cols-2 gap-2">
-                      <div>
-                        <Input
-                          {...register(`items.${index}.dosage` as const, { required: true })}
-                          placeholder="Posologie (ex: 1 cp 3x/jour)"
-                          className="h-7 text-xs font-mono"
-                        />
-                      </div>
-                      <div>
-                        <Input
-                          {...register(`items.${index}.duration` as const, { required: true })}
-                          placeholder="Durée (ex: 7 jours)"
-                          className="h-7 text-xs font-mono"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Specific Instructions */}
-                    <div>
-                      <Input
-                        {...register(`items.${index}.instructions` as const)}
-                        placeholder="Conseils de prise (ex: Pendant les repas, espacer de 6h)"
-                        className="h-7 text-[11px] text-zinc-600 dark:text-zinc-400"
-                      />
+                      <span className="text-[9px] font-mono text-zinc-400 select-none">mmHg</span>
                     </div>
                   </div>
-                ))}
+
+                  {/* Poids */}
+                  <div
+                    className={`flex items-center justify-between rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50/70 dark:bg-zinc-950/50 px-2.5 py-1 transition-all duration-200 focus-within:border-emerald-600 focus-within:ring-2 focus-within:ring-emerald-600/15 ${
+                      highlightFields ? 'ring-2 ring-emerald-500/70 bg-emerald-500/5' : ''
+                    }`}
+                  >
+                    <div className="flex items-center gap-1 min-w-0">
+                      <Scale className="w-3 h-3 text-zinc-400" />
+                      <span className="text-[10px] font-mono font-bold text-zinc-500 uppercase">Poids</span>
+                    </div>
+                    <div className="flex items-center gap-0.5">
+                      <input
+                        type="number"
+                        step="0.1"
+                        {...register('weightKg', {
+                          min: { value: 0.5, message: '> 0.5 kg' },
+                          max: { value: 400, message: '< 400 kg' },
+                        })}
+                        placeholder="70"
+                        className="w-11 h-6 text-xs font-mono font-semibold tabular-nums text-right bg-transparent text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-none"
+                      />
+                      <span className="text-[9px] font-mono text-zinc-400 select-none">kg</span>
+                    </div>
+                  </div>
+
+                  {/* FC / Pouls */}
+                  <div
+                    className={`flex items-center justify-between rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50/70 dark:bg-zinc-950/50 px-2.5 py-1 transition-all duration-200 focus-within:border-emerald-600 focus-within:ring-2 focus-within:ring-emerald-600/15 ${
+                      highlightFields ? 'ring-2 ring-emerald-500/70 bg-emerald-500/5' : ''
+                    }`}
+                  >
+                    <div className="flex items-center gap-1 min-w-0">
+                      <Heart className="w-3 h-3 text-rose-500" />
+                      <span className="text-[10px] font-mono font-bold text-zinc-500 uppercase">FC</span>
+                    </div>
+                    <div className="flex items-center gap-0.5">
+                      <input
+                        type="number"
+                        {...register('heartRateBpm', {
+                          min: { value: 30, message: 'Min 30' },
+                          max: { value: 250, message: 'Max 250' },
+                        })}
+                        placeholder="72"
+                        className="w-9 h-6 text-xs font-mono font-semibold tabular-nums text-right bg-transparent text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-none"
+                      />
+                      <span className="text-[9px] font-mono text-zinc-400 select-none">bpm</span>
+                    </div>
+                  </div>
+
+                  {/* Température */}
+                  <div
+                    className={`flex items-center justify-between rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50/70 dark:bg-zinc-950/50 px-2.5 py-1 transition-all duration-200 focus-within:border-emerald-600 focus-within:ring-2 focus-within:ring-emerald-600/15 ${
+                      highlightFields ? 'ring-2 ring-emerald-500/70 bg-emerald-500/5' : ''
+                    }`}
+                  >
+                    <div className="flex items-center gap-1 min-w-0">
+                      <span className="text-[10px] font-mono font-bold text-zinc-500 uppercase">Temp</span>
+                    </div>
+                    <div className="flex items-center gap-0.5">
+                      <input
+                        type="number"
+                        step="0.1"
+                        {...register('temperature')}
+                        placeholder="37.0"
+                        className="w-10 h-6 text-xs font-mono font-semibold tabular-nums text-right bg-transparent text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-none"
+                      />
+                      <span className="text-[9px] font-mono text-zinc-400 select-none">°C</span>
+                    </div>
+                  </div>
+
+                  {/* Glycémie */}
+                  <div
+                    className={`col-span-2 sm:col-span-1 flex items-center justify-between rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50/70 dark:bg-zinc-950/50 px-2.5 py-1 transition-all duration-200 focus-within:border-emerald-600 focus-within:ring-2 focus-within:ring-emerald-600/15 ${
+                      highlightFields ? 'ring-2 ring-emerald-500/70 bg-emerald-500/5' : ''
+                    }`}
+                  >
+                    <div className="flex items-center gap-1 min-w-0">
+                      <span className="text-[10px] font-mono font-bold text-zinc-500 uppercase">Glyc</span>
+                    </div>
+                    <div className="flex items-center gap-0.5">
+                      <input
+                        type="number"
+                        step="0.01"
+                        {...register('glycemia')}
+                        placeholder="0.95"
+                        className="w-10 h-6 text-xs font-mono font-semibold tabular-nums text-right bg-transparent text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-none"
+                      />
+                      <span className="text-[9px] font-mono text-zinc-400 select-none">g/L</span>
+                    </div>
+                  </div>
+                </div>
+
+                {errors.bloodPressure && (
+                  <p className="text-[9px] text-rose-500">{errors.bloodPressure.message}</p>
+                )}
+                {errors.weightKg && (
+                  <p className="text-[9px] text-rose-500">{errors.weightKg.message}</p>
+                )}
+                {errors.heartRateBpm && (
+                  <p className="text-[9px] text-rose-500">{errors.heartRateBpm.message}</p>
+                )}
               </div>
 
-              {/* Quick Add Button & Presets */}
-              <div className="space-y-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() =>
-                    append({
-                      medicationName: '',
-                      dosage: '1 cp 2 fois par jour',
-                      duration: '5 jours',
-                      instructions: '',
-                    })
-                  }
-                  className="w-full h-8 text-xs border-dashed border-zinc-300 dark:border-zinc-700 hover:border-zinc-500 text-zinc-700 dark:text-zinc-300 gap-1.5"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                  <span>Ajouter un médicament</span>
-                </Button>
+              {/* Motif de Consultation */}
+              <div>
+                <label className="block text-[11px] font-medium text-zinc-600 dark:text-zinc-400 mb-1">
+                  Motif de consultation *
+                </label>
+                <Input
+                  {...register('motif', { required: 'Le motif est obligatoire' })}
+                  placeholder="Ex: Douleurs abdominales aiguës, rhinopharyngite, contrôle TA…"
+                  className={`h-8 text-xs font-medium transition-all duration-300 ${
+                    highlightFields ? 'ring-2 ring-emerald-500/70 bg-emerald-500/5' : ''
+                  }`}
+                />
+                {errors.motif && (
+                  <p className="text-[10px] text-rose-500 mt-1">{errors.motif.message}</p>
+                )}
+              </div>
 
-                {/* Common Presets Badges */}
-                <div className="pt-1">
-                  <span className="text-[10px] text-zinc-400 uppercase font-mono block mb-1.5">
-                    Médicaments Fréquents (1-Click):
-                  </span>
+              {/* Observations Cliniques / Examen */}
+              <div>
+                <label className="block text-[11px] font-medium text-zinc-600 dark:text-zinc-400 mb-1">
+                  Observations Cliniques &amp; Anamnèse
+                </label>
+                <textarea
+                  {...register('clinicalNotes')}
+                  rows={6}
+                  placeholder="Examen physique: abdomen souple, absence de fièvre. Auscultation pulmonaire libre. Antécédents chirurgicaux non contributifs…"
+                  className={`w-full rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-2.5 text-xs text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-none focus:border-zinc-500 dark:focus:border-zinc-700 font-sans leading-relaxed resize-none transition-all duration-300 ${
+                    highlightFields ? 'ring-2 ring-emerald-500/70 bg-emerald-500/5' : ''
+                  }`}
+                />
+              </div>
+
+              {/* Diagnostic Retenu */}
+              <div>
+                <label className="block text-[11px] font-medium text-zinc-600 dark:text-zinc-400 mb-1">
+                  Diagnostic Médical Retenu
+                </label>
+                <Input
+                  {...register('diagnosis')}
+                  placeholder="Ex: Syndrome dyspeptique fonctionnel / Rhinopharyngite virale"
+                  className={`h-8 text-xs font-medium transition-all duration-300 ${
+                    highlightFields ? 'ring-2 ring-emerald-500/70 bg-emerald-500/5' : ''
+                  }`}
+                />
+              </div>
+            </form>
+          </div>
+
+          {/* ── Right Column: 3-Tab Speed Engine (7 cols) ── */}
+          <div className="lg:col-span-7 overflow-y-auto p-4 space-y-3.5 bg-slate-50/50 dark:bg-zinc-900/20 pb-24">
+            {/* ── Speed Engine Main Tab Navigation ── */}
+            <div className="flex items-center justify-between pb-2 border-b border-zinc-200 dark:border-zinc-800">
+              <div className="flex items-center gap-1.5 p-1 bg-zinc-200/70 dark:bg-zinc-800/60 rounded-lg">
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('ORDONNANCE')}
+                  className={`flex items-center gap-1.5 py-1.5 px-3 rounded-md text-xs font-semibold transition-all cursor-pointer ${
+                    activeTab === 'ORDONNANCE'
+                      ? 'bg-white dark:bg-zinc-950 text-emerald-600 dark:text-emerald-400 shadow-2xs'
+                      : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100'
+                  }`}
+                >
+                  <Pill className="w-3.5 h-3.5" />
+                  <span>Ordonnance (Rx)</span>
+                  <Badge variant="secondary" className="text-[10px] py-0 px-1 font-mono">
+                    {fields.length}
+                  </Badge>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('BILANS')}
+                  className={`flex items-center gap-1.5 py-1.5 px-3 rounded-md text-xs font-semibold transition-all cursor-pointer ${
+                    activeTab === 'BILANS'
+                      ? 'bg-white dark:bg-zinc-950 text-sky-600 dark:text-sky-400 shadow-2xs'
+                      : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100'
+                  }`}
+                >
+                  <TestTube2 className="w-3.5 h-3.5" />
+                  <span>Demandes de Bilans</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('CERTIFICATS')}
+                  className={`flex items-center gap-1.5 py-1.5 px-3 rounded-md text-xs font-semibold transition-all cursor-pointer ${
+                    activeTab === 'CERTIFICATS'
+                      ? 'bg-white dark:bg-zinc-950 text-purple-600 dark:text-purple-400 shadow-2xs'
+                      : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100'
+                  }`}
+                >
+                  <Award className="w-3.5 h-3.5" />
+                  <span>Certificats Médicaux</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('DOCUMENTS')}
+                  className={`flex items-center gap-1.5 py-1.5 px-3 rounded-md text-xs font-semibold transition-all cursor-pointer ${
+                    activeTab === 'DOCUMENTS'
+                      ? 'bg-white dark:bg-zinc-950 text-emerald-600 dark:text-emerald-400 shadow-2xs'
+                      : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100'
+                  }`}
+                >
+                  <FolderLock className="w-3.5 h-3.5" />
+                  <span>Imagerie &amp; Documents</span>
+                </button>
+              </div>
+
+              {activeTab === 'ORDONNANCE' && (
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      if (!selectedPatient) {
+                        toast.info("Sélectionnez d'abord un patient pour consulter son historique.")
+                        return
+                      }
+                      setIsHistoryOpen(true)
+                    }}
+                    className="h-7 text-[11px] gap-1 text-emerald-700 dark:text-emerald-400 border-emerald-300 dark:border-emerald-800 bg-emerald-50/50 dark:bg-emerald-950/30 hover:bg-emerald-100 cursor-pointer"
+                    title="Renouveler une ordonnance passée de ce patient"
+                  >
+                    <History className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+                    <span>Renouveler</span>
+                  </Button>
+
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setIsSaveTemplateOpen(true)}
+                    className="h-7 text-[11px] gap-1 text-zinc-700 dark:text-zinc-300 border-zinc-300 dark:border-zinc-700 cursor-pointer"
+                    title="Enregistrer l'ordonnance actuelle comme modèle type"
+                  >
+                    <BookmarkPlus className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+                    <span>Sauvegarder</span>
+                  </Button>
+                </div>
+              )}
+            </div>
+
+            {/* ════ TAB 1: ORDONNANCE (Rx) ════ */}
+            {activeTab === 'ORDONNANCE' && (
+              <div className="space-y-3.5">
+                {/* ── 1-Click Protocol Templates Injector Bar ── */}
+                <div className="p-2.5 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 shadow-2xs space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-mono text-zinc-500 uppercase flex items-center gap-1">
+                      <Zap className="w-3 h-3 text-amber-500 fill-amber-500" />
+                      Protocoles &amp; Ordonnances Types (1-Click) :
+                    </span>
+                    <span className="text-[9px] font-mono text-zinc-400">
+                      {templates.length} modèle(s) disponible(s)
+                    </span>
+                  </div>
+
                   <div className="flex flex-wrap gap-1.5">
-                    {COMMON_MEDICATIONS.slice(0, 8).map((med) => (
+                    {templates.map((tpl) => (
                       <button
-                        key={med}
+                        key={tpl.id}
                         type="button"
-                        onClick={() =>
-                          append({
-                            medicationName: med,
-                            dosage: '1 cp matin et soir',
-                            duration: '7 jours',
-                            instructions: 'Au cours des repas',
-                          })
-                        }
-                        className="text-[10px] font-mono px-2 py-0.5 rounded border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 hover:border-zinc-400 dark:hover:border-zinc-600 transition-colors cursor-pointer"
+                        onClick={() => handleApplyTemplate(tpl)}
+                        className="text-[11px] font-medium px-2.5 py-1 rounded-md border border-zinc-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-900 text-zinc-800 dark:text-zinc-200 hover:border-emerald-500 hover:bg-emerald-50/50 dark:hover:bg-emerald-950/30 hover:text-emerald-700 dark:hover:text-emerald-300 transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs group active:scale-95"
                       >
-                        + {med}
+                        <Sparkles className="w-3 h-3 text-amber-500 group-hover:text-emerald-600 transition-colors" />
+                        <span>{tpl.title}</span>
+                        <span className="text-[9px] font-mono text-zinc-400">({tpl.items.length})</span>
                       </button>
                     ))}
                   </div>
                 </div>
-              </div>
 
-              {/* Prescription General Notes / Recommandations */}
-              <div className="pt-2 border-t border-zinc-200 dark:border-zinc-800">
-                <label className="block text-[11px] font-medium text-zinc-600 dark:text-zinc-400 mb-1">
-                  Recommandations hygiéno-diététiques / Mentions ordonnance
-                </label>
-                <textarea
-                  {...register('prescriptionNotes')}
-                  rows={3}
-                  placeholder="Conseils de repos, hydratation, contrôle de la tension dans 15 jours…"
-                  className="w-full rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-2 text-xs text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-none focus:border-zinc-500 resize-none font-sans"
+                {/* ── Choreographed Dynamic Medication Rows ── */}
+                <div className="space-y-2.5">
+                  <AnimatePresence initial={false}>
+                    {fields.map((field, index) => (
+                      <motion.div
+                        key={field.id}
+                        initial={{ opacity: 0, y: -8, scale: 0.99 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.97, height: 0 }}
+                        transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+                        className={`p-3 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 shadow-2xs space-y-2 group transition-all duration-200 ${
+                          highlightFields ? 'ring-2 ring-emerald-500/70 bg-emerald-500/5' : ''
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono text-[10px] font-semibold text-zinc-500">
+                              Ligne #{index + 1}
+                            </span>
+                            {matchedCatalogMap[index] && (
+                              <Badge className="bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800 text-[9px] py-0 px-1 font-mono">
+                                Catalogue Maroc
+                              </Badge>
+                            )}
+                          </div>
+                          {fields.length > 1 && (
+                            <button
+                              type="button"
+                              onClick={() => remove(index)}
+                              className="p-1 rounded text-zinc-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
+                              title="Supprimer la ligne"
+                            >
+                              <Trash2 className="w-3.5 h-3.5 stroke-[1.5]" />
+                            </button>
+                          )}
+                        </div>
+
+                        {/* Medication Combobox (Moroccan Catalog Autocomplete) */}
+                        <div>
+                          <MedicationCombobox
+                            value={watch(`items.${index}.medicationName`) || ''}
+                            onChange={(val) => setValue(`items.${index}.medicationName`, val)}
+                            onSelectMedication={(item) => {
+                              setValue(`items.${index}.medicationName`, item.brandName)
+                              if (item.defaultPosology) {
+                                setValue(`items.${index}.dosage`, item.defaultPosology)
+                              }
+                            }}
+                          />
+                        </div>
+
+                        {/* Dosage & Duration Grid */}
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <Input
+                              {...register(`items.${index}.dosage` as const, { required: true })}
+                              placeholder="Posologie (ex: 1 cp 3x/jour)"
+                              className="h-7 text-xs font-mono"
+                            />
+                          </div>
+                          <div>
+                            <Input
+                              {...register(`items.${index}.duration` as const, { required: true })}
+                              placeholder="Durée (ex: 7 jours)"
+                              className="h-7 text-xs font-mono"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Specific Instructions */}
+                        <div>
+                          <Input
+                            {...register(`items.${index}.instructions` as const)}
+                            placeholder="Conseils de prise (ex: Pendant les repas, espacer de 6h)"
+                            className="h-7 text-[11px] text-zinc-600 dark:text-zinc-400"
+                          />
+                        </div>
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
+                </div>
+
+                {/* Quick Add Button & Presets */}
+                <div className="space-y-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      append({
+                        medicationName: '',
+                        dosage: '1 cp 2 fois par jour',
+                        duration: '5 jours',
+                        instructions: '',
+                      })
+                    }
+                    className="w-full h-8 text-xs border-dashed border-zinc-300 dark:border-zinc-700 hover:border-zinc-500 text-zinc-700 dark:text-zinc-300 gap-1.5 cursor-pointer"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Ajouter un médicament</span>
+                  </Button>
+
+                  {/* Common Presets Badges */}
+                  <div className="pt-1">
+                    <span className="text-[10px] text-zinc-400 uppercase font-mono block mb-1.5">
+                      Médicaments Fréquents (1-Click):
+                    </span>
+                    <div className="flex flex-wrap gap-1.5">
+                      {COMMON_MEDICATIONS.slice(0, 8).map((med) => (
+                        <button
+                          key={med}
+                          type="button"
+                          onClick={() =>
+                            append({
+                              medicationName: med,
+                              dosage: '1 cp matin et soir',
+                              duration: '7 jours',
+                              instructions: 'Au cours des repas',
+                            })
+                          }
+                          className="text-[10px] font-mono px-2 py-0.5 rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 hover:border-emerald-500 hover:text-emerald-700 dark:hover:text-emerald-400 transition-all active:scale-95 cursor-pointer shadow-2xs"
+                        >
+                          + {med}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Prescription General Notes / Recommandations */}
+                <div className="pt-2 border-t border-zinc-200 dark:border-zinc-800">
+                  <label className="block text-[11px] font-medium text-zinc-600 dark:text-zinc-400 mb-1">
+                    Recommandations hygiéno-diététiques / Mentions ordonnance
+                  </label>
+                  <textarea
+                    {...register('prescriptionNotes')}
+                    rows={3}
+                    placeholder="Conseils de repos, hydratation, contrôle de la tension dans 15 jours…"
+                    className="w-full rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-2 text-xs text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-none focus:border-zinc-500 resize-none font-sans"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* ════ TAB 2: DEMANDES DE BILANS ════ */}
+            {activeTab === 'BILANS' && (
+              <BilansTab
+                consultationId={lastSavedConsultationId || undefined}
+                patientName={patientFullName}
+              />
+            )}
+
+            {/* ════ TAB 3: CERTIFICATS MÉDICAUX ════ */}
+            {activeTab === 'CERTIFICATS' && (
+              <CertificatsTab
+                consultationId={lastSavedConsultationId || undefined}
+                patientName={patientFullName}
+              />
+            )}
+
+            {/* ════ TAB 4: IMAGERIE & DOCUMENTS MÉDICAUX (COFFRE-FORT) ════ */}
+            {activeTab === 'DOCUMENTS' && (
+              <div className="h-[calc(100vh-210px)] flex flex-col">
+                <PatientDocumentVault
+                  patientId={selectedPatientId}
+                  consultationId={lastSavedConsultationId || undefined}
+                  onPreviewDocument={(doc) => setSplitPreviewDoc(doc)}
                 />
               </div>
-            </div>
-          )}
+            )}
+          </div>
+        </div>
 
-          {/* ════ TAB 2: DEMANDES DE BILANS ════ */}
-          {activeTab === 'BILANS' && (
-            <BilansTab
-              consultationId={lastSavedConsultationId || undefined}
-              patientName={patientFullName}
-            />
-          )}
+        {/* ── Floating High-Contrast Command Dock ── */}
+        <div className="sticky bottom-3 z-30 mx-auto w-[calc(100%-1.5rem)] max-w-2xl px-4 py-2 bg-zinc-950/95 dark:bg-zinc-900/95 backdrop-blur-md rounded-xl border border-zinc-800 shadow-2xl flex items-center justify-between gap-3 text-white">
+          <div className="flex items-center gap-2.5 text-xs min-w-0">
+            <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse flex-shrink-0" />
+            <span className="font-medium text-zinc-300 truncate max-w-[150px] sm:max-w-[200px]">
+              {selectedPatient ? patientFullName : 'Patient non sélectionné'}
+            </span>
+            <span className="text-zinc-600 font-mono text-[11px]">·</span>
+            <span className="font-mono text-[11px] text-zinc-400 flex-shrink-0">
+              {fields.length} Rx
+            </span>
+            {lastSavedConsultationId && (
+              <Badge className="hidden sm:inline-flex bg-emerald-950/80 text-emerald-300 border-emerald-800 text-[10px] py-0 font-mono">
+                Enregistré
+              </Badge>
+            )}
+          </div>
 
-          {/* ════ TAB 3: CERTIFICATS MÉDICAUX ════ */}
-          {activeTab === 'CERTIFICATS' && (
-            <CertificatsTab
-              consultationId={lastSavedConsultationId || undefined}
-              patientName={patientFullName}
-            />
-          )}
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={handlePrintOrdonnance}
+              className="h-8 gap-1.5 text-xs text-zinc-300 hover:text-white hover:bg-zinc-800/80 cursor-pointer"
+              title="Imprimer l'ordonnance en PDF officiel signé"
+            >
+              <Printer className="w-3.5 h-3.5 text-zinc-400" />
+              <span className="hidden sm:inline">Imprimer PDF</span>
+            </Button>
 
-          {/* ════ TAB 4: IMAGERIE & DOCUMENTS MÉDICAUX (COFFRE-FORT) ════ */}
-          {activeTab === 'DOCUMENTS' && (
-            <div className="h-[calc(100vh-210px)] flex flex-col">
-              <PatientDocumentVault
-                patientId={selectedPatientId}
-                consultationId={lastSavedConsultationId || undefined}
-                onPreviewDocument={(doc) => setSplitPreviewDoc(doc)}
-              />
-            </div>
-          )}
+            <Button
+              form="consultation-form"
+              type="submit"
+              size="sm"
+              disabled={createConsultation.isPending}
+              className="h-8 gap-1.5 text-xs bg-emerald-600 hover:bg-emerald-500 text-white font-semibold cursor-pointer shadow-sm transition-all active:scale-[0.98]"
+            >
+              {createConsultation.isPending ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  <span>Enregistrement…</span>
+                </>
+              ) : (
+                <>
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  <span>Terminer consultation</span>
+                </>
+              )}
+            </Button>
+          </div>
         </div>
       </div>
 

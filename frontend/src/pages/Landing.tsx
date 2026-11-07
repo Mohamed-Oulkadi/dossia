@@ -15,6 +15,7 @@ import { useAuthStore } from '@/store/useAuthStore'
 import { useAppStore } from '@/store/useAppStore'
 import { DossiaLogo } from '@/components/ui/DossiaLogo'
 import { RoiCalculator } from '@/components/landing/RoiCalculator'
+import { DoctorWorkspaceStageDemo } from '@/components/marketing/DoctorWorkspaceStageDemo'
 import {
   FileText,
   ShieldCheck,
@@ -217,6 +218,11 @@ export default function Landing() {
               <span>{role === 'SUPER_ADMIN' ? 'Espace Super Admin' : 'Voir le Produit'}</span>
               <ChevronRight className="w-3.5 h-3.5 stroke-[1.5]" />
             </Link>
+          </motion.div>
+
+          {/* ── Stageshow Interactive Faux Product Stage Demo ── */}
+          <motion.div variants={itemVariants} className="w-full pt-4">
+            <DoctorWorkspaceStageDemo />
           </motion.div>
 
           {/* Moroccan Trust Row */}

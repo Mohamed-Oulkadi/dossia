@@ -31,6 +31,7 @@ d:/My Projects/Dossia/
 ├── ai/                     # Clinical Transcription, Darija/French NLP, and Assistant Agents
 ├── AGENTS.md               # Master Monorepo Governance (This File)
 ├── .agents/skills/design-taste-frontend/ # Leonxlnx/taste-skill anti-slop frontend art direction
+├── .agents/skills/stageshow/             # Faux product UI, animated demos & interactive stagecraft
 └── skills/                 # Universal Cross-Cutting Knowledge Base
     ├── 01-premium-ui-craft.md          # UI/UX design tokens & anti-pattern rules (Frontend)
     ├── 02-moroccan-domain.md           # Moroccan healthcare business logic & regulations (All)
@@ -44,7 +45,7 @@ d:/My Projects/Dossia/
 
 | Service | Technology Foundation | Primary Responsibilities | Mandatory Governance |
 | :--- | :--- | :--- | :--- |
-| **`frontend/`** | React 18, TypeScript, Tailwind CSS v4, Zustand, Radix UI, Three.js | Dashboard layout, Smart Agenda, Command Palette, Modals, dual-theme rendering | [`skills/01-premium-ui-craft.md`](file:///d:/My%20Projects/Dossia/skills/01-premium-ui-craft.md), [`.agents/skills/design-taste-frontend/SKILL.md`](file:///d:/My%20Projects/Dossia/.agents/skills/design-taste-frontend/SKILL.md) |
+| **`frontend/`** | React 18, TypeScript, Tailwind CSS v4, Zustand, Radix UI, Three.js, Framer Motion | Dashboard layout, Smart Agenda, Command Palette, Modals, dual-theme rendering | [`skills/01-premium-ui-craft.md`](file:///d:/My%20Projects/Dossia/skills/01-premium-ui-craft.md), [`.agents/skills/design-taste-frontend/SKILL.md`](file:///d:/My%20Projects/Dossia/.agents/skills/design-taste-frontend/SKILL.md), [`.agents/skills/stageshow/SKILL.md`](file:///d:/My%20Projects/Dossia/.agents/skills/stageshow/SKILL.md) |
 | **`backend/`** | Java 21+, Spring Boot, Spring Modulith, PostgreSQL, Flyway | Bounded domain modules (patient, agenda, billing, cnss), JWT security, CNDP audit | [`backend/AGENTS.md`](file:///d:/My%20Projects/Dossia/backend/AGENTS.md), [`skills/04-spring-modulith-craft.md`](file:///d:/My%20Projects/Dossia/skills/04-spring-modulith-craft.md), [`skills/05-backend-moroccan-domain.md`](file:///d:/My%20Projects/Dossia/skills/05-backend-moroccan-domain.md) |
 | **`ai/`** | Python, Whisper, LLM inference pipelines, LangChain | Voice-to-text clinical notes, Darija-to-French medical transcription, extraction | [`skills/02-moroccan-domain.md`](file:///d:/My%20Projects/Dossia/skills/02-moroccan-domain.md) |
 | **`docs/`** | Python, `python-docx` | Living master architectural specification (`Dossia_Architecture_Master_Spec.docx`) | [`skills/06-living-docx-documentation.md`](file:///d:/My%20Projects/Dossia/skills/06-living-docx-documentation.md) |
@@ -64,16 +65,19 @@ Before proposing plans, creating files, or modifying code in any folder, every A
    - Agents working in `backend/` must provide typed contracts (OpenAPI / tRPC schemas) matching the exact frontend expectations.
    - Agents working in `ai/` must ensure complete patient data confidentiality in accordance with Morocco's **CNDP Law 09-08**.
 
-3. **Frontend Craft & Taste-Skill Governance (`Agent Frontend-Craft`)**:
-   - `Agent Frontend-Craft` automatically enforces `Leonxlnx/taste-skill` ([`.agents/skills/design-taste-frontend/SKILL.md`](file:///d:/My%20Projects/Dossia/.agents/skills/design-taste-frontend/SKILL.md)) alongside [`skills/01-premium-ui-craft.md`](file:///d:/My%20Projects/Dossia/skills/01-premium-ui-craft.md).
+3. **Frontend Craft, Taste-Skill & Stageshow Governance (`Agent Frontend-Craft`)**:
+   - `Agent Frontend-Craft` automatically enforces both `Leonxlnx/taste-skill` ([`.agents/skills/design-taste-frontend/SKILL.md`](file:///d:/My%20Projects/Dossia/.agents/skills/design-taste-frontend/SKILL.md)) and `Benji Taylor's stageshow` ([`.agents/skills/stageshow/SKILL.md`](file:///d:/My%20Projects/Dossia/.agents/skills/stageshow/SKILL.md)) alongside [`skills/01-premium-ui-craft.md`](file:///d:/My%20Projects/Dossia/skills/01-premium-ui-craft.md).
+   - **Division of Labor**:
+     - **`design-taste-frontend`**: Governs global layout architecture, Dual-Mode Dials, Daylight-First surfaces, structural `divide-y` layouts, and `tabular-nums font-mono` discipline.
+     - **`stageshow`**: Governs high-craft interactive product demos on marketing/onboarding views AND micro-staged component choreography (tight framing, deliberate motion timing, tactile pill transitions, and zero decorative clutter) inside core clinical focal points.
    - **Stack Constraint**: Dossia is a pure **React 18 + Vite + TypeScript SPA** (not Next.js). Disregard Next.js Server Component conventions (e.g., `'use client'` pragmas or App Router server actions).
    - **Dual-Mode Dials**:
      - **Public Marketing Pages** (`/frontend/src/pages/Landing.tsx`):
        - Dials: `DESIGN_VARIANCE=7`, `MOTION_INTENSITY=6`, `VISUAL_DENSITY=4`.
-       - Directives: Asymmetric hero compositions, Geist/Satoshi typography, smooth spring physics, editorial art direction, no cookie-cutter 3-column equal feature cards.
+       - Directives: Asymmetric hero compositions, Geist/Satoshi typography, smooth spring physics, editorial art direction, interactive faux UI stageshow demos, no cookie-cutter 3-column equal feature cards.
      - **Clinical & Financial Workspaces** (`/app/*` and `/admin/*`):
        - Dials: `DESIGN_VARIANCE=3`, `MOTION_INTENSITY=3`, `VISUAL_DENSITY=9`.
-       - Directives: **Dashboard Hardening mode**: Banish bloated card containers in favor of structural `divide-y`, hairline `border-zinc-200 dark:border-zinc-800`, strict `tabular-nums font-mono` for MAD currency and vitals, and Deep Zinc (`#09090B`) with Emerald 600/400 (`#059669`) accents.
+       - Directives: **Dashboard Hardening & Instrument Stagecraft**: Banish bloated card containers in favor of structural `divide-y`, hairline `border-zinc-200 dark:border-zinc-800`, strict `tabular-nums font-mono` for MAD currency and vitals, Deep Zinc (`#09090B`) with Emerald 600/400 (`#059669`) accents, elevated inset stages, tactile instrument chips, and deliberate spring choreographies for row additions.
 
 4. **Code Hygiene & Verification**:
    - Zero tolerance for placeholder logic, unhandled promises, or mock data that fails Moroccan domain validation rules.

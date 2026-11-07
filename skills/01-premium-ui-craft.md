@@ -1,7 +1,7 @@
 # Skill: Premium UI Craft & Clinical Design System
 
 > **Scope**: Governs all user interface design, styling, and ergonomics in `frontend/`.  
-> **Art Direction Partner**: Strictly integrated with `Leonxlnx/taste-skill` ([`.agents/skills/design-taste-frontend/SKILL.md`](file:///d:/My%20Projects/Dossia/.agents/skills/design-taste-frontend/SKILL.md)).  
+> **Art Direction & Stagecraft Partners**: Strictly integrated with `Leonxlnx/taste-skill` ([`.agents/skills/design-taste-frontend/SKILL.md`](file:///d:/My%20Projects/Dossia/.agents/skills/design-taste-frontend/SKILL.md)) and `Benji Taylor's stageshow` ([`.agents/skills/stageshow/SKILL.md`](file:///d:/My%20Projects/Dossia/.agents/skills/stageshow/SKILL.md)).  
 > **Target Aesthetic**: Executive, surgical, high-density clinical SaaS.
 
 ---
@@ -121,3 +121,30 @@ When operating in `/app/*` and `/admin/*`:
 3. **Hairline Precision**: Demarcate boundaries exclusively with hairline `border-zinc-200 dark:border-zinc-800`.
 4. **Mandatory Monospace**: All Moroccan Dirham amounts (e.g., `350.00 MAD`), appointment hours (`09:30`), phone numbers (`+212...`), CINs, and vitals (`120/80 mmHg`, `72 bpm`) must be wrapped in `tabular-nums font-mono`.
 5. **Color Discipline**: Strict adherence to Deep Zinc canvas (`#09090B`), Zinc 950 surfaces (`#111118`), and Emerald (`#059669`) for primary clinical calls to action.
+
+---
+
+## 7. Stageshow Stagecraft & Micro-Choreography Standards
+
+`Agent Frontend-Craft` integrates `Benji Taylor's stageshow` ([`.agents/skills/stageshow/SKILL.md`](file:///d:/My%20Projects/Dossia/.agents/skills/stageshow/SKILL.md)) for intentional focal framing, believability, and caused micro-motion:
+
+### 1. Division of Labor
+- **`design-taste-frontend`**: Macro-level layout structure, Dual-Mode Dials, Daylight-First surfaces, hairline zinc borders, structural `divide-y`, and strict numeric monospace discipline.
+- **`stageshow`**: Micro-level stagecraft, tightly framed focal containers, tactile hardware-like instruments, choreographed transitions (every motion has a cause), and anchored command docks.
+
+### 2. Clinical Stagecraft Directives
+1. **The Inset Stage**:
+   - Do not let complex clinical workflows float on arbitrary edge-to-edge screens. Frame them inside a deliberate stage container:
+     - Outer canvas: `bg-zinc-100/70 dark:bg-zinc-950 p-2 sm:p-4`.
+     - Inner Stage: `bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200/80 dark:border-zinc-800 shadow-xs`.
+   - Crown the stage with an ultra-focused **Patient Context Ribbon** (identity, age, mutuelle badge, time slot, and medical history drawer trigger) with zero wasted padding.
+2. **Hardware-Like Instrument Inputs**:
+   - Vitals, lab measurements, and physiological constants must be staged as horizontal clusters of compact, tactile chips.
+   - Fixed uppercase mono label, right-aligned unit indicator, `tabular-nums font-mono` for all numeric values.
+   - Tactile focus ring: `focus-within:border-emerald-600 focus-within:ring-2 focus-within:ring-emerald-600/15` providing a responsive hardware feel.
+3. **Choreographed State Transitions**:
+   - Dynamic rows (medication items, lab tests, certificates) must use `framer-motion` `<AnimatePresence>` for spring arrivals (`initial={{ opacity: 0, y: -8, scale: 0.99 }}` to `{ opacity: 1, y: 0, scale: 1 }`).
+   - Every motion must have a clear cause; never animate arbitrarily or cause layout jumps on surrounding panes.
+4. **Floating High-Contrast Command Dock**:
+   - Pin primary lifecycle actions (`Imprimer PDF`, `Terminer la consultation`) into a floating command dock (`sticky bottom-4 z-20 mx-auto max-w-3xl rounded-xl bg-zinc-950/95 backdrop-blur-md border border-zinc-800 shadow-2xl`) ensuring unambiguous visual affordance.
+
