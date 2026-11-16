@@ -77,7 +77,7 @@ SYSTEM_CONTAINERS = [
     {
         "component": "Nginx Reverse Proxy",
         "tech": "Nginx 1.25 Alpine, SSL Termination, SSE Tuning",
-        "role": "Edge gateway enforcing OWASP security headers, CNDP X-Real-IP audit forwarding, 10MB medical document uploads, and unbuffered SSE event streaming."
+        "role": "Edge gateway enforcing OWASP security headers, CNDP X-Real-IP audit forwarding, auth rate-limiting (10 req/min on /api/v1/auth/login), 10MB medical document uploads, and unbuffered SSE event streaming."
     },
     {
         "component": "MinIO S3 Object Storage",
@@ -93,7 +93,7 @@ BOUNDED_CONTEXTS = [
         "description": "Manages user credentials, BCrypt password hashing, JWT token issuance, and multi-tenant clinic resolution via SecurityUtils. ThreadLocal clinic isolation ensures zero cross-practice data leakage.",
         "entities": ["users", "clinics"],
         "events": ["UserAuthenticatedEvent", "ClinicSubscriptionToggledEvent"],
-        "services": ["AuthService", "CustomUserDetailsService", "JwtTokenProvider", "SecurityUtils"]
+        "services": ["AuthService", "CustomUserDetailsService", "JwtTokenProvider", "SecurityUtils", "LoginRateLimiterService"]
     },
     {
         "name": "com.dossia.backend.admin",
@@ -464,6 +464,13 @@ CHANGELOG_ENTRIES = [
         "modules": "frontend:marketing, frontend:landing, skills:01-premium-ui-craft",
         "migrations": "N/A (Marketing Faux UI Stage Demo)",
         "summary": "Built DoctorWorkspaceStageDemo (~760x410) adhering strictly to stageshow framing, single signature action focus, and caused motion rules. Implemented a looping 4-beat choreography (6.5s cycle) with an authentic dark SVG cursor: Beat 1 moves to Voice Scribe mic button and activates live French audio waveform with transcript badge for Youssef Benali (34 ans • CNOPS); Beat 2 snaps vitals (120/80 mmHg, 74 kg, 78 bpm) and injects Augmentin 1g and Doliprane 1000mg with staggered spring arrivals; Beat 3 clicks the floating command dock's 'Imprimer l'Ordonnance (PDF)' button and slides up a miniature Moroccan A4 Ordonnance satellite card complete with INPE: 987654321 and circular Cachet stamp; Beat 4 holds the completed payoff for 1.3s before seamless reset. Embedded cleanly into Landing.tsx hero section."
+    },
+    {
+        "phase": "Phase 20: Authentication Security Hardening (SEC-03 Rate-Limiting & Brute-Force Lockout)",
+        "date": "November 2026",
+        "modules": "backend:auth, docker:nginx, backend:common",
+        "migrations": "N/A (In-Memory Defense-in-Depth & Nginx Rate Limiting)",
+        "summary": "Resolved vulnerability SEC-03 (No Rate-Limiting or Brute-Force Protection on Login). Implemented two-tier defense-in-depth: (1) Nginx reverse proxy rate limiting zone auth_login_limit (10 req/min per binary client IP, burst=5, status 429) on /api/v1/auth/login with X-Real-IP and X-Forwarded-For audit headers. (2) Spring Boot LoginRateLimiterService providing sliding-window IP flooding protection (10 req/min -> HTTP 429 LoginRateLimitExceededException) and account-level brute-force lockout (5 consecutive failed attempts -> HTTP 423 AccountLockedException for 15 minutes with dynamic remaining seconds countdown). Added GlobalExceptionHandler RFC 7807 ProblemDetail mappings for 429, 423, 401 BadCredentialsException, and 403 DisabledException. Full unit and integration test coverage verifying IP isolation, account lockout, and counter reset on successful authentication."
     }
 ]
 

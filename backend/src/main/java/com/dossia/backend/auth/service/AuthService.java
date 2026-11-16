@@ -10,6 +10,7 @@ import com.dossia.backend.auth.dto.UserProfileResponse;
 import com.dossia.backend.auth.repository.ClinicRepository;
 import com.dossia.backend.auth.repository.UserRepository;
 import com.dossia.backend.auth.security.JwtService;
+import com.dossia.backend.auth.security.LoginRateLimiterService;
 import com.dossia.backend.auth.security.UserPrincipal;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,13 +31,30 @@ public class AuthService {
     private final ClinicRepository clinicRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final LoginRateLimiterService loginRateLimiterService;
 
     @Transactional(readOnly = true)
     public AuthResponse login(AuthRequest request) {
+        return login(request, "127.0.0.1");
+    }
+
+    @Transactional(readOnly = true)
+    public AuthResponse login(AuthRequest request, String clientIp) {
+        // 1. IP Flooding Protection (SEC-03)
+        loginRateLimiterService.checkIpRateLimit(clientIp);
+
+        // 2. Account Brute-Force Lockout Check (SEC-03)
+        loginRateLimiterService.checkAccountLock(request.email());
+
         User user = userRepository.findByEmail(request.email().trim().toLowerCase())
-                .orElseThrow(() -> new BadCredentialsException("Adresse email ou mot de passe incorrect."));
+                .orElseGet(() -> {
+                    // Record failure against unknown emails to prevent username enumeration timing attacks
+                    loginRateLimiterService.recordFailedAttempt(request.email(), clientIp);
+                    throw new BadCredentialsException("Adresse email ou mot de passe incorrect.");
+                });
 
         if (!passwordEncoder.matches(request.password(), user.getPasswordHash())) {
+            loginRateLimiterService.recordFailedAttempt(request.email(), clientIp);
             throw new BadCredentialsException("Adresse email ou mot de passe incorrect.");
         }
 
@@ -56,6 +74,9 @@ public class AuthService {
                 clinicName = clinic.getName();
             }
         }
+
+        // Authentication succeeded: reset any previous failed attempts
+        loginRateLimiterService.recordSuccessfulLogin(request.email(), clientIp);
 
         UserPrincipal principal = UserPrincipal.from(user);
         String token = jwtService.generateToken(principal);

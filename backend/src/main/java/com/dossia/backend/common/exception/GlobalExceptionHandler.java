@@ -60,6 +60,67 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return problem;
     }
 
+    @ExceptionHandler(LoginRateLimitExceededException.class)
+    public ProblemDetail handleLoginRateLimitExceeded(LoginRateLimitExceededException ex) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+                HttpStatus.TOO_MANY_REQUESTS,
+                ex.getMessage()
+        );
+        problem.setTitle("Limite de Requêtes Dépassée");
+        problem.setType(URI.create("https://dossia.ma/errors/rate-limit-exceeded"));
+        problem.setProperty("timestamp", Instant.now());
+        return problem;
+    }
+
+    @ExceptionHandler(AccountLockedException.class)
+    public ProblemDetail handleAccountLocked(AccountLockedException ex) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+                HttpStatus.LOCKED,
+                ex.getMessage()
+        );
+        problem.setTitle("Compte Médical Verrouillé");
+        problem.setType(URI.create("https://dossia.ma/errors/account-locked"));
+        problem.setProperty("remainingSeconds", ex.getRemainingSeconds());
+        problem.setProperty("timestamp", Instant.now());
+        return problem;
+    }
+
+    @ExceptionHandler(org.springframework.security.authentication.BadCredentialsException.class)
+    public ProblemDetail handleBadCredentials(org.springframework.security.authentication.BadCredentialsException ex) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+                HttpStatus.UNAUTHORIZED,
+                ex.getMessage() != null ? ex.getMessage() : "Adresse email ou mot de passe incorrect."
+        );
+        problem.setTitle("Identifiants Invalides");
+        problem.setType(URI.create("https://dossia.ma/errors/bad-credentials"));
+        problem.setProperty("timestamp", Instant.now());
+        return problem;
+    }
+
+    @ExceptionHandler(org.springframework.security.authentication.DisabledException.class)
+    public ProblemDetail handleAccountDisabled(org.springframework.security.authentication.DisabledException ex) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+                HttpStatus.FORBIDDEN,
+                ex.getMessage()
+        );
+        problem.setTitle("Compte Utilisateur Désactivé");
+        problem.setType(URI.create("https://dossia.ma/errors/account-disabled"));
+        problem.setProperty("timestamp", Instant.now());
+        return problem;
+    }
+
+    @ExceptionHandler(org.springframework.security.authentication.LockedException.class)
+    public ProblemDetail handleClinicLocked(org.springframework.security.authentication.LockedException ex) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+                HttpStatus.LOCKED,
+                ex.getMessage()
+        );
+        problem.setTitle("Établissement Médical Suspendu");
+        problem.setType(URI.create("https://dossia.ma/errors/clinic-suspended"));
+        problem.setProperty("timestamp", Instant.now());
+        return problem;
+    }
+
     @Override
     protected ResponseEntity<Object> handleMaxUploadSizeExceededException(
             org.springframework.web.multipart.MaxUploadSizeExceededException ex,
