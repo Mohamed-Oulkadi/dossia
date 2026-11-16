@@ -83,6 +83,11 @@ SYSTEM_CONTAINERS = [
         "component": "MinIO S3 Object Storage",
         "tech": "MinIO S3 API (quay.io/minio/minio:latest), Internal Bridge (backend-net), 10MB Multipart Uploads",
         "role": "100% on-premise Moroccan medical document vault. Enforces multi-tenant namespace (clinics/{clinic_id}/patients/{patient_id}/*) with zero public port exposure; all binary streaming is mediated via Spring Boot with CNDP Loi 09-08 role access controls."
+    },
+    {
+        "component": "HashiCorp Vault Community Edition",
+        "tech": "HashiCorp Vault 1.15.6 Alpine, KV v2 Secret Engine, Spring EnvironmentPostProcessor",
+        "role": "Centralized encrypted secrets management for PostgreSQL credentials, MinIO S3 access keys, JWT HMAC signing keys, and AI provider tokens. Completely eliminates hardcoded plaintext credentials (SEC-01) with fail-safe local development fallback."
     }
 ]
 
@@ -471,6 +476,13 @@ CHANGELOG_ENTRIES = [
         "modules": "backend:auth, docker:nginx, backend:common",
         "migrations": "N/A (In-Memory Defense-in-Depth & Nginx Rate Limiting)",
         "summary": "Resolved vulnerability SEC-03 (No Rate-Limiting or Brute-Force Protection on Login). Implemented two-tier defense-in-depth: (1) Nginx reverse proxy rate limiting zone auth_login_limit (10 req/min per binary client IP, burst=5, status 429) on /api/v1/auth/login with X-Real-IP and X-Forwarded-For audit headers. (2) Spring Boot LoginRateLimiterService providing sliding-window IP flooding protection (10 req/min -> HTTP 429 LoginRateLimitExceededException) and account-level brute-force lockout (5 consecutive failed attempts -> HTTP 423 AccountLockedException for 15 minutes with dynamic remaining seconds countdown). Added GlobalExceptionHandler RFC 7807 ProblemDetail mappings for 429, 423, 401 BadCredentialsException, and 403 DisabledException. Full unit and integration test coverage verifying IP isolation, account lockout, and counter reset on successful authentication."
+    },
+    {
+        "phase": "Phase 21: Centralized Secrets Management (SEC-01 HashiCorp Vault Community Edition)",
+        "date": "November 2026",
+        "modules": "backend:config, docker:vault, scripts, docker-compose",
+        "migrations": "N/A (Secrets Management & Zero-Leakage Architecture)",
+        "summary": "Resolved vulnerability SEC-01 (Secrets & Credentials Committed to Source Code). Deployed HashiCorp Vault Community Edition (v1.15.6) on isolated backend-net with persistent storage (vault_data). Implemented early-stage Spring Boot VaultEnvironmentPostProcessor (HIGHEST_PRECEDENCE + 15) querying KV v2 engine (secret/data/dossia) to inject database password, MinIO secret key, JWT HMAC secret, and AI API key directly into Spring Environment. Purged all hardcoded fallback credentials from MinioProperties, application.yml, and scripts. Created Python automation utility (scripts/bootstrap_vault.py) for secret initialization, health verification, and masked auditing with zero plain-text leakage."
     }
 ]
 

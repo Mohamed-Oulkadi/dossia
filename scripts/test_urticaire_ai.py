@@ -1,8 +1,9 @@
+import os
 import urllib.request
 import json
 import time
 
-api_key = 'sk-13e31994194e1047825c06363f459cf60f440c27e278a8c44a2d21f0bcd2fcf7'
+api_key = os.getenv('DOSSIA_AI_API_KEY', '')
 base_url = 'https://discovery-api.intern-ai.org.cn/v1'
 model = 'deepseek-v4-flash-0731'
 

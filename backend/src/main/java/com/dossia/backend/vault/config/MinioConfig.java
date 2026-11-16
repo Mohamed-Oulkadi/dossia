@@ -11,9 +11,16 @@ public class MinioConfig {
 
     @Bean
     public MinioClient minioClient(MinioProperties properties) {
+        String access = (properties.getAccessKey() != null && !properties.getAccessKey().isBlank())
+                ? properties.getAccessKey()
+                : "dossia_unconfigured_access";
+        String secret = (properties.getSecretKey() != null && !properties.getSecretKey().isBlank())
+                ? properties.getSecretKey()
+                : "dossia_unconfigured_secret";
+
         return MinioClient.builder()
                 .endpoint(properties.getEndpoint())
-                .credentials(properties.getAccessKey(), properties.getSecretKey())
+                .credentials(access, secret)
                 .build();
     }
 }

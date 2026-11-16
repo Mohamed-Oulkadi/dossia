@@ -11,6 +11,6 @@ public class MinioProperties {
 
     private String endpoint = "http://localhost:9000";
     private String accessKey = "dossia_minio_admin";
-    private String secretKey = "dossia_minio_dev_secret_2026";
+    private String secretKey = "";
     private String bucketName = "dossia-medical-vault";
 }

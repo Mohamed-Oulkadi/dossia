@@ -8,7 +8,7 @@ spring:
   datasource:
     url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:dossia_db}
     username: ${DB_USER:dossia_user}
-    password: ${DB_PASSWORD:dossia_dev_password_2026}
+    password: ${DB_PASSWORD:}
     driver-class-name: org.postgresql.Driver
     hikari:
       maximum-pool-size: 15
@@ -36,10 +36,15 @@ spring:
       max-request-size: 10MB
 
 dossia:
+  vault:
+    enabled: ${DOSSIA_VAULT_ENABLED:false}
+    endpoint: ${VAULT_ADDR:http://localhost:8200}
+    token: ${VAULT_TOKEN:}
+    secret-path: ${VAULT_SECRET_PATH:secret/data/dossia}
   minio:
     endpoint: ${MINIO_ENDPOINT:http://localhost:9000}
     access-key: ${MINIO_ACCESS_KEY:dossia_minio_admin}
-    secret-key: ${MINIO_SECRET_KEY:dossia_minio_dev_secret_2026}
+    secret-key: ${MINIO_SECRET_KEY:}
     bucket-name: ${MINIO_BUCKET:dossia-medical-vault}
   ai:
     api-key: ${DOSSIA_AI_API_KEY:}

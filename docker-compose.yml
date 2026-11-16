@@ -12,13 +12,13 @@ services:
     container_name: dossia-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_DB: dossia_db
-      POSTGRES_USER: dossia_user
-      POSTGRES_PASSWORD: dossia_dev_password_2026
+      POSTGRES_DB: ${DB_NAME:-dossia_db}
+      POSTGRES_USER: ${DB_USER:-dossia_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
     volumes:
       - dossia_pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U dossia_user -d dossia_db"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-dossia_user} -d ${DB_NAME:-dossia_db}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -38,8 +38,8 @@ services:
     restart: unless-stopped
     command: server /data --console-address ":9001"
     environment:
-      MINIO_ROOT_USER: dossia_minio_admin
-      MINIO_ROOT_PASSWORD: dossia_minio_dev_secret_2026
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY:-dossia_minio_admin}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY}
     volumes:
       - minio_data:/data
     networks:
@@ -48,6 +48,31 @@ services:
     ports:
       - "127.0.0.1:9000:9000"
       - "127.0.0.1:9001:9001"
+
+  # ----------------------------------------------------------------------------
+  # 1c. Secret Management Tier: HashiCorp Vault Community Edition (SEC-01)
+  # ----------------------------------------------------------------------------
+  vault:
+    image: hashicorp/vault:1.15.6
+    container_name: dossia-vault
+    restart: unless-stopped
+    environment:
+      VAULT_DEV_ROOT_TOKEN_ID: ${VAULT_ROOT_TOKEN:-dossia_vault_dev_root_token_2026}
+      VAULT_DEV_LISTEN_ADDRESS: 0.0.0.0:8200
+    ports:
+      - "127.0.0.1:8200:8200"
+    networks:
+      - backend-net
+    cap_add:
+      - IPC_LOCK
+    volumes:
+      - vault_data:/vault/file
+    healthcheck:
+      test: ["CMD-SHELL", "vault status -address=http://127.0.0.1:8200 || exit 0"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
 
   # ----------------------------------------------------------------------------
   # 2. Application Tier: Spring Boot 3 / Java 21 Modular Monolith
@@ -63,19 +88,25 @@ services:
         condition: service_healthy
       minio:
         condition: service_started
+      vault:
+        condition: service_started
     environment:
       DB_HOST: db
       DB_PORT: 5432
-      DB_NAME: dossia_db
-      DB_USER: dossia_user
-      DB_PASSWORD: dossia_dev_password_2026
+      DB_NAME: ${DB_NAME:-dossia_db}
+      DB_USER: ${DB_USER:-dossia_user}
+      DB_PASSWORD: ${DB_PASSWORD}
       MINIO_ENDPOINT: http://minio:9000
-      MINIO_ACCESS_KEY: dossia_minio_admin
-      MINIO_SECRET_KEY: dossia_minio_dev_secret_2026
-      MINIO_BUCKET: dossia-medical-vault
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-dossia_minio_admin}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
+      MINIO_BUCKET: ${MINIO_BUCKET:-dossia-medical-vault}
       DOSSIA_AI_API_KEY: ${DOSSIA_AI_API_KEY:-}
       DOSSIA_AI_BASE_URL: ${DOSSIA_AI_BASE_URL:-https://radoxai.com/v1}
       DOSSIA_AI_MODEL: ${DOSSIA_AI_MODEL:-gpt-4o-mini}
+      VAULT_ADDR: http://vault:8200
+      VAULT_TOKEN: ${VAULT_ROOT_TOKEN:-dossia_vault_dev_root_token_2026}
+      VAULT_SECRET_PATH: secret/data/dossia
+      DOSSIA_VAULT_ENABLED: "true"
       SPRING_PROFILES_ACTIVE: prod
     networks:
       - backend-net
@@ -131,4 +162,6 @@ volumes:
   dossia_pgdata:
     driver: local
   minio_data:
+    driver: local
+  vault_data:
     driver: local
