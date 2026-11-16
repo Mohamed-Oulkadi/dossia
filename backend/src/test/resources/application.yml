@@ -14,6 +14,10 @@ spring:
     enabled: false
 
 dossia:
+  security:
+    jwt:
+      secret: "dossia-test-jwt-secret-key-32-chars-minimum-for-hmac-sha256!"
+      expiration-ms: 86400000
   minio:
     endpoint: http://localhost:9000
     access-key: test-access-key

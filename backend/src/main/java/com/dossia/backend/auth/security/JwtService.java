@@ -19,11 +19,19 @@ public class JwtService {
     private final SecretKey signingKey;
     private final long expirationMs;
 
+    public static final int MINIMUM_SECRET_LENGTH = 32;
+
     public JwtService(
-            @Value("${dossia.security.jwt.secret:dossia_secret_key_morocco_clinical_saas_jwt_token_2026_super_secure_key_123}") String secret,
+            @Value("${dossia.security.jwt.secret}") String secret,
             @Value("${dossia.security.jwt.expiration-ms:86400000}") long expirationMs // 24 hours default
     ) {
-        this.signingKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+        if (secret == null || secret.trim().length() < MINIMUM_SECRET_LENGTH) {
+            throw new IllegalStateException(
+                    "Le secret cryptographique JWT (dossia.security.jwt.secret / JWT_SECRET) doit comporter au moins 32 caractères (256 bits). " +
+                    "La présence de secrets hardcodés par défaut est strictement interdite (CWE-321 / SEC-04)."
+            );
+        }
+        this.signingKey = Keys.hmacShaKeyFor(secret.trim().getBytes(StandardCharsets.UTF_8));
         this.expirationMs = expirationMs;
     }
 

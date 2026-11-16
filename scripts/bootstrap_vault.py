@@ -9,6 +9,7 @@ with PostgreSQL database, MinIO object storage, JWT HMAC, and AI provider secret
 import os
 import sys
 import json
+import secrets
 import urllib.request
 import urllib.error
 
@@ -110,7 +111,7 @@ def main():
         "db_user": os.getenv("DB_USER", "dossia_user"),
         "minio_secret_key": os.getenv("MINIO_SECRET_KEY", "dossia_minio_dev_secret_2026"),
         "minio_access_key": os.getenv("MINIO_ACCESS_KEY", "dossia_minio_admin"),
-        "jwt_secret": os.getenv("JWT_SECRET", "dossia_secret_key_morocco_clinical_saas_jwt_token_2026_super_secure_key_123"),
+        "jwt_secret": os.getenv("JWT_SECRET") or secrets.token_urlsafe(36),
         "ai_api_key": os.getenv("DOSSIA_AI_API_KEY", "")
     }
 

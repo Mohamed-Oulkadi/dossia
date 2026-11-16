@@ -107,6 +107,7 @@ services:
       VAULT_TOKEN: ${VAULT_ROOT_TOKEN:-dossia_vault_dev_root_token_2026}
       VAULT_SECRET_PATH: secret/data/dossia
       DOSSIA_VAULT_ENABLED: "true"
+      JWT_SECRET: ${JWT_SECRET:-}
       SPRING_PROFILES_ACTIVE: prod
     networks:
       - backend-net

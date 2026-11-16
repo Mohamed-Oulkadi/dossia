@@ -483,6 +483,13 @@ CHANGELOG_ENTRIES = [
         "modules": "backend:config, docker:vault, scripts, docker-compose",
         "migrations": "N/A (Secrets Management & Zero-Leakage Architecture)",
         "summary": "Resolved vulnerability SEC-01 (Secrets & Credentials Committed to Source Code). Deployed HashiCorp Vault Community Edition (v1.15.6) on isolated backend-net with persistent storage (vault_data). Implemented early-stage Spring Boot VaultEnvironmentPostProcessor (HIGHEST_PRECEDENCE + 15) querying KV v2 engine (secret/data/dossia) to inject database password, MinIO secret key, JWT HMAC secret, and AI API key directly into Spring Environment. Purged all hardcoded fallback credentials from MinioProperties, application.yml, and scripts. Created Python automation utility (scripts/bootstrap_vault.py) for secret initialization, health verification, and masked auditing with zero plain-text leakage."
+    },
+    {
+        "phase": "Phase 22: Cryptographic JWT Secret Hardening (SEC-04 Zero-Default Validation)",
+        "date": "November 2026",
+        "modules": "backend:auth, backend:config, docker-compose, scripts",
+        "migrations": "N/A (Cryptographic Signing Key Enforcement)",
+        "summary": "Resolved vulnerability SEC-04 (JWT Secret Hardcoded as Fallback Default in Source). Removed hardcoded HMAC secret key from JwtService.java (CWE-321). Enforced strict fail-fast validation on application startup requiring dossia.security.jwt.secret / JWT_SECRET to be configured and meet a minimum 256-bit entropy threshold (32 characters), failing startup with IllegalStateException if absent or weak. Wired JWT_SECRET across application.yml, test profiles, docker-compose, and HashiCorp Vault KV v2 engine. Created JwtServiceSecurityTest (4/4 passed) validating startup rejections for null, empty, or short keys and verifying HMAC-SHA256 signature and claim integrity."
     }
 ]
 

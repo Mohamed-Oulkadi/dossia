@@ -50,6 +50,10 @@ dossia:
     api-key: ${DOSSIA_AI_API_KEY:}
     base-url: ${DOSSIA_AI_BASE_URL:https://radoxai.com/v1}
     model: ${DOSSIA_AI_MODEL:gpt-4o-mini}
+  security:
+    jwt:
+      secret: ${JWT_SECRET:}
+      expiration-ms: ${JWT_EXPIRATION_MS:86400000}
 
 server:
   port: 8080
