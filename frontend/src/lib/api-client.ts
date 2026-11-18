@@ -19,6 +19,7 @@ export const apiClient = axios.create({
     'Content-Type': 'application/json',
   },
   timeout: 30000,
+  withCredentials: true,
 })
 
 // Global Request Interceptor: Attach Bearer JWT token if available

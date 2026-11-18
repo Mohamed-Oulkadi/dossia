@@ -35,7 +35,7 @@ export function useWaitingRoomStream() {
 
   useEffect(() => {
     // Only connect if user is authenticated in an active clinic session
-    if (!isAuthenticated || !token || role === 'SUPER_ADMIN') {
+    if (!isAuthenticated || role === 'SUPER_ADMIN') {
       setIsConnected(false)
       return
     }
@@ -45,12 +45,17 @@ export function useWaitingRoomStream() {
 
     const connectStream = async () => {
       try {
+        const headers: Record<string, string> = {
+          Accept: 'text/event-stream',
+        }
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`
+        }
+
         await fetchEventSource('/api/v1/agenda/stream', {
           method: 'GET',
-          headers: {
-            Authorization: `Bearer ${token}`,
-            Accept: 'text/event-stream',
-          },
+          headers,
+          credentials: 'include',
           signal: controller.signal,
 
           onopen: async (response) => {

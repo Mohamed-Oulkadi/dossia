@@ -490,6 +490,13 @@ CHANGELOG_ENTRIES = [
         "modules": "backend:auth, backend:config, docker-compose, scripts",
         "migrations": "N/A (Cryptographic Signing Key Enforcement)",
         "summary": "Resolved vulnerability SEC-04 (JWT Secret Hardcoded as Fallback Default in Source). Removed hardcoded HMAC secret key from JwtService.java (CWE-321). Enforced strict fail-fast validation on application startup requiring dossia.security.jwt.secret / JWT_SECRET to be configured and meet a minimum 256-bit entropy threshold (32 characters), failing startup with IllegalStateException if absent or weak. Wired JWT_SECRET across application.yml, test profiles, docker-compose, and HashiCorp Vault KV v2 engine. Created JwtServiceSecurityTest (4/4 passed) validating startup rejections for null, empty, or short keys and verifying HMAC-SHA256 signature and claim integrity."
+    },
+    {
+        "phase": "Phase 23: XSS Mitigation via HttpOnly Cookie Authentication (SEC-05)",
+        "date": "November 2026",
+        "modules": "backend:auth, frontend:auth, frontend:store, frontend:hooks",
+        "migrations": "N/A (Authentication Cookie & Storage Hardening)",
+        "summary": "Resolved vulnerability SEC-05 (JWT Bearer Token Stored in localStorage / XSS-Exploitable). Implemented dual-mode authentication protocol: HttpOnly, SameSite=Strict, Path=/ session cookies ('dossia_token') issued upon POST /api/v1/auth/login and invalidated via POST /api/v1/auth/logout with Max-Age=0, with backward-compatible fallback to Authorization: Bearer header for external API/test clients in JwtAuthenticationFilter. Hardened frontend Zustand useAuthStore using partialize to strictly exclude the cryptographic token from browser localStorage (storing only non-sensitive user metadata). Configured Axios apiClient with withCredentials: true and updated useWaitingRoomStream SSE hook with credentials: 'include'. Created JwtCookieAuthenticationTest (4/4 passed) verifying cookie issuance, authenticated requests via cookie, logout cookie clearance, and 401 rejection on invalid cookies."
     }
 ]
 

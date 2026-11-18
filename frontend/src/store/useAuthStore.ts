@@ -41,6 +41,7 @@ export const useAuthStore = create<AuthState>()(
       },
 
       logout: () => {
+        fetch('/api/v1/auth/logout', { method: 'POST', credentials: 'include' }).catch(() => {})
         set({
           token: null,
           user: null,
@@ -58,6 +59,11 @@ export const useAuthStore = create<AuthState>()(
     }),
     {
       name: 'dossia-auth-storage',
+      partialize: (state) => ({
+        user: state.user,
+        role: state.role,
+        isAuthenticated: state.isAuthenticated,
+      }),
     }
   )
 )

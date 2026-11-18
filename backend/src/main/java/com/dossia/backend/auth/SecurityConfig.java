@@ -77,7 +77,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // Public authentication & health endpoints
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers("/api/v1/auth/login", "/actuator/**", "/error").permitAll()
+                        .requestMatchers("/api/v1/auth/login", "/api/v1/auth/logout", "/actuator/**", "/error").permitAll()
 
                         // DOCTOR ONLY: Clinical records, diagnoses, and medical consultations (Secretaries & SuperAdmins blocked)
                         .requestMatchers("/api/v1/consultations/**").hasRole("DOCTOR")
