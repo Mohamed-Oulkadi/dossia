@@ -30,10 +30,11 @@ import java.util.List;
 public class SecurityConfig {
 
     private final com.dossia.backend.auth.security.JwtService jwtService;
+    private final com.dossia.backend.auth.security.TokenRevocationService tokenRevocationService;
 
     @Bean
     public JwtAuthenticationFilter jwtAuthenticationFilter() {
-        return new JwtAuthenticationFilter(jwtService);
+        return new JwtAuthenticationFilter(jwtService, tokenRevocationService);
     }
 
     @Bean

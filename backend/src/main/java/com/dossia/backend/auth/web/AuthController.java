@@ -3,6 +3,8 @@ package com.dossia.backend.auth.web;
 import com.dossia.backend.auth.dto.AuthRequest;
 import com.dossia.backend.auth.dto.AuthResponse;
 import com.dossia.backend.auth.dto.UserProfileResponse;
+import com.dossia.backend.auth.security.JwtService;
+import com.dossia.backend.auth.security.TokenRevocationService;
 import com.dossia.backend.auth.service.AuthService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -14,6 +16,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Duration;
+import java.time.Instant;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -23,6 +27,8 @@ public class AuthController {
     public static final String AUTH_COOKIE_NAME = "dossia_token";
 
     private final AuthService authService;
+    private final JwtService jwtService;
+    private final TokenRevocationService tokenRevocationService;
 
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(
@@ -48,6 +54,21 @@ public class AuthController {
 
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(HttpServletRequest httpRequest, HttpServletResponse httpResponse) {
+        // SEC-06: Invalidate JWT token so it cannot be reused even if intercepted or replayed
+        String jwt = extractJwt(httpRequest);
+        if (jwt != null && !jwt.isBlank()) {
+            try {
+                String jti = jwtService.extractJti(jwt);
+                UUID userId = jwtService.extractUserId(jwt);
+                Instant expiresAt = jwtService.extractExpiration(jwt);
+                if (jti != null) {
+                    tokenRevocationService.revokeToken(jti, userId, expiresAt, "LOGOUT");
+                }
+            } catch (Exception ex) {
+                // If token has parsing issues, continue to clear cookie
+            }
+        }
+
         // Clear HttpOnly authentication cookie
         ResponseCookie cookie = ResponseCookie.from(AUTH_COOKIE_NAME, "")
                 .httpOnly(true)
@@ -59,6 +80,21 @@ public class AuthController {
 
         httpResponse.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
         return ResponseEntity.noContent().build();
+    }
+
+    private String extractJwt(HttpServletRequest request) {
+        if (request.getCookies() != null) {
+            for (jakarta.servlet.http.Cookie cookie : request.getCookies()) {
+                if (AUTH_COOKIE_NAME.equals(cookie.getName()) && cookie.getValue() != null && !cookie.getValue().isBlank()) {
+                    return cookie.getValue().trim();
+                }
+            }
+        }
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            return authHeader.substring(7).trim();
+        }
+        return null;
     }
 
     @GetMapping("/me")

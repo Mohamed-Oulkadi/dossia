@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.SQLRestriction;
 
+import java.time.Instant;
 import java.util.UUID;
 
 @Entity
@@ -43,4 +44,7 @@ public class User extends AuditableEntity {
     @Column(name = "is_active", nullable = false)
     @Builder.Default
     private boolean active = true;
+
+    @Column(name = "tokens_revoked_before")
+    private Instant tokensRevokedBefore;
 }

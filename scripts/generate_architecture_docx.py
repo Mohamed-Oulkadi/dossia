@@ -242,6 +242,13 @@ FLYWAY_LEDGER = [
         "tables": "medications_catalog, prescription_templates",
         "tenant_isolated": "Yes (Global Ordonnance Template & Drug Catalog)",
         "description": "Seeded Primalan 10mg & 0.05% Sirop into Moroccan Drug Catalog and added 'Urticaire Aiguë Adulte' 1-click clinical prescription template (Aerius, Primalan, Célestène)."
+    },
+    {
+        "version": "V13",
+        "script": "V13__init_token_revocation_schema.sql",
+        "tables": "revoked_tokens, users (tokens_revoked_before)",
+        "tenant_isolated": "Yes (Audit & Session State via users FK)",
+        "description": "Created revoked_tokens table with unique jti index, user_id FK, and expires_at index for granular session termination. Added tokens_revoked_before timestamp column to users table enabling instant user-wide token invalidation on password reset or account suspension (SEC-06)."
     }
 ]
 
@@ -497,6 +504,13 @@ CHANGELOG_ENTRIES = [
         "modules": "backend:auth, frontend:auth, frontend:store, frontend:hooks",
         "migrations": "N/A (Authentication Cookie & Storage Hardening)",
         "summary": "Resolved vulnerability SEC-05 (JWT Bearer Token Stored in localStorage / XSS-Exploitable). Implemented dual-mode authentication protocol: HttpOnly, SameSite=Strict, Path=/ session cookies ('dossia_token') issued upon POST /api/v1/auth/login and invalidated via POST /api/v1/auth/logout with Max-Age=0, with backward-compatible fallback to Authorization: Bearer header for external API/test clients in JwtAuthenticationFilter. Hardened frontend Zustand useAuthStore using partialize to strictly exclude the cryptographic token from browser localStorage (storing only non-sensitive user metadata). Configured Axios apiClient with withCredentials: true and updated useWaitingRoomStream SSE hook with credentials: 'include'. Created JwtCookieAuthenticationTest (4/4 passed) verifying cookie issuance, authenticated requests via cookie, logout cookie clearance, and 401 rejection on invalid cookies."
+    },
+    {
+        "phase": "Phase 24: JWT Token Revocation & Session Blacklist Engine (SEC-06)",
+        "date": "November 2026",
+        "modules": "backend:auth, backend:admin, flyway:V13, scripts",
+        "migrations": "V13__init_token_revocation_schema.sql",
+        "summary": "Resolved vulnerability SEC-06 (No JWT Token Revocation Mechanism / CWE-613 Insufficient Session Expiration). Implemented hybrid persistent and in-memory token revocation architecture. Embedded cryptographically unique jti (JWT ID) claims into all issued JWTs. Created Flyway migration V13 provisioning revoked_tokens table and users.tokens_revoked_before column. Built TokenRevocationService with sub-microsecond in-memory ConcurrentHashMap fast cache, database synchronization, user-level instant revocation barriers, and hourly @Scheduled purge of naturally expired revocations. Updated AuthController.logout to revoke session jti upon sign-out and AdminClinicService.resetUserPassword to invalidate all prior user sessions. Hardened JwtAuthenticationFilter to reject revoked tokens immediately with RFC 7807 401 Unauthorized. Created TokenRevocationSecurityTest (4/4 passed)."
     }
 ]
 

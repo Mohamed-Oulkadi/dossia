@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import java.util.Date;
 import java.util.UUID;
 import java.util.function.Function;
@@ -38,8 +39,10 @@ public class JwtService {
     public String generateToken(UserPrincipal principal) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + expirationMs);
+        String jti = UUID.randomUUID().toString();
 
         var builder = Jwts.builder()
+                .id(jti)
                 .subject(principal.getUsername())
                 .claim("userId", principal.getId().toString())
                 .claim("role", principal.getRole().name())
@@ -53,6 +56,18 @@ public class JwtService {
         }
 
         return builder.compact();
+    }
+
+    public String extractJti(String token) {
+        return extractClaim(token, Claims::getId);
+    }
+
+    public Instant extractIssuedAt(String token) {
+        return extractClaim(token, claims -> claims.getIssuedAt() != null ? claims.getIssuedAt().toInstant() : null);
+    }
+
+    public Instant extractExpiration(String token) {
+        return extractClaim(token, claims -> claims.getExpiration() != null ? claims.getExpiration().toInstant() : null);
     }
 
     public String extractEmail(String token) {
@@ -88,11 +103,8 @@ public class JwtService {
     }
 
     private boolean isTokenExpired(String token) {
-        return extractExpiration(token).before(new Date());
-    }
-
-    private Date extractExpiration(String token) {
-        return extractClaim(token, Claims::getExpiration);
+        Instant exp = extractExpiration(token);
+        return exp != null && exp.isBefore(Instant.now());
     }
 
     private Claims extractAllClaims(String token) {

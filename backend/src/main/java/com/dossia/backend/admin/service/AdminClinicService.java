@@ -10,6 +10,7 @@ import com.dossia.backend.auth.domain.User;
 import com.dossia.backend.auth.domain.UserRole;
 import com.dossia.backend.auth.repository.ClinicRepository;
 import com.dossia.backend.auth.repository.UserRepository;
+import com.dossia.backend.auth.security.TokenRevocationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -29,6 +30,7 @@ public class AdminClinicService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final AdminAuditService auditService;
+    private final TokenRevocationService tokenRevocationService;
 
     @Transactional(readOnly = true)
     public List<AdminClinicSummaryResponse> getAllClinics(String search, String status) {
@@ -166,6 +168,9 @@ public class AdminClinicService {
 
         user.setPasswordHash(passwordEncoder.encode("Dossia2026!"));
         userRepository.save(user);
+
+        // SEC-06: Invalidate all existing tokens and sessions for this user upon password reset
+        tokenRevocationService.revokeAllUserTokens(userId, "ADMIN_PASSWORD_RESET");
 
         auditService.logEvent(
                 "admin@dossia.ma",

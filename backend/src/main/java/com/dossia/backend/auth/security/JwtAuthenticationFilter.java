@@ -17,11 +17,20 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 import java.util.UUID;
 
-@RequiredArgsConstructor
 @Slf4j
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
+    private final TokenRevocationService tokenRevocationService;
+
+    public JwtAuthenticationFilter(JwtService jwtService, TokenRevocationService tokenRevocationService) {
+        this.jwtService = jwtService;
+        this.tokenRevocationService = tokenRevocationService;
+    }
+
+    public JwtAuthenticationFilter(JwtService jwtService) {
+        this(jwtService, null);
+    }
 
     @Override
     protected void doFilterInternal(
@@ -73,6 +82,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 );
 
                 if (jwtService.isTokenValid(jwt, principal)) {
+                    if (tokenRevocationService != null) {
+                        String jti = jwtService.extractJti(jwt);
+                        java.time.Instant issuedAt = jwtService.extractIssuedAt(jwt);
+                        if (tokenRevocationService.isRevoked(jti, userId, issuedAt)) {
+                            log.warn("Blocked revoked JWT token (jti: {}) for user: {}", jti, userEmail);
+                            SecurityContextHolder.clearContext();
+                            response.setContentType("application/problem+json;charset=UTF-8");
+                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                            response.getWriter().write("{\"type\":\"https://dossia.ma/errors/revoked-token\",\"title\":\"Jeton Révoqué\",\"status\":401,\"detail\":\"Cette session a été révoquée. Veuillez vous reconnecter.\"}");
+                            return;
+                        }
+                    }
+
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                             principal,
                             null,
