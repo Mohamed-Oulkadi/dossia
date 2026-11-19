@@ -2,16 +2,19 @@ package com.dossia.backend.consultation.service;
 
 import com.dossia.backend.auth.SecurityUtils;
 import com.dossia.backend.auth.security.UserPrincipal;
+import com.dossia.backend.common.exception.ResourceNotFoundException;
 import com.dossia.backend.consultation.domain.AiScribeLog;
 import com.dossia.backend.consultation.domain.MedicationCatalogItem;
 import com.dossia.backend.consultation.dto.ExtractedMedicationDto;
 import com.dossia.backend.consultation.dto.VoiceConsultationExtractDto;
 import com.dossia.backend.consultation.repository.AiScribeLogRepository;
+import com.dossia.backend.consultation.repository.ConsultationRepository;
 import com.dossia.backend.consultation.repository.MedicationCatalogRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.data.domain.PageRequest;
@@ -35,15 +38,26 @@ public class FrenchMedicalVoiceScribeServiceImpl implements FrenchMedicalVoiceSc
 
     private final MedicationCatalogRepository medicationCatalogRepository;
     private final AiScribeLogRepository aiScribeLogRepository;
+    private final ConsultationRepository consultationRepository;
     private final ObjectMapper objectMapper;
+
+    @Autowired
+    public FrenchMedicalVoiceScribeServiceImpl(
+            MedicationCatalogRepository medicationCatalogRepository,
+            AiScribeLogRepository aiScribeLogRepository,
+            ConsultationRepository consultationRepository
+    ) {
+        this.medicationCatalogRepository = medicationCatalogRepository;
+        this.aiScribeLogRepository = aiScribeLogRepository;
+        this.consultationRepository = consultationRepository;
+        this.objectMapper = new ObjectMapper();
+    }
 
     public FrenchMedicalVoiceScribeServiceImpl(
             MedicationCatalogRepository medicationCatalogRepository,
             AiScribeLogRepository aiScribeLogRepository
     ) {
-        this.medicationCatalogRepository = medicationCatalogRepository;
-        this.aiScribeLogRepository = aiScribeLogRepository;
-        this.objectMapper = new ObjectMapper();
+        this(medicationCatalogRepository, aiScribeLogRepository, null);
     }
 
     @Value("${dossia.ai.api-key:}")
@@ -68,9 +82,15 @@ public class FrenchMedicalVoiceScribeServiceImpl implements FrenchMedicalVoiceSc
     @Transactional
     public VoiceConsultationExtractDto processFrenchMedicalVoice(MultipartFile audio, String clientTranscript, UUID clinicId, UUID consultationId) {
         long startMs = System.currentTimeMillis();
-        UUID effectiveClinicId = clinicId != null ? clinicId : SecurityUtils.getCurrentClinicId();
+        UUID effectiveClinicId = clinicId != null ? clinicId : SecurityUtils.requireCurrentClinicId();
         if (effectiveClinicId == null) {
             effectiveClinicId = UUID.fromString("11111111-1111-1111-1111-111111111111");
+        }
+
+        // SEC-08: Validate tenant ownership of consultationId before linking
+        if (consultationId != null && consultationRepository != null) {
+            consultationRepository.findByClinicIdAndId(effectiveClinicId, consultationId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Consultation introuvable avec l'ID: " + consultationId));
         }
 
         VoiceConsultationExtractDto rawExtract;

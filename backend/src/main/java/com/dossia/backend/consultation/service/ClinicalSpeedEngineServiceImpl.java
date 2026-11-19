@@ -60,7 +60,7 @@ public class ClinicalSpeedEngineServiceImpl implements ClinicalSpeedEngineServic
     }
 
     private UUID resolveClinicId() {
-        UUID current = SecurityUtils.getCurrentClinicId();
+        UUID current = SecurityUtils.requireCurrentClinicId();
         return current != null ? current : DEFAULT_CLINIC_ID;
     }
 

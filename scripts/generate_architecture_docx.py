@@ -511,6 +511,13 @@ CHANGELOG_ENTRIES = [
         "modules": "backend:auth, backend:admin, flyway:V13, scripts",
         "migrations": "V13__init_token_revocation_schema.sql",
         "summary": "Resolved vulnerability SEC-06 (No JWT Token Revocation Mechanism / CWE-613 Insufficient Session Expiration). Implemented hybrid persistent and in-memory token revocation architecture. Embedded cryptographically unique jti (JWT ID) claims into all issued JWTs. Created Flyway migration V13 provisioning revoked_tokens table and users.tokens_revoked_before column. Built TokenRevocationService with sub-microsecond in-memory ConcurrentHashMap fast cache, database synchronization, user-level instant revocation barriers, and hourly @Scheduled purge of naturally expired revocations. Updated AuthController.logout to revoke session jti upon sign-out and AdminClinicService.resetUserPassword to invalidate all prior user sessions. Hardened JwtAuthenticationFilter to reject revoked tokens immediately with RFC 7807 401 Unauthorized. Created TokenRevocationSecurityTest (4/4 passed)."
+    },
+    {
+        "phase": "Phase 25: Multi-Tenant Consultation Isolation Hardening (SEC-08)",
+        "date": "November 2026",
+        "modules": "backend:consultation, backend:auth, scripts",
+        "migrations": "N/A (Multi-Tenant Authorization & Scoping)",
+        "summary": "Resolved vulnerability SEC-08 (Missing Tenant Isolation on Consultation Records / CWE-639 Authorization Bypass Through User-Controlled Key). Hardened SecurityUtils with requireCurrentClinicId() to enforce strict CNDP Law 09-08 clinic scoping, eliminating silent default tenant fallbacks for authenticated users and immediately rejecting clinic-less users (such as SuperAdmins) with AccessDeniedException. Wired strict tenant resolution across ConsultationServiceImpl, ClinicalSpeedEngineServiceImpl, and FrenchMedicalVoiceScribeServiceImpl. Enforced cross-tenant validation on optional consultationId in FrenchMedicalVoiceScribe to prevent cross-clinic AI scribe log linkage. Created ConsultationTenantIsolationSecurityTest with 8 comprehensive integration test cases (8/8 passed) validating cross-clinic 404 Not Found isolation and SuperAdmin 403 Forbidden enforcement."
     }
 ]
 

@@ -38,7 +38,7 @@ public class ConsultationServiceImpl implements ConsultationService {
     private final ApplicationEventPublisher eventPublisher;
 
     private UUID resolveClinicId() {
-        UUID current = com.dossia.backend.auth.SecurityUtils.getCurrentClinicId();
+        UUID current = com.dossia.backend.auth.SecurityUtils.requireCurrentClinicId();
         return current != null ? current : DEFAULT_CLINIC_ID;
     }
 

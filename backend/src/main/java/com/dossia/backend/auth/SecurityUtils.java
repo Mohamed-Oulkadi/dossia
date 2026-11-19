@@ -33,6 +33,27 @@ public final class SecurityUtils {
                 .orElse(null);
     }
 
+    /**
+     * Extracts the active tenant clinic ID from the SecurityContext.
+     * Enforces strict multi-tenancy: if a user is authenticated but has no associated clinic ID
+     * (e.g. SUPER_ADMIN attempting to access clinic-scoped patient/consultation data),
+     * an AccessDeniedException is thrown per CNDP Law 09-08.
+     * Returns null only for unauthenticated contexts (e.g. isolated test harnesses).
+     */
+    public static UUID requireCurrentClinicId() {
+        Optional<UserPrincipal> user = getCurrentUser();
+        if (user.isPresent()) {
+            UUID clinicId = user.get().getClinicId();
+            if (clinicId == null) {
+                throw new org.springframework.security.access.AccessDeniedException(
+                        "Accès refusé selon la loi CNDP 09-08 : aucun cabinet médical associé à ce profil."
+                );
+            }
+            return clinicId;
+        }
+        return null;
+    }
+
     public static Optional<UserRole> getCurrentRole() {
         return getCurrentUser().map(UserPrincipal::getRole);
     }
