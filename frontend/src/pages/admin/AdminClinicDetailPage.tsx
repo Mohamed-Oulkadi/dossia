@@ -295,7 +295,7 @@ export function AdminClinicDetailPage() {
                           variant="outline"
                           onClick={() => handleResetPassword(u.id)}
                           disabled={resetPasswordMutation.isPending}
-                          title="Réinitialiser le mot de passe sur Dossia2026!"
+                          title="Générer un mot de passe temporaire à usage unique"
                           className="h-7 px-2 text-[10px] font-medium text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 cursor-pointer gap-1"
                         >
                           <KeyRound className="w-3 h-3" />

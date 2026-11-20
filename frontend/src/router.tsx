@@ -2,6 +2,7 @@ import { Suspense, lazy } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
 import { RoleGuard } from '@/components/auth/RoleGuard'
+import { ForcePasswordChangeModal } from '@/components/auth/ForcePasswordChangeModal'
 import { AdminLayout } from '@/layouts/AdminLayout'
 
 // Lazy-load heavy pages per AGENTS.md Rule #1
@@ -27,6 +28,7 @@ const PageLoader = () => (
 export function AppRouter() {
   return (
     <BrowserRouter>
+      <ForcePasswordChangeModal />
       <Suspense fallback={<PageLoader />}>
         <Routes>
           {/* Public Routes */}

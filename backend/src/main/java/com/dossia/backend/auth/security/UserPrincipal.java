@@ -20,15 +20,21 @@ public class UserPrincipal implements UserDetails {
     private final String passwordHash;
     private final UserRole role;
     private final boolean active;
+    private final boolean passwordChangeRequired;
     private final Collection<? extends GrantedAuthority> authorities;
 
     public UserPrincipal(UUID id, UUID clinicId, String email, String passwordHash, UserRole role, boolean active) {
+        this(id, clinicId, email, passwordHash, role, active, false);
+    }
+
+    public UserPrincipal(UUID id, UUID clinicId, String email, String passwordHash, UserRole role, boolean active, boolean passwordChangeRequired) {
         this.id = id;
         this.clinicId = clinicId;
         this.email = email;
         this.passwordHash = passwordHash;
         this.role = role;
         this.active = active;
+        this.passwordChangeRequired = passwordChangeRequired;
         this.authorities = List.of(new SimpleGrantedAuthority("ROLE_" + role.name()));
     }
 
@@ -39,7 +45,8 @@ public class UserPrincipal implements UserDetails {
                 user.getEmail(),
                 user.getPasswordHash(),
                 user.getRole(),
-                user.isActive()
+                user.isActive(),
+                user.isPasswordChangeRequired()
         );
     }
 

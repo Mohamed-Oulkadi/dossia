@@ -59,6 +59,9 @@ public class AdminClinicController {
             @PathVariable UUID userId
     ) {
         clinicService.resetUserPassword(id, userId);
-        return ResponseEntity.ok(Map.of("message", "Mot de passe réinitialisé avec succès sur Dossia2026!"));
+        return ResponseEntity.ok(Map.of(
+                "message",
+                "Le mot de passe temporaire a été généré et transmis au praticien avec obligation de changement lors de la prochaine connexion."
+        ));
     }
 }

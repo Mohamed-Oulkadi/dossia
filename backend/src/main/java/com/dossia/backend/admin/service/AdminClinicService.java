@@ -10,7 +10,9 @@ import com.dossia.backend.auth.domain.User;
 import com.dossia.backend.auth.domain.UserRole;
 import com.dossia.backend.auth.repository.ClinicRepository;
 import com.dossia.backend.auth.repository.UserRepository;
+import com.dossia.backend.auth.security.SecureTemporaryPasswordGenerator;
 import com.dossia.backend.auth.security.TokenRevocationService;
+import com.dossia.backend.auth.service.UserNotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -31,6 +33,8 @@ public class AdminClinicService {
     private final PasswordEncoder passwordEncoder;
     private final AdminAuditService auditService;
     private final TokenRevocationService tokenRevocationService;
+    private final SecureTemporaryPasswordGenerator passwordGenerator;
+    private final UserNotificationService userNotificationService;
 
     @Transactional(readOnly = true)
     public List<AdminClinicSummaryResponse> getAllClinics(String search, String status) {
@@ -103,17 +107,22 @@ public class AdminClinicService {
 
         Clinic savedClinic = clinicRepository.save(clinic);
 
+        String tempPassword = passwordGenerator.generate();
+
         User leadDoctor = User.builder()
                 .clinicId(savedClinic.getId())
                 .firstName(request.doctorFirstName().trim())
                 .lastName(request.doctorLastName().trim())
                 .email(request.doctorEmail().trim().toLowerCase())
-                .passwordHash(passwordEncoder.encode("Dossia2026!"))
+                .passwordHash(passwordEncoder.encode(tempPassword))
                 .role(UserRole.DOCTOR)
                 .active(true)
+                .passwordChangeRequired(true)
                 .build();
 
         userRepository.save(leadDoctor);
+
+        userNotificationService.sendTemporaryPassword(leadDoctor, tempPassword);
 
         auditService.logEvent(
                 "admin@dossia.ma",
@@ -166,11 +175,15 @@ public class AdminClinicService {
             throw new IllegalArgumentException("L'utilisateur n'appartient pas au cabinet spécifié");
         }
 
-        user.setPasswordHash(passwordEncoder.encode("Dossia2026!"));
+        String tempPassword = passwordGenerator.generate();
+        user.setPasswordHash(passwordEncoder.encode(tempPassword));
+        user.setPasswordChangeRequired(true);
         userRepository.save(user);
 
         // SEC-06: Invalidate all existing tokens and sessions for this user upon password reset
         tokenRevocationService.revokeAllUserTokens(userId, "ADMIN_PASSWORD_RESET");
+
+        userNotificationService.sendTemporaryPassword(user, tempPassword);
 
         auditService.logEvent(
                 "admin@dossia.ma",

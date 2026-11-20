@@ -249,6 +249,13 @@ FLYWAY_LEDGER = [
         "tables": "revoked_tokens, users (tokens_revoked_before)",
         "tenant_isolated": "Yes (Audit & Session State via users FK)",
         "description": "Created revoked_tokens table with unique jti index, user_id FK, and expires_at index for granular session termination. Added tokens_revoked_before timestamp column to users table enabling instant user-wide token invalidation on password reset or account suspension (SEC-06)."
+    },
+    {
+        "version": "V14",
+        "script": "V14__add_password_change_required.sql",
+        "tables": "users (password_change_required)",
+        "tenant_isolated": "Yes (Per-user authentication security state)",
+        "description": "Added password_change_required boolean column to users table with default FALSE. Enforces mandatory permanent password rotation on first login for newly provisioned or administratively reset accounts (SEC-02)."
     }
 ]
 
@@ -256,6 +263,8 @@ REST_ENDPOINTS = [
     # Auth
     {"method": "POST", "path": "/api/v1/auth/login", "roles": "PUBLIC", "desc": "Authenticates user with email/password; returns signed JWT and profile."},
     {"method": "GET",  "path": "/api/v1/auth/me", "roles": "AUTHENTICATED", "desc": "Returns currently authenticated user profile, clinic affiliation, and active role."},
+    {"method": "POST", "path": "/api/v1/auth/change-password", "roles": "AUTHENTICATED", "desc": "Rotates temporary or existing password, enforces 12+ character complexity, clears password_change_required flag, and revokes prior session tokens."},
+    {"method": "POST", "path": "/api/v1/auth/logout", "roles": "AUTHENTICATED", "desc": "Revokes current session JWT (jti blacklist) and clears HttpOnly authentication cookie."},
     # Admin
     {"method": "GET",   "path": "/api/v1/admin/clinics", "roles": "SUPER_ADMIN", "desc": "Lists all registered medical clinics with tenant search and status filtering."},
     {"method": "GET",   "path": "/api/v1/admin/clinics/{id}", "roles": "SUPER_ADMIN", "desc": "Retrieves comprehensive clinic details, users, and subscription records."},
@@ -518,6 +527,13 @@ CHANGELOG_ENTRIES = [
         "modules": "backend:consultation, backend:auth, scripts",
         "migrations": "N/A (Multi-Tenant Authorization & Scoping)",
         "summary": "Resolved vulnerability SEC-08 (Missing Tenant Isolation on Consultation Records / CWE-639 Authorization Bypass Through User-Controlled Key). Hardened SecurityUtils with requireCurrentClinicId() to enforce strict CNDP Law 09-08 clinic scoping, eliminating silent default tenant fallbacks for authenticated users and immediately rejecting clinic-less users (such as SuperAdmins) with AccessDeniedException. Wired strict tenant resolution across ConsultationServiceImpl, ClinicalSpeedEngineServiceImpl, and FrenchMedicalVoiceScribeServiceImpl. Enforced cross-tenant validation on optional consultationId in FrenchMedicalVoiceScribe to prevent cross-clinic AI scribe log linkage. Created ConsultationTenantIsolationSecurityTest with 8 comprehensive integration test cases (8/8 passed) validating cross-clinic 404 Not Found isolation and SuperAdmin 403 Forbidden enforcement."
+    },
+    {
+        "phase": "Phase 26: Elimination of Universal Default Password & Secure Temporary Credential Lifecycle (SEC-02)",
+        "date": "November 2026",
+        "modules": "backend:admin, backend:auth, frontend:auth, flyway:V14, scripts",
+        "migrations": "V14__add_password_change_required.sql",
+        "summary": "Resolved vulnerability SEC-02 (Universal Hardcoded Default Password on Tenant Provisioning / CWE-521 Weak Password Requirements). Completely eliminated hardcoded default passwords from AdminClinicService and AdminClinicController. Implemented SecureTemporaryPasswordGenerator using SecureRandom generating 16-character high-entropy temporary credentials with guaranteed character diversity. Added Flyway migration V14 provisioning users.password_change_required. Created UserNotificationService to dispatch one-time credentials securely. Built self-service password change API (POST /api/v1/auth/change-password) enforcing strict 12+ character complexity, revoking prior session tokens, and clearing the passwordChangeRequired flag. Added frontend ForcePasswordChangeModal blocking clinical navigation until temporary credentials are rotated. Created AdminPasswordSecurityTest (3/3 passed) and verified full regression suite (43/43 passed)."
     }
 ]
 

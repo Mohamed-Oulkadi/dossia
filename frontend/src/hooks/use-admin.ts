@@ -296,7 +296,7 @@ export function useResetUserPassword() {
     },
     onSuccess: (data) => {
       toast.success('Mot de passe réinitialisé', {
-        description: data.message || 'Le mot de passe a été remis à sa valeur par défaut.',
+        description: data.message || 'Le mot de passe temporaire a été généré et transmis au praticien.',
       })
     },
   })

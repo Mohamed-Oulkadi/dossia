@@ -11,6 +11,7 @@ export interface UserProfile {
   lastName: string
   email: string
   role: UserRole
+  passwordChangeRequired?: boolean
 }
 
 export interface AuthState {

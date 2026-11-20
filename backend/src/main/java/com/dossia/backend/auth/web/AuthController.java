@@ -97,6 +97,27 @@ public class AuthController {
         return null;
     }
 
+    @PostMapping("/change-password")
+    public ResponseEntity<AuthResponse> changePassword(
+            @Valid @RequestBody com.dossia.backend.auth.dto.ChangePasswordRequest request,
+            HttpServletRequest httpRequest,
+            HttpServletResponse httpResponse
+    ) {
+        AuthResponse authResponse = authService.changePassword(request);
+
+        // Update HttpOnly cookie with the freshly minted token
+        ResponseCookie cookie = ResponseCookie.from(AUTH_COOKIE_NAME, authResponse.token())
+                .httpOnly(true)
+                .secure(httpRequest.isSecure())
+                .path("/")
+                .maxAge(Duration.ofDays(1))
+                .sameSite("Strict")
+                .build();
+
+        httpResponse.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+        return ResponseEntity.ok(authResponse);
+    }
+
     @GetMapping("/me")
     public ResponseEntity<UserProfileResponse> me() {
         return ResponseEntity.ok(authService.getCurrentProfile());

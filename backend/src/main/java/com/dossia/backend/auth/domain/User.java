@@ -47,4 +47,8 @@ public class User extends AuditableEntity {
 
     @Column(name = "tokens_revoked_before")
     private Instant tokensRevokedBefore;
+
+    @Column(name = "password_change_required", nullable = false)
+    @Builder.Default
+    private boolean passwordChangeRequired = false;
 }
